@@ -37,6 +37,20 @@ export default function NewBioPageForm() {
         <label className="label" htmlFor="avatarEmoji">ไอคอน (emoji)</label>
         <input className="input" id="avatarEmoji" name="avatarEmoji" placeholder="✨" maxLength={2} />
       </div>
+      <div className="sm:col-span-2">
+        <label className="label" htmlFor="fbPixelId">Facebook Pixel ID (ถ้ามี)</label>
+        <input
+          className="input"
+          id="fbPixelId"
+          name="fbPixelId"
+          placeholder="123456789012345"
+          inputMode="numeric"
+          pattern="[0-9]*"
+        />
+        <p className="mt-1 text-xs text-ink/40">
+          ใส่ไว้เพื่อติดตามยอดเข้าชม/conversion จาก Facebook Ads บนหน้านี้
+        </p>
+      </div>
       {state?.error && (
         <p className="text-sm text-red-600 sm:col-span-2">{state.error}</p>
       )}

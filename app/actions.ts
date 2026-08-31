@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
+const FB_PIXEL_RE = /^\d{5,20}$/;
 
 type ActionState = { error?: string; success?: boolean };
 
@@ -108,10 +109,14 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
   const bio = String(formData.get("bio") || "").trim();
   const themeColor = String(formData.get("themeColor") || "#3d5afe");
   const avatarEmoji = String(formData.get("avatarEmoji") || "✨");
+  const fbPixelId = String(formData.get("fbPixelId") || "").trim();
 
   if (!slug) return { error: "ใส่ตัวย่อ URL สำหรับหน้า Bio" };
   if (!SLUG_RE.test(slug)) {
     return { error: "ตัวย่อ URL ใช้ได้เฉพาะ a-z, 0-9, - และ _ (3-32 ตัวอักษร)" };
+  }
+  if (fbPixelId && !FB_PIXEL_RE.test(fbPixelId)) {
+    return { error: "Facebook Pixel ID ต้องเป็นตัวเลขเท่านั้น (5-20 หลัก)" };
   }
 
   const exists = await prisma.link.findUnique({ where: { slug } });
@@ -126,6 +131,7 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
       themeColor,
       avatarEmoji,
       blocks: "[]",
+      fbPixelId: fbPixelId || null,
       userId,
     },
   });

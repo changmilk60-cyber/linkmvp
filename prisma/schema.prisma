@@ -34,6 +34,7 @@ model Link {
   themeColor String?
   avatarEmoji String?
   blocks     String?  // JSON string: [{ "label": "...", "url": "..." }]
+  fbPixelId  String?  // Facebook Pixel ID for tracking visits/conversions on this bio page
 
   clicks     Int      @default(0)
   createdAt  DateTime @default(now())
