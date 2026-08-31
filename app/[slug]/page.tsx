@@ -30,38 +30,87 @@ export default async function SlugPage({
   const pixelId =
     link.fbPixelId && /^\d{5,20}$/.test(link.fbPixelId) ? link.fbPixelId : null;
 
+  const pixelTags = pixelId && (
+    <>
+      <Script id="fb-pixel" strategy="afterInteractive">
+        {`
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '${pixelId}');
+          fbq('track', 'PageView');
+        `}
+      </Script>
+      <noscript>
+        <img
+          height="1"
+          width="1"
+          style={{ display: "none" }}
+          src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
+          alt=""
+        />
+      </noscript>
+    </>
+  );
+
+  if (link.template === "service") {
+    return (
+      <main className="mx-auto min-h-screen max-w-md bg-white pb-16">
+        {pixelTags}
+        <div
+          className="flex flex-col items-center px-6 pb-8 pt-14 text-center"
+          style={{ background: `linear-gradient(160deg, ${theme}, ${theme}cc)` }}
+        >
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-3xl shadow-sm">
+            {link.avatarEmoji || "🏢"}
+          </div>
+          <h1 className="mt-4 text-xl font-bold text-white">{link.title}</h1>
+          {link.bio && (
+            <p className="mt-1 text-sm text-white/85">{link.bio}</p>
+          )}
+        </div>
+
+        <div className="px-6">
+          <p className="mt-6 mb-3 text-sm font-semibold text-ink/50">
+            บริการ / ช่องทางติดต่อ
+          </p>
+          <div className="space-y-3">
+            {blocks.map((b, i) => (
+              <a
+                key={i}
+                href={b.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-xl border border-ink/10 bg-white px-4 py-3.5 shadow-sm transition hover:shadow-md"
+              >
+                <span className="font-semibold" style={{ color: theme }}>
+                  {b.label}
+                </span>
+                <span style={{ color: theme }}>→</span>
+              </a>
+            ))}
+            {blocks.length === 0 && (
+              <p className="text-center text-sm text-ink/40">ยังไม่มีรายการในหน้านี้</p>
+            )}
+          </div>
+        </div>
+
+        <p className="mt-16 text-center text-xs text-ink/30">สร้างด้วย LinkMVP</p>
+      </main>
+    );
+  }
+
   return (
     <main
       className="mx-auto flex min-h-screen max-w-md flex-col items-center px-6 py-16"
       style={{ background: `linear-gradient(180deg, ${theme}14, #fff 30%)` }}
     >
-      {pixelId && (
-        <>
-          <Script id="fb-pixel" strategy="afterInteractive">
-            {`
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${pixelId}');
-              fbq('track', 'PageView');
-            `}
-          </Script>
-          <noscript>
-            <img
-              height="1"
-              width="1"
-              style={{ display: "none" }}
-              src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
-              alt=""
-            />
-          </noscript>
-        </>
-      )}
+      {pixelTags}
       <div
         className="flex h-20 w-20 items-center justify-center rounded-full text-3xl shadow-sm"
         style={{ background: theme + "22" }}

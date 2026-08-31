@@ -14,6 +14,7 @@ import { nanoid } from "nanoid";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
 const FB_PIXEL_RE = /^\d{5,20}$/;
+const BIO_TEMPLATES = ["classic", "service"] as const;
 
 type ActionState = { error?: string; success?: boolean };
 
@@ -110,6 +111,10 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
   const themeColor = String(formData.get("themeColor") || "#3d5afe");
   const avatarEmoji = String(formData.get("avatarEmoji") || "✨");
   const fbPixelId = String(formData.get("fbPixelId") || "").trim();
+  const templateInput = String(formData.get("template") || "classic");
+  const template = (BIO_TEMPLATES as readonly string[]).includes(templateInput)
+    ? templateInput
+    : "classic";
 
   if (!slug) return { error: "ใส่ตัวย่อ URL สำหรับหน้า Bio" };
   if (!SLUG_RE.test(slug)) {
@@ -132,6 +137,7 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
       avatarEmoji,
       blocks: "[]",
       fbPixelId: fbPixelId || null,
+      template,
       userId,
     },
   });

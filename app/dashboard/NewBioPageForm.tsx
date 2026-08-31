@@ -22,6 +22,13 @@ export default function NewBioPageForm() {
         <input className="input" id="slug" name="slug" placeholder="beam" required />
       </div>
       <div>
+        <label className="label" htmlFor="template">เทมเพลต</label>
+        <select className="input" id="template" name="template" defaultValue="classic">
+          <option value="classic">มาตรฐาน</option>
+          <option value="service">ธุรกิจบริการ</option>
+        </select>
+      </div>
+      <div>
         <label className="label" htmlFor="title">ชื่อหน้า</label>
         <input className="input" id="title" name="title" placeholder="แบรนด์ของคุณ" />
       </div>
