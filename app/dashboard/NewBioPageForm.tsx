@@ -26,6 +26,7 @@ export default function NewBioPageForm() {
         <select className="input" id="template" name="template" defaultValue="classic">
           <option value="classic">มาตรฐาน</option>
           <option value="service">ธุรกิจบริการ</option>
+          <option value="course">คอร์สเรียนออนไลน์</option>
         </select>
       </div>
       <div>

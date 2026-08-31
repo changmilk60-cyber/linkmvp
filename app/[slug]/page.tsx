@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Script from "next/script";
+import CourseTemplate from "./CourseTemplate";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,20 @@ export default async function SlugPage({
       </noscript>
     </>
   );
+
+  if (link.template === "course") {
+    return (
+      <CourseTemplate
+        title={link.title}
+        bio={link.bio}
+        avatarEmoji={link.avatarEmoji}
+        theme={theme}
+        tracks={blocks}
+        ctaUrl={blocks[0]?.url || "#"}
+        pixelTags={pixelTags}
+      />
+    );
+  }
 
   if (link.template === "service") {
     return (

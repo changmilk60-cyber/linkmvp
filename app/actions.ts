@@ -14,7 +14,7 @@ import { nanoid } from "nanoid";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
 const FB_PIXEL_RE = /^\d{5,20}$/;
-const BIO_TEMPLATES = ["classic", "service"] as const;
+const BIO_TEMPLATES = ["classic", "service", "course"] as const;
 
 type ActionState = { error?: string; success?: boolean };
 
