@@ -70,6 +70,7 @@ export default function CourseTemplate({
   tracks,
   ctaUrl,
   pixelTags,
+  customCodeBlock,
 }: {
   title: string | null;
   bio: string | null;
@@ -78,6 +79,7 @@ export default function CourseTemplate({
   tracks: Track[];
   ctaUrl: string;
   pixelTags: ReactNode;
+  customCodeBlock?: ReactNode;
 }) {
   const trackList: Track[] =
     tracks.length > 0
@@ -352,6 +354,7 @@ export default function CourseTemplate({
       </a>
 
       <p className="mt-8 text-center text-xs text-ink/30">สร้างด้วย LinkMVP</p>
+      {customCodeBlock}
     </main>
   );
 }

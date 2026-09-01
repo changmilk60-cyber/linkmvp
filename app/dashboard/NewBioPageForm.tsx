@@ -59,6 +59,21 @@ export default function NewBioPageForm() {
           ใส่ไว้เพื่อติดตามยอดเข้าชม/conversion จาก Facebook Ads บนหน้านี้
         </p>
       </div>
+      <div className="sm:col-span-2">
+        <label className="label" htmlFor="customCode">โค้ดกำหนดเอง (Custom Code)</label>
+        <textarea
+          className="input font-mono text-xs"
+          id="customCode"
+          name="customCode"
+          rows={5}
+          placeholder="<script>...</script> หรือโค้ด embed อื่น ๆ"
+          maxLength={20000}
+        />
+        <p className="mt-1 text-xs text-ink/40">
+          โค้ดนี้จะถูกฝังลงในหน้า Bio ของคุณตรง ๆ และรันจริงกับผู้เข้าชมทุกคน
+          ใส่เฉพาะโค้ดที่คุณเขียนเองหรือเชื่อถือแหล่งที่มาเท่านั้น
+        </p>
+      </div>
       {state?.error && (
         <p className="text-sm text-red-600 sm:col-span-2">{state.error}</p>
       )}

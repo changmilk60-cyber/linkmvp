@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Script from "next/script";
 import CourseTemplate from "./CourseTemplate";
+import CustomCodeBlock from "./CustomCodeBlock";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,8 @@ export default async function SlugPage({
     </>
   );
 
+  const customCodeBlock = link.customCode && <CustomCodeBlock html={link.customCode} />;
+
   if (link.template === "course") {
     return (
       <CourseTemplate
@@ -69,6 +72,7 @@ export default async function SlugPage({
         tracks={blocks}
         ctaUrl={blocks[0]?.url || "#"}
         pixelTags={pixelTags}
+        customCodeBlock={customCodeBlock}
       />
     );
   }
@@ -116,6 +120,7 @@ export default async function SlugPage({
         </div>
 
         <p className="mt-16 text-center text-xs text-ink/30">สร้างด้วย LinkMVP</p>
+        {customCodeBlock}
       </main>
     );
   }
@@ -156,6 +161,7 @@ export default async function SlugPage({
       </div>
 
       <p className="mt-16 text-xs text-ink/30">สร้างด้วย LinkMVP</p>
+      {customCodeBlock}
     </main>
   );
 }

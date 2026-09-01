@@ -115,6 +115,7 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
   const template = (BIO_TEMPLATES as readonly string[]).includes(templateInput)
     ? templateInput
     : "classic";
+  const customCode = String(formData.get("customCode") || "").trim();
 
   if (!slug) return { error: "ใส่ตัวย่อ URL สำหรับหน้า Bio" };
   if (!SLUG_RE.test(slug)) {
@@ -122,6 +123,9 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
   }
   if (fbPixelId && !FB_PIXEL_RE.test(fbPixelId)) {
     return { error: "Facebook Pixel ID ต้องเป็นตัวเลขเท่านั้น (5-20 หลัก)" };
+  }
+  if (customCode.length > 20000) {
+    return { error: "โค้ดกำหนดเองยาวเกินไป (ไม่เกิน 20,000 ตัวอักษร)" };
   }
 
   const exists = await prisma.link.findUnique({ where: { slug } });
@@ -138,6 +142,7 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
       blocks: "[]",
       fbPixelId: fbPixelId || null,
       template,
+      customCode: customCode || null,
       userId,
     },
   });
