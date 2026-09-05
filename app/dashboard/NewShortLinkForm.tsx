@@ -33,7 +33,7 @@ export default function NewShortLinkForm() {
       </div>
       <SubmitButton />
       {state?.error && (
-        <p className="text-sm text-red-600 sm:col-span-3">{state.error}</p>
+        <p className="text-sm text-red-400 sm:col-span-3">{state.error}</p>
       )}
     </form>
   );

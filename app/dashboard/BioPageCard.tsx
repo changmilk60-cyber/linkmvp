@@ -57,29 +57,37 @@ export default function BioPageCard({
             </div>
           </div>
         </div>
-        <DeleteButton linkId={page.id} />
+        <div className="flex shrink-0 items-center gap-1">
+          <a
+            href={`/dashboard/edit/${page.id}`}
+            className="rounded-lg px-2 py-1 text-sm text-accent hover:bg-accent/10"
+          >
+            แก้ไข
+          </a>
+          <DeleteButton linkId={page.id} />
+        </div>
       </div>
 
-      <p className="mt-2 text-xs text-ink/40">เข้าชม {page.clicks} ครั้ง</p>
+      <p className="mt-2 text-xs text-mint/40">เข้าชม {page.clicks} ครั้ง</p>
 
       <div className="mt-4 space-y-2">
         {blocks.map((b, i) => (
-          <div key={i} className="flex items-center justify-between rounded-lg border border-ink/10 px-3 py-2 text-sm">
+          <div key={i} className="flex items-center justify-between rounded-lg border border-mint/10 px-3 py-2 text-sm">
             <span className="truncate">
               <span className="font-medium">{b.label}</span>{" "}
-              <span className="text-ink/40">— {b.url}</span>
+              <span className="text-mint/40">— {b.url}</span>
             </span>
             <form action={removeBioBlockAction}>
               <input type="hidden" name="linkId" value={page.id} />
               <input type="hidden" name="index" value={i} />
-              <button className="text-xs text-red-600 hover:underline" type="submit">
+              <button className="text-xs text-red-400 hover:underline" type="submit">
                 ลบ
               </button>
             </form>
           </div>
         ))}
         {blocks.length === 0 && (
-          <p className="text-sm text-ink/40">ยังไม่มีปุ่มลิงก์ในหน้านี้</p>
+          <p className="text-sm text-mint/40">ยังไม่มีปุ่มลิงก์ในหน้านี้</p>
         )}
       </div>
 
@@ -89,7 +97,7 @@ export default function BioPageCard({
         <input className="input" name="url" placeholder="https://..." required />
         <AddBlockButton />
       </form>
-      {addState?.error && <p className="mt-1 text-sm text-red-600">{addState.error}</p>}
+      {addState?.error && <p className="mt-1 text-sm text-red-400">{addState.error}</p>}
     </div>
   );
 }

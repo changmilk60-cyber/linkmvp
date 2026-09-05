@@ -9,8 +9,11 @@ const config: Config = {
     extend: {
       colors: {
         ink: "#14161a",
+        mint: "#eafbea",
         paper: "#faf9f6",
-        accent: "#3d5afe",
+        accent: "#22c55e",
+        night: "#0a0f0d",
+        surface: "#111816",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],

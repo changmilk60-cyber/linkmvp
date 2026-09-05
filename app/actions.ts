@@ -188,6 +188,84 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
   return { success: true };
 }
 
+const TOGGLE_KEYS = ["carousel", "quiz", "countdown", "reviews", "faq"] as const;
+
+export async function updateBioPageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const userId = await getSessionUserId();
+  if (!userId) redirect("/login");
+
+  const linkId = String(formData.get("linkId") || "");
+  const existing = await prisma.link.findFirst({ where: { id: linkId, userId, type: "BIO" } });
+  if (!existing) return { error: "ไม่พบหน้านี้" };
+
+  const title = String(formData.get("title") || "").trim() || "หน้าของฉัน";
+  const bio = String(formData.get("bio") || "").trim();
+  const themeColor = String(formData.get("themeColor") || existing.themeColor || "#3d5afe");
+  const avatarEmoji = String(formData.get("avatarEmoji") || "✨");
+  const fbPixelId = String(formData.get("fbPixelId") || "").trim();
+  const templateInput = String(formData.get("template") || existing.template || "classic");
+  const template = (BIO_TEMPLATES as readonly string[]).includes(templateInput)
+    ? templateInput
+    : "classic";
+  const customCode = String(formData.get("customCode") || "").trim();
+  const fontFamily = String(formData.get("fontFamily") || "").trim();
+
+  if (fbPixelId && !FB_PIXEL_RE.test(fbPixelId)) {
+    return { error: "Facebook Pixel ID ต้องเป็นตัวเลขเท่านั้น (5-20 หลัก)" };
+  }
+  if (customCode.length > 20000) {
+    return { error: "โค้ดกำหนดเองยาวเกินไป (ไม่เกิน 20,000 ตัวอักษร)" };
+  }
+
+  const sectionToggles: Record<string, boolean> = {};
+  for (const key of TOGGLE_KEYS) {
+    sectionToggles[key] = formData.get(`toggle_${key}`) === "on";
+  }
+
+  const reviews: { name: string; text: string }[] = [];
+  for (let i = 0; i < 5; i++) {
+    const name = String(formData.get(`review_name_${i}`) || "").trim();
+    const text = String(formData.get(`review_text_${i}`) || "").trim();
+    if (name || text) reviews.push({ name: name || "ผู้เรียน", text });
+  }
+
+  const faq: { q: string; a: string }[] = [];
+  for (let i = 0; i < 6; i++) {
+    const q = String(formData.get(`faq_q_${i}`) || "").trim();
+    const a = String(formData.get(`faq_a_${i}`) || "").trim();
+    if (q || a) faq.push({ q, a });
+  }
+
+  const newImageFiles = formData.getAll("images").filter((v): v is File => v instanceof File);
+  const newSaved = await saveUploadedImages(newImageFiles);
+  if (!Array.isArray(newSaved)) return newSaved;
+  const existingImages: string[] = existing.images ? JSON.parse(existing.images) : [];
+  const removeImages = formData.getAll("removeImages").map(String);
+  const keptImages = existingImages.filter((u) => !removeImages.includes(u));
+  const allImages = [...keptImages, ...newSaved].slice(0, MAX_IMAGES);
+
+  await prisma.link.update({
+    where: { id: linkId },
+    data: {
+      title,
+      bio,
+      themeColor,
+      avatarEmoji,
+      fbPixelId: fbPixelId || null,
+      template,
+      customCode: customCode || null,
+      fontFamily: fontFamily || null,
+      sectionToggles: JSON.stringify(sectionToggles),
+      reviews: reviews.length > 0 ? JSON.stringify(reviews) : null,
+      faq: faq.length > 0 ? JSON.stringify(faq) : null,
+      images: allImages.length > 0 ? JSON.stringify(allImages) : null,
+    },
+  });
+
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
+}
+
 export async function addBioBlockAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
   if (!userId) redirect("/login");

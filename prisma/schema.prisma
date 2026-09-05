@@ -35,9 +35,13 @@ model Link {
   avatarEmoji String?
   blocks     String?  // JSON string: [{ "label": "...", "url": "..." }]
   fbPixelId  String?  // Facebook Pixel ID for tracking visits/conversions on this bio page
-  template   String?  @default("classic") // "classic" | "service" | "course"
+  template   String?  @default("classic") // "classic" | "service" | "course" | "custom"
   customCode String?  // raw HTML/CSS/JS the owner wants embedded on their bio page
   images     String?  // JSON string: ["/uploads/xxx.jpg", ...] uploaded gallery images
+  fontFamily String?  // Google Font name applied to the course template
+  sectionToggles String? // JSON string: {"carousel":true,"quiz":true,"countdown":true,"reviews":true,"faq":true}
+  reviews    String?  // JSON string: [{ "name": "...", "text": "..." }]
+  faq        String?  // JSON string: [{ "q": "...", "a": "..." }]
 
   clicks     Int      @default(0)
   createdAt  DateTime @default(now())

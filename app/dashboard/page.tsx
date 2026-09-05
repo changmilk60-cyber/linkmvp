@@ -22,6 +22,14 @@ export default async function DashboardPage() {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
+  const totalClicks = links.reduce((sum, l) => sum + l.clicks, 0);
+  const stats = [
+    { label: "ลิงก์ทั้งหมด", value: links.length },
+    { label: "ย่อลิงก์", value: shortLinks.length },
+    { label: "หน้า Bio", value: bioPages.length },
+    { label: "คลิกรวม", value: totalClicks },
+  ];
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <div className="mb-8 flex items-center justify-between">
@@ -29,6 +37,16 @@ export default async function DashboardPage() {
         <form action={logoutAction}>
           <button className="btn btn-outline" type="submit">ออกจากระบบ</button>
         </form>
+      </div>
+
+      {/* STATS */}
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label} className="card text-center">
+            <p className="text-2xl font-extrabold text-accent">{s.value.toLocaleString()}</p>
+            <p className="mt-1 text-xs text-mint/50">{s.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* SHORT LINKS */}
@@ -39,7 +57,7 @@ export default async function DashboardPage() {
         </div>
         <div className="space-y-2">
           {shortLinks.length === 0 && (
-            <p className="text-sm text-ink/50">ยังไม่มีลิงก์ที่ย่อไว้</p>
+            <p className="text-sm text-mint/50">ยังไม่มีลิงก์ที่ย่อไว้</p>
           )}
           {shortLinks.map((l) => (
             <div key={l.id} className="card flex items-center justify-between gap-3">
@@ -50,8 +68,8 @@ export default async function DashboardPage() {
                   </span>
                   <CopyButton text={`${baseUrl}/${l.slug}`} />
                 </div>
-                <p className="truncate text-sm text-ink/50">{l.targetUrl}</p>
-                <p className="mt-1 text-xs text-ink/40">คลิก {l.clicks} ครั้ง</p>
+                <p className="truncate text-sm text-mint/50">{l.targetUrl}</p>
+                <p className="mt-1 text-xs text-mint/40">คลิก {l.clicks} ครั้ง</p>
               </div>
               <DeleteButton linkId={l.id} />
             </div>
@@ -67,7 +85,7 @@ export default async function DashboardPage() {
         </div>
         <div className="space-y-4">
           {bioPages.length === 0 && (
-            <p className="text-sm text-ink/50">ยังไม่มีหน้า Bio</p>
+            <p className="text-sm text-mint/50">ยังไม่มีหน้า Bio</p>
           )}
           {bioPages.map((p) => (
             <BioPageCard key={p.id} page={p} baseUrl={baseUrl} />

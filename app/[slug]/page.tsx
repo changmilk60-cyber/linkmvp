@@ -95,6 +95,10 @@ export default async function SlugPage({
         pixelTags={pixelTags}
         customCodeBlock={customCodeBlock}
         images={images}
+        fontFamily={link.fontFamily}
+        toggles={link.sectionToggles ? JSON.parse(link.sectionToggles) : undefined}
+        reviews={link.reviews ? JSON.parse(link.reviews) : undefined}
+        faq={link.faq ? JSON.parse(link.faq) : undefined}
       />
     );
   }

@@ -2,6 +2,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { createBioPageAction } from "@/app/actions";
+import ColorSwatches from "./ColorSwatches";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -39,8 +40,8 @@ export default function NewBioPageForm() {
         <input className="input" id="bio" name="bio" placeholder="ลิงก์รวมของฉัน" />
       </div>
       <div>
-        <label className="label" htmlFor="themeColor">สีธีม</label>
-        <input className="input h-10" id="themeColor" name="themeColor" type="color" defaultValue="#3d5afe" />
+        <label className="label">สีธีม</label>
+        <ColorSwatches name="themeColor" defaultValue="#3d5afe" />
       </div>
       <div>
         <label className="label" htmlFor="avatarEmoji">ไอคอน (emoji)</label>
@@ -56,7 +57,7 @@ export default function NewBioPageForm() {
           inputMode="numeric"
           pattern="[0-9]*"
         />
-        <p className="mt-1 text-xs text-ink/40">
+        <p className="mt-1 text-xs text-mint/40">
           ใส่ไว้เพื่อติดตามยอดเข้าชม/conversion จาก Facebook Ads บนหน้านี้
         </p>
       </div>
@@ -70,7 +71,7 @@ export default function NewBioPageForm() {
           placeholder="<script>...</script> หรือโค้ด embed อื่น ๆ"
           maxLength={20000}
         />
-        <p className="mt-1 text-xs text-ink/40">
+        <p className="mt-1 text-xs text-mint/40">
           โค้ดนี้จะถูกฝังลงในหน้า Bio ของคุณตรง ๆ และรันจริงกับผู้เข้าชมทุกคน
           ใส่เฉพาะโค้ดที่คุณเขียนเองหรือเชื่อถือแหล่งที่มาเท่านั้น
           หากเลือกเทมเพลต &quot;คัสต้อม&quot; โค้ดนี้จะกลายเป็นเนื้อหาหลักของทั้งหน้า
@@ -86,12 +87,12 @@ export default function NewBioPageForm() {
           accept="image/*"
           multiple
         />
-        <p className="mt-1 text-xs text-ink/40">
+        <p className="mt-1 text-xs text-mint/40">
           ใช้แทนรูปตัวอย่าง/พื้นหลังในเทมเพลตคอร์สเรียนออนไลน์
         </p>
       </div>
       {state?.error && (
-        <p className="text-sm text-red-600 sm:col-span-2">{state.error}</p>
+        <p className="text-sm text-red-400 sm:col-span-2">{state.error}</p>
       )}
       <div className="sm:col-span-2">
         <SubmitButton />

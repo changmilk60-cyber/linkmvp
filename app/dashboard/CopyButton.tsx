@@ -13,7 +13,7 @@ export default function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="shrink-0 rounded-md bg-ink/5 px-2 py-0.5 text-xs text-ink/60 hover:bg-ink/10"
+      className="shrink-0 rounded-md bg-mint/5 px-2 py-0.5 text-xs text-mint/60 hover:bg-mint/10"
     >
       {copied ? "คัดลอกแล้ว" : "คัดลอก"}
     </button>

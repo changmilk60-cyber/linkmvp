@@ -3,11 +3,28 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type Track = { label: string; url: string };
+type Review = { name: string; text: string };
+type Faq = { q: string; a: string };
+type Toggles = {
+  carousel: boolean;
+  quiz: boolean;
+  countdown: boolean;
+  reviews: boolean;
+  faq: boolean;
+};
+
+const DEFAULT_TOGGLES: Toggles = {
+  carousel: true,
+  quiz: true,
+  countdown: true,
+  reviews: true,
+  faq: true,
+};
 
 const DEMO_REVIEWS = [
-  { name: "ผู้เรียนตัวอย่าง 01" },
-  { name: "ผู้เรียนตัวอย่าง 02" },
-  { name: "ผู้เรียนตัวอย่าง 03" },
+  { name: "ผู้เรียนตัวอย่าง 01", text: "ข้อความรีวิวตัวอย่างที่ต้องเปลี่ยนเป็นข้อมูลจริง" },
+  { name: "ผู้เรียนตัวอย่าง 02", text: "ข้อความรีวิวตัวอย่างที่ต้องเปลี่ยนเป็นข้อมูลจริง" },
+  { name: "ผู้เรียนตัวอย่าง 03", text: "ข้อความรีวิวตัวอย่างที่ต้องเปลี่ยนเป็นข้อมูลจริง" },
 ];
 
 const DEMO_FAQ = [
@@ -72,6 +89,10 @@ export default function CourseTemplate({
   pixelTags,
   customCodeBlock,
   images,
+  fontFamily,
+  toggles,
+  reviews,
+  faq,
 }: {
   title: string | null;
   bio: string | null;
@@ -82,7 +103,14 @@ export default function CourseTemplate({
   pixelTags: ReactNode;
   customCodeBlock?: ReactNode;
   images?: string[];
+  fontFamily?: string | null;
+  toggles?: Partial<Toggles>;
+  reviews?: Review[];
+  faq?: Faq[];
 }) {
+  const on = { ...DEFAULT_TOGGLES, ...toggles };
+  const reviewList = reviews && reviews.length > 0 ? reviews : DEMO_REVIEWS;
+  const faqList = faq && faq.length > 0 ? faq : DEMO_FAQ;
   const trackList: Track[] =
     tracks.length > 0
       ? tracks
@@ -136,9 +164,17 @@ export default function CourseTemplate({
   return (
     <main
       className="relative mx-auto min-h-screen max-w-md bg-[#f4f6fb] px-5 pb-16 pt-6"
-      style={{ color: "#1c2540" }}
+      style={{ color: "#1c2540", fontFamily: fontFamily ? `'${fontFamily}', sans-serif` : undefined }}
     >
       {pixelTags}
+      {fontFamily && (
+        <link
+          rel="stylesheet"
+          href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+            fontFamily
+          )}:wght@400;600;700;800&display=swap`}
+        />
+      )}
 
       <div className="fixed left-4 top-4 z-20 flex flex-col gap-2">
         <button
@@ -180,27 +216,29 @@ export default function CourseTemplate({
         </p>
       </div>
 
-      <div className="mt-6 flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
-        {(images && images.length > 0 ? images : [0, 1, 2]).map((item, i) =>
-          typeof item === "string" ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={item}
-              alt=""
-              className="h-40 w-56 flex-shrink-0 rounded-xl object-cover"
-            />
-          ) : (
-            <div
-              key={i}
-              className="h-40 w-56 flex-shrink-0 rounded-xl"
-              style={{
-                background: `linear-gradient(160deg, ${theme}33, ${theme}88)`,
-              }}
-            />
-          )
-        )}
-      </div>
+      {on.carousel && (
+        <div className="mt-6 flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+          {(images && images.length > 0 ? images : [0, 1, 2]).map((item, i) =>
+            typeof item === "string" ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={item}
+                alt=""
+                className="h-40 w-56 flex-shrink-0 rounded-xl object-cover"
+              />
+            ) : (
+              <div
+                key={i}
+                className="h-40 w-56 flex-shrink-0 rounded-xl"
+                style={{
+                  background: `linear-gradient(160deg, ${theme}33, ${theme}88)`,
+                }}
+              />
+            )
+          )}
+        </div>
+      )}
 
       <div className="mt-5 space-y-3">
         {trackList.map((t, i) => (
@@ -217,6 +255,8 @@ export default function CourseTemplate({
         ))}
       </div>
 
+      {on.quiz && (
+      <>
       <p className="mt-4 text-center text-xs text-ink/50">
         ยังไม่แน่ใจว่าแพ็กเกจไหนเหมาะกับคุณ? ทำแบบทดสอบสั้น ๆ ด้านล่างได้เลย
       </p>
@@ -295,7 +335,10 @@ export default function CourseTemplate({
           </a>
         </div>
       </div>
+      </>
+      )}
 
+      {on.countdown && (
       <div className="mt-6 rounded-2xl p-4 text-center text-white" style={{ background: "#1c2540" }}>
         <p className="text-sm font-semibold">รอบสมัครถัดไปปิดใน</p>
         <div className="mt-2 flex justify-center gap-2 text-xl font-mono font-bold">
@@ -312,39 +355,42 @@ export default function CourseTemplate({
           ))}
         </div>
       </div>
+      )}
 
+      {on.reviews && (
+      <>
       <h2 className="mt-8 text-center text-lg font-extrabold" style={{ color: theme }}>
-        รีวิวตัวอย่าง — เปลี่ยนเป็นรีวิวจริงก่อนเผยแพร่
+        รีวิวจากผู้เรียน
       </h2>
       <div className="mt-4 space-y-3">
-        {DEMO_REVIEWS.map((r, i) => (
+        {reviewList.map((r, i) => (
           <div key={i} className="rounded-xl border border-ink/10 bg-white p-4 shadow-sm">
-            <p className="text-sm font-bold">รีวิวตัวอย่าง {String(i + 1).padStart(2, "0")}</p>
             <p className="text-amber-500">★★★★★</p>
-            <p className="mt-1 text-sm text-ink/60">
-              ข้อความรีวิวตัวอย่างที่ต้องเปลี่ยนเป็นข้อมูลจริง
-            </p>
+            <p className="mt-1 text-sm text-ink/60">{r.text}</p>
             <div className="mt-3 flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/10 text-xs">
                 {r.name.charAt(0)}
               </div>
               <div className="text-xs">
                 <p className="font-semibold">{r.name}</p>
-                <p className="text-ink/40">ผู้เรียนตัวอย่าง</p>
               </div>
             </div>
           </div>
         ))}
       </div>
+      </>
+      )}
 
+      {on.faq && (
       <div className="mt-8 space-y-2">
-        {DEMO_FAQ.map((f, i) => (
+        {faqList.map((f, i) => (
           <details key={i} className="rounded-lg border border-ink/10 bg-white px-4 py-3">
             <summary className="cursor-pointer text-sm font-semibold">{f.q}</summary>
             <p className="mt-2 text-xs text-ink/60">{f.a}</p>
           </details>
         ))}
       </div>
+      )}
 
       <a
         href={ctaUrl}
