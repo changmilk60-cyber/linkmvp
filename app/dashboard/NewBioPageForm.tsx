@@ -74,6 +74,20 @@ export default function NewBioPageForm() {
           ใส่เฉพาะโค้ดที่คุณเขียนเองหรือเชื่อถือแหล่งที่มาเท่านั้น
         </p>
       </div>
+      <div className="sm:col-span-2">
+        <label className="label" htmlFor="images">รูปภาพประกอบ (สูงสุด 6 รูป, ไม่เกิน 5MB ต่อรูป)</label>
+        <input
+          className="input"
+          id="images"
+          name="images"
+          type="file"
+          accept="image/*"
+          multiple
+        />
+        <p className="mt-1 text-xs text-ink/40">
+          ใช้แทนรูปตัวอย่าง/พื้นหลังในเทมเพลตคอร์สเรียนออนไลน์
+        </p>
+      </div>
       {state?.error && (
         <p className="text-sm text-red-600 sm:col-span-2">{state.error}</p>
       )}

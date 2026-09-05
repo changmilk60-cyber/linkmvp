@@ -71,6 +71,7 @@ export default function CourseTemplate({
   ctaUrl,
   pixelTags,
   customCodeBlock,
+  images,
 }: {
   title: string | null;
   bio: string | null;
@@ -80,6 +81,7 @@ export default function CourseTemplate({
   ctaUrl: string;
   pixelTags: ReactNode;
   customCodeBlock?: ReactNode;
+  images?: string[];
 }) {
   const trackList: Track[] =
     tracks.length > 0
@@ -179,15 +181,25 @@ export default function CourseTemplate({
       </div>
 
       <div className="mt-6 flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="h-40 w-56 flex-shrink-0 rounded-xl"
-            style={{
-              background: `linear-gradient(160deg, ${theme}33, ${theme}88)`,
-            }}
-          />
-        ))}
+        {(images && images.length > 0 ? images : [0, 1, 2]).map((item, i) =>
+          typeof item === "string" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={item}
+              alt=""
+              className="h-40 w-56 flex-shrink-0 rounded-xl object-cover"
+            />
+          ) : (
+            <div
+              key={i}
+              className="h-40 w-56 flex-shrink-0 rounded-xl"
+              style={{
+                background: `linear-gradient(160deg, ${theme}33, ${theme}88)`,
+              }}
+            />
+          )
+        )}
       </div>
 
       <div className="mt-5 space-y-3">

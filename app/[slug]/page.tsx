@@ -61,6 +61,7 @@ export default async function SlugPage({
   );
 
   const customCodeBlock = link.customCode && <CustomCodeBlock html={link.customCode} />;
+  const images: string[] = link.images ? JSON.parse(link.images) : [];
 
   if (link.template === "course") {
     return (
@@ -73,6 +74,7 @@ export default async function SlugPage({
         ctaUrl={blocks[0]?.url || "#"}
         pixelTags={pixelTags}
         customCodeBlock={customCodeBlock}
+        images={images}
       />
     );
   }

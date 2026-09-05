@@ -37,6 +37,7 @@ model Link {
   fbPixelId  String?  // Facebook Pixel ID for tracking visits/conversions on this bio page
   template   String?  @default("classic") // "classic" | "service" | "course"
   customCode String?  // raw HTML/CSS/JS the owner wants embedded on their bio page
+  images     String?  // JSON string: ["/uploads/xxx.jpg", ...] uploaded gallery images
 
   clicks     Int      @default(0)
   createdAt  DateTime @default(now())

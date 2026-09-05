@@ -11,12 +11,44 @@ import {
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
 const FB_PIXEL_RE = /^\d{5,20}$/;
 const BIO_TEMPLATES = ["classic", "service", "course"] as const;
+const MAX_IMAGES = 6;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 type ActionState = { error?: string; success?: boolean };
+
+async function saveUploadedImages(files: File[]): Promise<string[] | { error: string }> {
+  const real = files.filter((f) => f && f.size > 0);
+  if (real.length === 0) return [];
+  if (real.length > MAX_IMAGES) {
+    return { error: `อัปโหลดรูปได้ไม่เกิน ${MAX_IMAGES} รูป` };
+  }
+
+  const urls: string[] = [];
+  await mkdir(UPLOAD_DIR, { recursive: true });
+
+  for (const file of real) {
+    if (!file.type.startsWith("image/")) {
+      return { error: "อัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น" };
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      return { error: "แต่ละรูปต้องมีขนาดไม่เกิน 5MB" };
+    }
+    const ext = (file.type.split("/")[1] || "jpg").replace(/[^a-z0-9]/gi, "");
+    const filename = `${nanoid(12)}.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(path.join(UPLOAD_DIR, filename), buffer);
+    urls.push(`/uploads/${filename}`);
+  }
+
+  return urls;
+}
 
 function cleanSlug(input: string) {
   return input.trim().toLowerCase().replace(/\s+/g, "-");
@@ -131,6 +163,10 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
   const exists = await prisma.link.findUnique({ where: { slug } });
   if (exists) return { error: "ตัวย่อ URL นี้ถูกใช้ไปแล้ว ลองอันอื่น" };
 
+  const imageFiles = formData.getAll("images").filter((v): v is File => v instanceof File);
+  const savedImages = await saveUploadedImages(imageFiles);
+  if (!Array.isArray(savedImages)) return savedImages;
+
   await prisma.link.create({
     data: {
       slug,
@@ -143,6 +179,7 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
       fbPixelId: fbPixelId || null,
       template,
       customCode: customCode || null,
+      images: savedImages.length > 0 ? JSON.stringify(savedImages) : null,
       userId,
     },
   });
