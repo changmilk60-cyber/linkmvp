@@ -4,7 +4,16 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import EditBioPageForm from "./EditBioPageForm";
 
-const DEFAULT_TOGGLES = { carousel: true, quiz: true, countdown: true, reviews: true, faq: true };
+const DEFAULT_TOGGLES = {
+  carousel: true,
+  quiz: true,
+  countdown: true,
+  reviews: true,
+  faq: true,
+  promotions: true,
+  pricing: true,
+  contact: true,
+};
 
 export default async function EditBioPagePage({ params }: { params: { id: string } }) {
   const userId = await getSessionUserId();
@@ -40,6 +49,13 @@ export default async function EditBioPagePage({ params }: { params: { id: string
         toggles={toggles}
         reviews={page.reviews ? JSON.parse(page.reviews) : []}
         faq={page.faq ? JSON.parse(page.faq) : []}
+        promotions={page.promotions ? JSON.parse(page.promotions) : []}
+        pricing={page.pricing ? JSON.parse(page.pricing) : []}
+        contact={
+          page.contact
+            ? JSON.parse(page.contact)
+            : { phone: "", line: "", email: "", address: "" }
+        }
       />
     </main>
   );

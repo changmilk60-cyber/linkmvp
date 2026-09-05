@@ -5,12 +5,18 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 type Track = { label: string; url: string };
 type Review = { name: string; text: string };
 type Faq = { q: string; a: string };
+type Promotion = { label: string; detail: string };
+type PricingPlan = { name: string; price: string; features: string; highlight: boolean };
+type Contact = { phone: string; line: string; email: string; address: string };
 type Toggles = {
   carousel: boolean;
   quiz: boolean;
   countdown: boolean;
   reviews: boolean;
   faq: boolean;
+  promotions: boolean;
+  pricing: boolean;
+  contact: boolean;
 };
 
 const DEFAULT_TOGGLES: Toggles = {
@@ -19,6 +25,9 @@ const DEFAULT_TOGGLES: Toggles = {
   countdown: true,
   reviews: true,
   faq: true,
+  promotions: true,
+  pricing: true,
+  contact: true,
 };
 
 const DEMO_REVIEWS = [
@@ -93,6 +102,9 @@ export default function CourseTemplate({
   toggles,
   reviews,
   faq,
+  promotions,
+  pricing,
+  contact,
 }: {
   title: string | null;
   bio: string | null;
@@ -107,10 +119,16 @@ export default function CourseTemplate({
   toggles?: Partial<Toggles>;
   reviews?: Review[];
   faq?: Faq[];
+  promotions?: Promotion[];
+  pricing?: PricingPlan[];
+  contact?: Contact | null;
 }) {
   const on = { ...DEFAULT_TOGGLES, ...toggles };
   const reviewList = reviews && reviews.length > 0 ? reviews : DEMO_REVIEWS;
   const faqList = faq && faq.length > 0 ? faq : DEMO_FAQ;
+  const promoList = promotions || [];
+  const pricingList = pricing || [];
+  const hasContact = contact && Object.values(contact).some(Boolean);
   const trackList: Track[] =
     tracks.length > 0
       ? tracks
@@ -255,6 +273,24 @@ export default function CourseTemplate({
         ))}
       </div>
 
+      {on.promotions && promoList.length > 0 && (
+        <div className="mt-5 space-y-2">
+          {promoList.map((p, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3"
+              style={{ borderColor: theme + "40", background: theme + "0d" }}
+            >
+              <span className="text-lg">🔥</span>
+              <div className="min-w-0">
+                <p className="font-bold" style={{ color: theme }}>{p.label}</p>
+                {p.detail && <p className="text-xs text-ink/60">{p.detail}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {on.quiz && (
       <>
       <p className="mt-4 text-center text-xs text-ink/50">
@@ -357,6 +393,47 @@ export default function CourseTemplate({
       </div>
       )}
 
+      {on.pricing && pricingList.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-center text-lg font-extrabold" style={{ color: theme }}>
+            แพ็กเกจราคา
+          </h2>
+          <div className="mt-4 space-y-3">
+            {pricingList.map((p, i) => (
+              <div
+                key={i}
+                className="rounded-xl border bg-white p-4 shadow-sm"
+                style={
+                  p.highlight
+                    ? { borderColor: theme, boxShadow: `0 0 0 2px ${theme}33` }
+                    : { borderColor: "#e5e7eb" }
+                }
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-bold">{p.name}</p>
+                  {p.highlight && (
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                      style={{ background: theme }}
+                    >
+                      แนะนำ
+                    </span>
+                  )}
+                </div>
+                {p.price && (
+                  <p className="mt-1 text-xl font-extrabold" style={{ color: theme }}>
+                    {p.price}
+                  </p>
+                )}
+                {p.features && (
+                  <p className="mt-2 whitespace-pre-line text-xs text-ink/60">{p.features}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {on.reviews && (
       <>
       <h2 className="mt-8 text-center text-lg font-extrabold" style={{ color: theme }}>
@@ -390,6 +467,26 @@ export default function CourseTemplate({
           </details>
         ))}
       </div>
+      )}
+
+      {on.contact && hasContact && contact && (
+        <div className="mt-8 rounded-2xl border border-ink/10 bg-white p-4">
+          <h2 className="text-sm font-bold" style={{ color: theme }}>ช่องทางติดต่อ</h2>
+          <div className="mt-2 space-y-1 text-sm text-ink/70">
+            {contact.phone && (
+              <p>
+                📞 <a href={`tel:${contact.phone}`} className="underline">{contact.phone}</a>
+              </p>
+            )}
+            {contact.line && <p>💬 LINE: {contact.line}</p>}
+            {contact.email && (
+              <p>
+                ✉️ <a href={`mailto:${contact.email}`} className="underline">{contact.email}</a>
+              </p>
+            )}
+            {contact.address && <p>📍 {contact.address}</p>}
+          </div>
+        </div>
       )}
 
       <a

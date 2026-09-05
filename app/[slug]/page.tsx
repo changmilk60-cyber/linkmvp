@@ -99,6 +99,9 @@ export default async function SlugPage({
         toggles={link.sectionToggles ? JSON.parse(link.sectionToggles) : undefined}
         reviews={link.reviews ? JSON.parse(link.reviews) : undefined}
         faq={link.faq ? JSON.parse(link.faq) : undefined}
+        promotions={link.promotions ? JSON.parse(link.promotions) : undefined}
+        pricing={link.pricing ? JSON.parse(link.pricing) : undefined}
+        contact={link.contact ? JSON.parse(link.contact) : undefined}
       />
     );
   }

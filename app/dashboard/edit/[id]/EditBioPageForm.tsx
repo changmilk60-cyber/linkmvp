@@ -6,12 +6,18 @@ import ColorSwatches from "../../ColorSwatches";
 
 type Review = { name: string; text: string };
 type Faq = { q: string; a: string };
+type Promotion = { label: string; detail: string };
+type PricingPlan = { name: string; price: string; features: string; highlight: boolean };
+type Contact = { phone: string; line: string; email: string; address: string };
 type Toggles = {
   carousel: boolean;
   quiz: boolean;
   countdown: boolean;
   reviews: boolean;
   faq: boolean;
+  promotions: boolean;
+  pricing: boolean;
+  contact: boolean;
 };
 
 const FONT_OPTIONS = ["", "Prompt", "Kanit", "Sarabun", "Mitr", "Chonburi"];
@@ -39,6 +45,9 @@ export default function EditBioPageForm({
   toggles,
   reviews,
   faq,
+  promotions,
+  pricing,
+  contact,
 }: {
   linkId: string;
   title: string;
@@ -53,10 +62,18 @@ export default function EditBioPageForm({
   toggles: Toggles;
   reviews: Review[];
   faq: Faq[];
+  promotions: Promotion[];
+  pricing: PricingPlan[];
+  contact: Contact;
 }) {
   const [state, formAction] = useFormState(updateBioPageAction, {});
   const reviewRows = [...reviews, ...Array(5).fill({ name: "", text: "" })].slice(0, 5);
   const faqRows = [...faq, ...Array(6).fill({ q: "", a: "" })].slice(0, 6);
+  const promoRows = [...promotions, ...Array(4).fill({ label: "", detail: "" })].slice(0, 4);
+  const priceRows = [
+    ...pricing,
+    ...Array(3).fill({ name: "", price: "", features: "", highlight: false }),
+  ].slice(0, 3);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -121,6 +138,9 @@ export default function EditBioPageForm({
             ["countdown", "นับถอยหลัง"],
             ["reviews", "รีวิว"],
             ["faq", "คำถามที่พบบ่อย"],
+            ["promotions", "โปรโมชั่น"],
+            ["pricing", "แพ็กเกจราคา"],
+            ["contact", "ข้อมูลติดต่อ"],
           ] as const).map(([key, label]) => (
             <label key={key} className="flex items-center gap-2 rounded-lg border border-accent/15 px-3 py-2 text-sm">
               <input type="checkbox" name={`toggle_${key}`} defaultChecked={toggles[key]} className="accent-accent" />
@@ -188,6 +208,61 @@ export default function EditBioPageForm({
               <textarea className="input" name={`faq_a_${i}`} defaultValue={f.a} placeholder="คำตอบ" rows={2} />
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="mb-3 text-sm font-semibold text-mint/80">โปรโมชั่น (เว้นว่างแถวที่ไม่ใช้)</h2>
+        <div className="space-y-3">
+          {promoRows.map((p, i) => (
+            <div key={i} className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+              <input className="input" name={`promo_label_${i}`} defaultValue={p.label} placeholder="ชื่อโปรโมชั่น" />
+              <input className="input" name={`promo_detail_${i}`} defaultValue={p.detail} placeholder="รายละเอียด เช่น ลด 20% ถึงสิ้นเดือนนี้" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="mb-3 text-sm font-semibold text-mint/80">แพ็กเกจราคา (เว้นว่างแถวที่ไม่ใช้)</h2>
+        <div className="space-y-3">
+          {priceRows.map((p, i) => (
+            <div key={i} className="grid gap-2 rounded-lg border border-accent/10 p-3 sm:grid-cols-[1fr_1fr]">
+              <input className="input" name={`price_name_${i}`} defaultValue={p.name} placeholder="ชื่อแพ็กเกจ เช่น Self-paced" />
+              <input className="input" name={`price_price_${i}`} defaultValue={p.price} placeholder="ราคา เช่น 1,990 บาท" />
+              <textarea
+                className="input sm:col-span-2"
+                name={`price_features_${i}`}
+                defaultValue={p.features}
+                placeholder="รายละเอียด/สิทธิประโยชน์ (ขึ้นบรรทัดใหม่ได้)"
+                rows={2}
+              />
+              <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                <input type="checkbox" name={`price_highlight_${i}`} defaultChecked={p.highlight} className="accent-accent" />
+                แนะนำ (เน้นแพ็กเกจนี้)
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card grid gap-3 sm:grid-cols-2">
+        <h2 className="text-sm font-semibold text-mint/80 sm:col-span-2">ข้อมูลติดต่อ</h2>
+        <div>
+          <label className="label" htmlFor="contact_phone">เบอร์โทร</label>
+          <input className="input" id="contact_phone" name="contact_phone" defaultValue={contact.phone} placeholder="08x-xxx-xxxx" />
+        </div>
+        <div>
+          <label className="label" htmlFor="contact_line">LINE ID / ลิงก์ LINE</label>
+          <input className="input" id="contact_line" name="contact_line" defaultValue={contact.line} placeholder="@yourline" />
+        </div>
+        <div>
+          <label className="label" htmlFor="contact_email">อีเมล</label>
+          <input className="input" id="contact_email" name="contact_email" defaultValue={contact.email} placeholder="you@example.com" />
+        </div>
+        <div>
+          <label className="label" htmlFor="contact_address">ที่อยู่ / พื้นที่ให้บริการ</label>
+          <input className="input" id="contact_address" name="contact_address" defaultValue={contact.address} />
         </div>
       </div>
 

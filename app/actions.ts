@@ -188,7 +188,16 @@ export async function createBioPageAction(_prevState: ActionState, formData: For
   return { success: true };
 }
 
-const TOGGLE_KEYS = ["carousel", "quiz", "countdown", "reviews", "faq"] as const;
+const TOGGLE_KEYS = [
+  "carousel",
+  "quiz",
+  "countdown",
+  "reviews",
+  "faq",
+  "promotions",
+  "pricing",
+  "contact",
+] as const;
 
 export async function updateBioPageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
@@ -236,6 +245,30 @@ export async function updateBioPageAction(_prevState: ActionState, formData: For
     if (q || a) faq.push({ q, a });
   }
 
+  const promotions: { label: string; detail: string }[] = [];
+  for (let i = 0; i < 4; i++) {
+    const label = String(formData.get(`promo_label_${i}`) || "").trim();
+    const detail = String(formData.get(`promo_detail_${i}`) || "").trim();
+    if (label || detail) promotions.push({ label, detail });
+  }
+
+  const pricing: { name: string; price: string; features: string; highlight: boolean }[] = [];
+  for (let i = 0; i < 3; i++) {
+    const name = String(formData.get(`price_name_${i}`) || "").trim();
+    const price = String(formData.get(`price_price_${i}`) || "").trim();
+    const features = String(formData.get(`price_features_${i}`) || "").trim();
+    const highlight = formData.get(`price_highlight_${i}`) === "on";
+    if (name || price || features) pricing.push({ name, price, features, highlight });
+  }
+
+  const contact = {
+    phone: String(formData.get("contact_phone") || "").trim(),
+    line: String(formData.get("contact_line") || "").trim(),
+    email: String(formData.get("contact_email") || "").trim(),
+    address: String(formData.get("contact_address") || "").trim(),
+  };
+  const hasContact = Object.values(contact).some(Boolean);
+
   const newImageFiles = formData.getAll("images").filter((v): v is File => v instanceof File);
   const newSaved = await saveUploadedImages(newImageFiles);
   if (!Array.isArray(newSaved)) return newSaved;
@@ -258,6 +291,9 @@ export async function updateBioPageAction(_prevState: ActionState, formData: For
       sectionToggles: JSON.stringify(sectionToggles),
       reviews: reviews.length > 0 ? JSON.stringify(reviews) : null,
       faq: faq.length > 0 ? JSON.stringify(faq) : null,
+      promotions: promotions.length > 0 ? JSON.stringify(promotions) : null,
+      pricing: pricing.length > 0 ? JSON.stringify(pricing) : null,
+      contact: hasContact ? JSON.stringify(contact) : null,
       images: allImages.length > 0 ? JSON.stringify(allImages) : null,
     },
   });

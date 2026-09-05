@@ -39,9 +39,12 @@ model Link {
   customCode String?  // raw HTML/CSS/JS the owner wants embedded on their bio page
   images     String?  // JSON string: ["/uploads/xxx.jpg", ...] uploaded gallery images
   fontFamily String?  // Google Font name applied to the course template
-  sectionToggles String? // JSON string: {"carousel":true,"quiz":true,"countdown":true,"reviews":true,"faq":true}
+  sectionToggles String? // JSON string: {"carousel":true,"quiz":true,"countdown":true,"reviews":true,"faq":true,"promotions":true,"pricing":true,"contact":true}
   reviews    String?  // JSON string: [{ "name": "...", "text": "..." }]
   faq        String?  // JSON string: [{ "q": "...", "a": "..." }]
+  promotions String?  // JSON string: [{ "label": "...", "detail": "..." }]
+  pricing    String?  // JSON string: [{ "name": "...", "price": "...", "features": "...", "highlight": true }]
+  contact    String?  // JSON string: { "phone": "...", "line": "...", "email": "...", "address": "..." }
 
   clicks     Int      @default(0)
   createdAt  DateTime @default(now())
