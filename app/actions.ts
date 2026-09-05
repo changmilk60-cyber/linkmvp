@@ -16,7 +16,7 @@ import path from "path";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
 const FB_PIXEL_RE = /^\d{5,20}$/;
-const BIO_TEMPLATES = ["classic", "service", "course"] as const;
+const BIO_TEMPLATES = ["classic", "service", "course", "custom"] as const;
 const MAX_IMAGES = 6;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");

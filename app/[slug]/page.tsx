@@ -63,6 +63,26 @@ export default async function SlugPage({
   const customCodeBlock = link.customCode && <CustomCodeBlock html={link.customCode} />;
   const images: string[] = link.images ? JSON.parse(link.images) : [];
 
+  if (link.template === "custom") {
+    return (
+      <main className="mx-auto min-h-screen max-w-md bg-white">
+        {pixelTags}
+        {link.customCode ? (
+          customCodeBlock
+        ) : (
+          <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+            <p className="text-sm text-ink/40">
+              หน้านี้ใช้เทมเพลต &quot;คัสต้อม&quot; แต่ยังไม่ได้ใส่โค้ดกำหนดเอง
+            </p>
+            <p className="mt-1 text-xs text-ink/30">
+              ไปที่แดชบอร์ด แล้วเพิ่มโค้ดในช่อง &quot;โค้ดกำหนดเอง (Custom Code)&quot;
+            </p>
+          </div>
+        )}
+      </main>
+    );
+  }
+
   if (link.template === "course") {
     return (
       <CourseTemplate

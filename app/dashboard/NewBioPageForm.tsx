@@ -27,6 +27,7 @@ export default function NewBioPageForm() {
           <option value="classic">มาตรฐาน</option>
           <option value="service">ธุรกิจบริการ</option>
           <option value="course">คอร์สเรียนออนไลน์</option>
+          <option value="custom">คัสต้อม (กำหนดเอง)</option>
         </select>
       </div>
       <div>
@@ -72,6 +73,7 @@ export default function NewBioPageForm() {
         <p className="mt-1 text-xs text-ink/40">
           โค้ดนี้จะถูกฝังลงในหน้า Bio ของคุณตรง ๆ และรันจริงกับผู้เข้าชมทุกคน
           ใส่เฉพาะโค้ดที่คุณเขียนเองหรือเชื่อถือแหล่งที่มาเท่านั้น
+          หากเลือกเทมเพลต &quot;คัสต้อม&quot; โค้ดนี้จะกลายเป็นเนื้อหาหลักของทั้งหน้า
         </p>
       </div>
       <div className="sm:col-span-2">

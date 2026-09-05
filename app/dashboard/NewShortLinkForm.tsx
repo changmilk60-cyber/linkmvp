@@ -28,8 +28,8 @@ export default function NewShortLinkForm() {
         />
       </div>
       <div>
-        <label className="label" htmlFor="slug">ตัวย่อ (ไม่ใส่ = สุ่มให้)</label>
-        <input className="input" id="slug" name="slug" placeholder="promo-สิงหา" />
+        <label className="label" htmlFor="shortSlug">ตัวย่อ (ไม่ใส่ = สุ่มให้)</label>
+        <input className="input" id="shortSlug" name="slug" placeholder="promo-สิงหา" />
       </div>
       <SubmitButton />
       {state?.error && (
