@@ -13,53 +13,45 @@ import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { DEFAULT_SECTIONS, parseSections, type SectionEntry, type SectionKey } from "@/lib/sections";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
-const FB_PIXEL_RE = /^\d{5,20}$/;
-const BIO_TEMPLATES = ["classic", "service", "course", "custom"] as const;
-const MAX_IMAGES = 6;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 type ActionState = { error?: string; success?: boolean };
 
-async function saveUploadedImages(files: File[]): Promise<string[] | { error: string }> {
-  const real = files.filter((f) => f && f.size > 0);
-  if (real.length === 0) return [];
-  if (real.length > MAX_IMAGES) {
-    return { error: `อัปโหลดรูปได้ไม่เกิน ${MAX_IMAGES} รูป` };
-  }
-
-  const urls: string[] = [];
-  await mkdir(UPLOAD_DIR, { recursive: true });
-
-  for (const file of real) {
-    if (!file.type.startsWith("image/")) {
-      return { error: "อัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น" };
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      return { error: "แต่ละรูปต้องมีขนาดไม่เกิน 5MB" };
-    }
-    const ext = (file.type.split("/")[1] || "jpg").replace(/[^a-z0-9]/gi, "");
-    const filename = `${nanoid(12)}.${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(UPLOAD_DIR, filename), buffer);
-    urls.push(`/uploads/${filename}`);
-  }
-
-  return urls;
+function cleanSlug(input: string) {
+  return input.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, 32);
 }
 
-function cleanSlug(input: string) {
-  return input.trim().toLowerCase().replace(/\s+/g, "-");
+async function saveUpload(file: FormDataEntryValue | null): Promise<string | null | { error: string }> {
+  if (!(file instanceof File) || file.size === 0) return null;
+  if (!file.type.startsWith("image/")) return { error: "อัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น" };
+  if (file.size > MAX_IMAGE_BYTES) return { error: "แต่ละรูปต้องมีขนาดไม่เกิน 5MB" };
+  const ext = (file.type.split("/")[1] || "jpg").replace(/[^a-z0-9]/gi, "");
+  const filename = `${nanoid(12)}.${ext}`;
+  await mkdir(UPLOAD_DIR, { recursive: true });
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(path.join(UPLOAD_DIR, filename), buffer);
+  return `/uploads/${filename}`;
 }
 
 // ---------- AUTH ----------
 
+async function uniqueSlugFromEmail(email: string) {
+  const base = cleanSlug(email.split("@")[0] || "page") || "page";
+  let slug = base;
+  let n = 1;
+  // eslint-disable-next-line no-await-in-loop
+  while (await prisma.page.findUnique({ where: { slug } })) {
+    slug = `${base}-${++n}`;
+  }
+  return slug;
+}
+
 export async function registerAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const email = String(formData.get("email") || "")
-    .trim()
-    .toLowerCase();
+  const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
 
   if (!email || !password || password.length < 6) {
@@ -67,13 +59,18 @@ export async function registerAction(_prevState: ActionState, formData: FormData
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return { error: "อีเมลนี้ถูกใช้งานแล้ว" };
-  }
+  if (existing) return { error: "อีเมลนี้ถูกใช้งานแล้ว" };
 
   const passwordHash = await hashPassword(password);
-  const user = await prisma.user.create({
-    data: { email, passwordHash },
+  const user = await prisma.user.create({ data: { email, passwordHash } });
+
+  const slug = await uniqueSlugFromEmail(email);
+  await prisma.page.create({
+    data: {
+      slug,
+      userId: user.id,
+      sections: JSON.stringify(DEFAULT_SECTIONS),
+    },
   });
 
   await createSession(user.id);
@@ -81,9 +78,7 @@ export async function registerAction(_prevState: ActionState, formData: FormData
 }
 
 export async function loginAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const email = String(formData.get("email") || "")
-    .trim()
-    .toLowerCase();
+  const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
 
   const user = await prisma.user.findUnique({ where: { email } });
@@ -101,261 +96,273 @@ export async function logoutAction() {
   redirect("/login");
 }
 
-// ---------- SHORT LINKS ----------
-
-export async function createShortLinkAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/login");
-
-  const targetUrl = String(formData.get("targetUrl") || "").trim();
-  let slug = cleanSlug(String(formData.get("slug") || ""));
-
-  if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
-    return { error: "ใส่ URL ปลายทางให้ถูกต้อง (ต้องขึ้นต้นด้วย http:// หรือ https://)" };
-  }
-
-  if (!slug) {
-    slug = nanoid(7);
-  } else if (!SLUG_RE.test(slug)) {
-    return { error: "ตัวย่อลิงก์ใช้ได้เฉพาะ a-z, 0-9, - และ _ (3-32 ตัวอักษร)" };
-  }
-
-  const exists = await prisma.link.findUnique({ where: { slug } });
-  if (exists) return { error: "ตัวย่อลิงก์นี้ถูกใช้ไปแล้ว ลองอันอื่น" };
-
-  await prisma.link.create({
-    data: { slug, type: "SHORT", targetUrl, userId },
+// Every logged-in user has exactly one Page (the one "หลังบ้านแก้เว็บ" admin
+// manages). Older accounts that predate this field, or any edge case where
+// creation above didn't run, get one lazily here.
+export async function getOrCreateOwnPage(userId: string) {
+  const existing = await prisma.page.findFirst({ where: { userId } });
+  if (existing) return existing;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const slug = await uniqueSlugFromEmail(user?.email || nanoid(6));
+  return prisma.page.create({
+    data: { slug, userId, sections: JSON.stringify(DEFAULT_SECTIONS) },
   });
-
-  revalidatePath("/dashboard");
-  return { success: true };
 }
 
-// ---------- BIO PAGES ----------
+// ---------- URL rename ----------
 
-export async function createBioPageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function renameSlugAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
   if (!userId) redirect("/login");
 
-  let slug = cleanSlug(String(formData.get("slug") || ""));
-  const title = String(formData.get("title") || "").trim() || "หน้าของฉัน";
-  const bio = String(formData.get("bio") || "").trim();
-  const themeColor = String(formData.get("themeColor") || "#3d5afe");
-  const avatarEmoji = String(formData.get("avatarEmoji") || "✨");
-  const fbPixelId = String(formData.get("fbPixelId") || "").trim();
-  const templateInput = String(formData.get("template") || "classic");
-  const template = (BIO_TEMPLATES as readonly string[]).includes(templateInput)
-    ? templateInput
-    : "classic";
-  const customCode = String(formData.get("customCode") || "").trim();
+  const pageId = String(formData.get("pageId") || "");
+  const newSlugRaw = String(formData.get("newSlug") || "");
+  const confirmPassword = String(formData.get("confirmPassword") || "");
 
-  if (!slug) return { error: "ใส่ตัวย่อ URL สำหรับหน้า Bio" };
-  if (!SLUG_RE.test(slug)) {
+  const page = await prisma.page.findFirst({ where: { id: pageId, userId } });
+  if (!page) return { error: "ไม่พบหน้านี้" };
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !(await verifyPassword(confirmPassword, user.passwordHash))) {
+    return { error: "รหัสผ่านไม่ถูกต้อง" };
+  }
+
+  const newSlug = cleanSlug(newSlugRaw);
+  if (!SLUG_RE.test(newSlug)) {
     return { error: "ตัวย่อ URL ใช้ได้เฉพาะ a-z, 0-9, - และ _ (3-32 ตัวอักษร)" };
   }
-  if (fbPixelId && !FB_PIXEL_RE.test(fbPixelId)) {
-    return { error: "Facebook Pixel ID ต้องเป็นตัวเลขเท่านั้น (5-20 หลัก)" };
-  }
-  if (customCode.length > 20000) {
-    return { error: "โค้ดกำหนดเองยาวเกินไป (ไม่เกิน 20,000 ตัวอักษร)" };
-  }
+  if (newSlug === page.slug) return { error: "ชื่อ URL ใหม่ต้องไม่ซ้ำกับชื่อเดิม" };
 
-  const exists = await prisma.link.findUnique({ where: { slug } });
+  const exists = await prisma.page.findUnique({ where: { slug: newSlug } });
   if (exists) return { error: "ตัวย่อ URL นี้ถูกใช้ไปแล้ว ลองอันอื่น" };
 
-  const imageFiles = formData.getAll("images").filter((v): v is File => v instanceof File);
-  const savedImages = await saveUploadedImages(imageFiles);
-  if (!Array.isArray(savedImages)) return savedImages;
-
-  await prisma.link.create({
-    data: {
-      slug,
-      type: "BIO",
-      title,
-      bio,
-      themeColor,
-      avatarEmoji,
-      blocks: "[]",
-      fbPixelId: fbPixelId || null,
-      template,
-      customCode: customCode || null,
-      images: savedImages.length > 0 ? JSON.stringify(savedImages) : null,
-      userId,
-    },
-  });
-
+  await prisma.page.update({ where: { id: page.id }, data: { slug: newSlug } });
   revalidatePath("/dashboard");
   return { success: true };
 }
 
-const TOGGLE_KEYS = [
-  "carousel",
-  "quiz",
-  "countdown",
-  "reviews",
-  "faq",
-  "promotions",
-  "pricing",
-  "contact",
-] as const;
+// ---------- reorder ----------
 
-export async function updateBioPageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function moveSectionAction(index: number, direction: "up" | "down", formData: FormData) {
+  const userId = await getSessionUserId();
+  if (!userId) redirect("/login");
+  const pageId = String(formData.get("pageId") || "");
+  const page = await prisma.page.findFirst({ where: { id: pageId, userId } });
+  if (!page) return;
+
+  const sections = parseSections(page.sections);
+  const swapWith = direction === "up" ? index - 1 : index + 1;
+  if (swapWith < 0 || swapWith >= sections.length) return;
+  [sections[index], sections[swapWith]] = [sections[swapWith], sections[index]];
+
+  await prisma.page.update({ where: { id: page.id }, data: { sections: JSON.stringify(sections) } });
+  revalidatePath("/dashboard");
+}
+
+// ---------- main settings save (the one big "บันทึกทั้งหมด" form) ----------
+
+const NUM = (fd: FormData, k: string) => {
+  const v = Number(fd.get(k));
+  return Number.isFinite(v) ? v : undefined;
+};
+const STR = (fd: FormData, k: string) => {
+  const v = String(fd.get(k) ?? "").trim();
+  return v || undefined;
+};
+
+export async function saveSettingsAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
   if (!userId) redirect("/login");
 
-  const linkId = String(formData.get("linkId") || "");
-  const existing = await prisma.link.findFirst({ where: { id: linkId, userId, type: "BIO" } });
-  if (!existing) return { error: "ไม่พบหน้านี้" };
+  const pageId = String(formData.get("pageId") || "");
+  const page = await prisma.page.findFirst({ where: { id: pageId, userId } });
+  if (!page) return { error: "ไม่พบหน้านี้" };
 
-  const title = String(formData.get("title") || "").trim() || "หน้าของฉัน";
-  const bio = String(formData.get("bio") || "").trim();
-  const themeColor = String(formData.get("themeColor") || existing.themeColor || "#3d5afe");
-  const avatarEmoji = String(formData.get("avatarEmoji") || "✨");
-  const fbPixelId = String(formData.get("fbPixelId") || "").trim();
-  const templateInput = String(formData.get("template") || existing.template || "classic");
-  const template = (BIO_TEMPLATES as readonly string[]).includes(templateInput)
-    ? templateInput
-    : "classic";
-  const customCode = String(formData.get("customCode") || "").trim();
-  const fontFamily = String(formData.get("fontFamily") || "").trim();
+  // ---- appearance / main settings ----
+  const themePreset = STR(formData, "themePreset") || page.themePreset;
+  const tabTitle = STR(formData, "tabTitle") ?? null;
+  const ogDescription = STR(formData, "ogDescription") ?? null;
+  const capiEventName = formData.get("capiEventName") === "purchase" ? "purchase" : "subscribe";
+  const ctaLayout = formData.get("ctaLayout") === "vertical" ? "vertical" : "horizontal";
+  const capiAccessToken = STR(formData, "capiAccessToken") ?? null;
+  const capiEndpointUrl = STR(formData, "capiEndpointUrl") ?? null;
 
-  if (fbPixelId && !FB_PIXEL_RE.test(fbPixelId)) {
-    return { error: "Facebook Pixel ID ต้องเป็นตัวเลขเท่านั้น (5-20 หลัก)" };
+  const heroHeadline = STR(formData, "heroHeadline") ?? null;
+  const heroSubtext = STR(formData, "heroSubtext") ?? null;
+  const footerText = STR(formData, "footerText") ?? null;
+  const footerTextColor = STR(formData, "footerTextColor") ?? null;
+
+  const fbPixelIdsRaw = String(formData.get("fbPixelIds") || "");
+  const fbPixelIds = fbPixelIdsRaw
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter((s) => /^\d{5,20}$/.test(s));
+
+  const landingUrl = STR(formData, "landingUrl") ?? null;
+  const whitepageRedirectUrl = STR(formData, "whitepageRedirectUrl") ?? null;
+  const useSameLandingForAll = formData.get("useSameLandingForAll") === "on";
+  const cloakToLandingUrl = formData.get("cloakToLandingUrl") === "on";
+
+  const colorFields = ["primary", "body", "muted", "cta_text", "line_cta_text"] as const;
+  const colorOverrides: Record<string, string> = {};
+  for (const k of colorFields) {
+    const v = STR(formData, `color_${k}`);
+    if (v) colorOverrides[k] = v;
   }
-  if (customCode.length > 20000) {
-    return { error: "โค้ดกำหนดเองยาวเกินไป (ไม่เกิน 20,000 ตัวอักษร)" };
-  }
 
-  const sectionToggles: Record<string, boolean> = {};
-  for (const key of TOGGLE_KEYS) {
-    sectionToggles[key] = formData.get(`toggle_${key}`) === "on";
-  }
-
-  const reviews: { name: string; text: string }[] = [];
+  const reviewsTitle = STR(formData, "reviewsTitle") ?? null;
+  const reviewsSubtitle = STR(formData, "reviewsSubtitle") ?? null;
+  const reviews: { member: string; text: string; stars: string }[] = [];
   for (let i = 0; i < 5; i++) {
-    const name = String(formData.get(`review_name_${i}`) || "").trim();
+    if (formData.get(`review_remove_${i}`) === "on") continue;
+    const member = String(formData.get(`review_member_${i}`) || "").trim();
     const text = String(formData.get(`review_text_${i}`) || "").trim();
-    if (name || text) reviews.push({ name: name || "ผู้เรียน", text });
+    const stars = String(formData.get(`review_stars_${i}`) || "5 ดาว");
+    if (member || text) reviews.push({ member: member || "สมาชิก", text, stars });
   }
 
-  const faq: { q: string; a: string }[] = [];
-  for (let i = 0; i < 6; i++) {
-    const q = String(formData.get(`faq_q_${i}`) || "").trim();
-    const a = String(formData.get(`faq_a_${i}`) || "").trim();
-    if (q || a) faq.push({ q, a });
+  // ---- image uploads ----
+  const uploads: Record<string, string | null> = {};
+  for (const field of ["logoUrl", "lineLogoUrl", "ogImage"] as const) {
+    const saved = await saveUpload(formData.get(`file_${field}`));
+    if (saved && typeof saved === "object") return saved;
+    if (saved) uploads[field] = saved;
   }
 
-  const promotions: { label: string; detail: string }[] = [];
-  for (let i = 0; i < 4; i++) {
-    const label = String(formData.get(`promo_label_${i}`) || "").trim();
-    const detail = String(formData.get(`promo_detail_${i}`) || "").trim();
-    if (label || detail) promotions.push({ label, detail });
+  // ---- sections ----
+  const sections = parseSections(page.sections);
+  for (const s of sections) {
+    s.enabled = formData.get(`section_enabled_${s.key}`) === "on";
+    switch (s.key as SectionKey) {
+      case "online_users": {
+        s.data = { min: NUM(formData, "section_data_online_users_min") ?? 20, max: NUM(formData, "section_data_online_users_max") ?? 80 };
+        break;
+      }
+      case "bonus_total": {
+        s.data = {
+          baseAmount: NUM(formData, "section_data_bonus_total_baseAmount") ?? 0,
+          perHourIncrement: NUM(formData, "section_data_bonus_total_perHourIncrement") ?? 0,
+        };
+        break;
+      }
+      case "gif_signup_button": {
+        const img = await saveUpload(formData.get("section_file_gif_signup_button_image"));
+        if (img && typeof img === "object") return img;
+        s.data = {
+          linkUrl: STR(formData, "section_data_gif_signup_button_linkUrl") || "",
+          imageUrl: img || (s.data as { imageUrl?: string }).imageUrl || "",
+        };
+        break;
+      }
+      case "hero_image": {
+        const img = await saveUpload(formData.get("section_file_hero_image_image"));
+        if (img && typeof img === "object") return img;
+        s.data = { imageUrl: img || (s.data as { imageUrl?: string }).imageUrl || "" };
+        break;
+      }
+      case "text_block_1":
+      case "text_block_2": {
+        s.data = {
+          heading: STR(formData, `section_data_${s.key}_heading`) || "",
+          body: STR(formData, `section_data_${s.key}_body`) || "",
+        };
+        break;
+      }
+      case "top_games": {
+        const games: { name: string; imageUrl: string }[] = [];
+        for (let i = 0; i < 3; i++) {
+          const img = await saveUpload(formData.get(`section_file_top_games_image_${i}`));
+          if (img && typeof img === "object") return img;
+          const prev = (s.data as { games?: { name: string; imageUrl: string }[] }).games?.[i];
+          games.push({ name: STR(formData, `section_data_top_games_name_${i}`) || "", imageUrl: img || prev?.imageUrl || "" });
+        }
+        s.data = { games };
+        break;
+      }
+      case "player_ranking": {
+        const players: { name: string; amount: string }[] = [];
+        for (let i = 0; i < 5; i++) {
+          const name = STR(formData, `section_data_player_ranking_name_${i}`);
+          const amount = STR(formData, `section_data_player_ranking_amount_${i}`);
+          if (name || amount) players.push({ name: name || "", amount: amount || "" });
+        }
+        s.data = { players };
+        break;
+      }
+      case "prizes": {
+        const items: { label: string; imageUrl: string }[] = [];
+        for (let i = 0; i < 4; i++) {
+          const img = await saveUpload(formData.get(`section_file_prizes_image_${i}`));
+          if (img && typeof img === "object") return img;
+          const prev = (s.data as { items?: { label: string; imageUrl: string }[] }).items?.[i];
+          const label = STR(formData, `section_data_prizes_label_${i}`);
+          if (label || img || prev?.imageUrl) items.push({ label: label || "", imageUrl: img || prev?.imageUrl || "" });
+        }
+        s.data = { items };
+        break;
+      }
+      case "announcements": {
+        const items: string[] = [];
+        for (let i = 0; i < 5; i++) {
+          const t = STR(formData, `section_data_announcements_text_${i}`);
+          if (t) items.push(t);
+        }
+        s.data = { items };
+        break;
+      }
+      case "image_slider": {
+        const images: string[] = [];
+        for (let i = 0; i < 4; i++) {
+          const img = await saveUpload(formData.get(`section_file_image_slider_image_${i}`));
+          if (img && typeof img === "object") return img;
+          const prev = (s.data as { images?: string[] }).images?.[i];
+          images.push(img || prev || "");
+        }
+        s.data = { images };
+        break;
+      }
+      case "signup_line_buttons": {
+        s.data = {
+          signupUrl: STR(formData, "section_data_signup_line_buttons_signupUrl") || "",
+          lineUrl: STR(formData, "section_data_signup_line_buttons_lineUrl") || "",
+        };
+        break;
+      }
+      case "reviews":
+        // content lives in the top-level reviews/reviewsTitle fields above
+        break;
+    }
   }
 
-  const pricing: { name: string; price: string; features: string; highlight: boolean }[] = [];
-  for (let i = 0; i < 3; i++) {
-    const name = String(formData.get(`price_name_${i}`) || "").trim();
-    const price = String(formData.get(`price_price_${i}`) || "").trim();
-    const features = String(formData.get(`price_features_${i}`) || "").trim();
-    const highlight = formData.get(`price_highlight_${i}`) === "on";
-    if (name || price || features) pricing.push({ name, price, features, highlight });
-  }
-
-  const contact = {
-    phone: String(formData.get("contact_phone") || "").trim(),
-    line: String(formData.get("contact_line") || "").trim(),
-    email: String(formData.get("contact_email") || "").trim(),
-    address: String(formData.get("contact_address") || "").trim(),
-  };
-  const hasContact = Object.values(contact).some(Boolean);
-
-  const newImageFiles = formData.getAll("images").filter((v): v is File => v instanceof File);
-  const newSaved = await saveUploadedImages(newImageFiles);
-  if (!Array.isArray(newSaved)) return newSaved;
-  const existingImages: string[] = existing.images ? JSON.parse(existing.images) : [];
-  const removeImages = formData.getAll("removeImages").map(String);
-  const keptImages = existingImages.filter((u) => !removeImages.includes(u));
-  const allImages = [...keptImages, ...newSaved].slice(0, MAX_IMAGES);
-
-  await prisma.link.update({
-    where: { id: linkId },
+  await prisma.page.update({
+    where: { id: page.id },
     data: {
-      title,
-      bio,
-      themeColor,
-      avatarEmoji,
-      fbPixelId: fbPixelId || null,
-      template,
-      customCode: customCode || null,
-      fontFamily: fontFamily || null,
-      sectionToggles: JSON.stringify(sectionToggles),
-      reviews: reviews.length > 0 ? JSON.stringify(reviews) : null,
-      faq: faq.length > 0 ? JSON.stringify(faq) : null,
-      promotions: promotions.length > 0 ? JSON.stringify(promotions) : null,
-      pricing: pricing.length > 0 ? JSON.stringify(pricing) : null,
-      contact: hasContact ? JSON.stringify(contact) : null,
-      images: allImages.length > 0 ? JSON.stringify(allImages) : null,
+      themePreset,
+      tabTitle,
+      ogDescription,
+      ...uploads,
+      capiEventName,
+      ctaLayout,
+      capiAccessToken,
+      capiEndpointUrl,
+      heroHeadline,
+      heroSubtext,
+      footerText,
+      footerTextColor,
+      fbPixelIds: fbPixelIds.length ? JSON.stringify(fbPixelIds) : null,
+      landingUrl,
+      whitepageRedirectUrl,
+      useSameLandingForAll,
+      cloakToLandingUrl,
+      colorOverrides: Object.keys(colorOverrides).length ? JSON.stringify(colorOverrides) : null,
+      reviewsTitle,
+      reviewsSubtitle,
+      reviews: reviews.length ? JSON.stringify(reviews) : null,
+      sections: JSON.stringify(sections satisfies SectionEntry[]),
     },
   });
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
-}
-
-export async function addBioBlockAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/login");
-
-  const linkId = String(formData.get("linkId") || "");
-  const label = String(formData.get("label") || "").trim();
-  const url = String(formData.get("url") || "").trim();
-
-  if (!label || !url || !/^https?:\/\//i.test(url)) {
-    return { error: "ใส่ชื่อปุ่มและ URL ให้ถูกต้อง" };
-  }
-
-  const link = await prisma.link.findFirst({ where: { id: linkId, userId } });
-  if (!link) return { error: "ไม่พบหน้า Bio นี้" };
-
-  const blocks = JSON.parse(link.blocks || "[]");
-  blocks.push({ label, url });
-
-  await prisma.link.update({
-    where: { id: linkId },
-    data: { blocks: JSON.stringify(blocks) },
-  });
-
-  revalidatePath("/dashboard");
+  revalidatePath(`/${page.slug}`);
   return { success: true };
-}
-
-export async function removeBioBlockAction(formData: FormData): Promise<void> {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/login");
-
-  const linkId = String(formData.get("linkId") || "");
-  const index = Number(formData.get("index"));
-
-  const link = await prisma.link.findFirst({ where: { id: linkId, userId } });
-  if (!link) return;
-
-  const blocks = JSON.parse(link.blocks || "[]");
-  blocks.splice(index, 1);
-
-  await prisma.link.update({
-    where: { id: linkId },
-    data: { blocks: JSON.stringify(blocks) },
-  });
-
-  revalidatePath("/dashboard");
-}
-
-export async function deleteLinkAction(formData: FormData): Promise<void> {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/login");
-
-  const linkId = String(formData.get("linkId") || "");
-  await prisma.link.deleteMany({ where: { id: linkId, userId } });
-
-  revalidatePath("/dashboard");
 }

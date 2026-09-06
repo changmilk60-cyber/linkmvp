@@ -1,32 +1,24 @@
 import Link from "next/link";
 import { getSessionUserId } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { Button, Pill } from "@/components/ds";
 
 export default async function Home() {
   const userId = await getSessionUserId();
   if (userId) redirect("/dashboard");
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 py-20 text-center">
-      <span className="mb-4 rounded-full bg-mint/5 px-3 py-1 text-xs font-medium text-mint/60">
-        MVP · ย่อลิงก์ + หน้า Bio
-      </span>
-      <h1 className="max-w-2xl text-4xl font-bold leading-tight sm:text-5xl">
-        ย่อลิงก์ และสร้างหน้า Bio
-        <br />
-        ของคุณเองใน 1 นาที
+    <main style={{ minHeight: "100vh", background: "var(--surface-page)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", textAlign: "center", gap: "16px" }}>
+      <Pill tone="soft" icon="⚡">PageVIP Pro</Pill>
+      <h1 style={{ margin: 0, maxWidth: "560px", font: "var(--fw-bold) 36px/1.25 var(--font-sans)", color: "var(--text-primary)" }}>
+        สร้างและแก้หน้าเซลเพจของคุณ<br />จากหลังบ้านเดียว
       </h1>
-      <p className="mt-4 max-w-md text-mint/60">
-        เครื่องมือจัดการลิงก์เบื้องต้น: ย่อ URL แบบกำหนดชื่อเองได้ และสร้างหน้ารวมลิงก์
-        (Bio page) พร้อมนับยอดคลิก
+      <p style={{ margin: 0, maxWidth: "440px", font: "var(--text-body-default)", color: "var(--text-muted)" }}>
+        จัดการ Section, โทนสี, Pixel, รีวิว และสถิติผู้เข้าชม — กดบันทึกครั้งเดียวใช้ได้ทั้งเว็บ
       </p>
-      <div className="mt-8 flex gap-3">
-        <Link href="/register" className="btn btn-primary">
-          เริ่มใช้งานฟรี
-        </Link>
-        <Link href="/login" className="btn btn-outline">
-          เข้าสู่ระบบ
-        </Link>
+      <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+        <Link href="/register"><Button variant="primary">เริ่มใช้งานฟรี</Button></Link>
+        <Link href="/login"><Button variant="ghost">เข้าสู่ระบบ</Button></Link>
       </div>
     </main>
   );

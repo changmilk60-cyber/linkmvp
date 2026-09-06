@@ -2,30 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-sans: "Inter", "Noto Sans Thai", system-ui, sans-serif;
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: #0a0f0d;
-  color: #eafbea;
+  margin: 0;
+  background: var(--surface-page, #0b0b0b);
+  color: var(--text-body, #fff);
 }
 
-.btn {
-  @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition;
+a {
+  color: var(--text-accent, #00cc66);
+  text-decoration: none;
 }
-.btn-primary {
-  @apply bg-accent text-white shadow-[0_0_20px_-4px_theme(colors.accent)] hover:opacity-90;
-}
-.btn-outline {
-  @apply border border-accent/25 bg-transparent text-mint hover:bg-accent/10;
-}
-.card {
-  @apply rounded-xl border border-accent/15 bg-surface p-5;
-}
-.input {
-  @apply w-full rounded-lg border border-accent/20 bg-black/30 px-3 py-2.5 text-sm text-mint outline-none placeholder:text-mint/30 focus:border-accent;
-}
-.label {
-  @apply mb-1.5 block text-sm font-medium text-mint/60;
+a:hover {
+  color: var(--text-accent-bright, #00ff88);
 }

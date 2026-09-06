@@ -12,45 +12,73 @@ model User {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
-  links        Link[]
+  pages        Page[]
 }
 
-enum LinkType {
-  SHORT
-  BIO
-}
+// One PageVIP Pro sales page + its "หลังบ้านแก้เว็บ" admin settings, per user.
+model Page {
+  id     String @id @default(cuid())
+  slug   String @unique
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model Link {
-  id         String   @id @default(cuid())
-  slug       String   @unique
-  type       LinkType
+  // ---- license ----
+  licenseExpiresAt DateTime @default(dbgenerated("(now() + interval '365 days')"))
 
-  // SHORT link fields
-  targetUrl  String?
+  // ---- appearance ----
+  themePreset     String  @default("green-black")
+  tabTitle        String?
+  ogDescription   String?
+  ogImage         String?
+  logoUrl         String?
+  lineLogoUrl     String?
+  footerText      String?
+  footerTextColor String?
+  colorOverrides  String? // JSON: {primary?, textPrimary?, textBody?, textMuted?, ctaText?, lineCtaText?}
 
-  // BIO page fields
-  title      String?
-  bio        String?
-  themeColor String?
-  avatarEmoji String?
-  blocks     String?  // JSON string: [{ "label": "...", "url": "..." }]
-  fbPixelId  String?  // Facebook Pixel ID for tracking visits/conversions on this bio page
-  template   String?  @default("classic") // "classic" | "service" | "course" | "custom"
-  customCode String?  // raw HTML/CSS/JS the owner wants embedded on their bio page
-  images     String?  // JSON string: ["/uploads/xxx.jpg", ...] uploaded gallery images
-  fontFamily String?  // Google Font name applied to the course template
-  sectionToggles String? // JSON string: {"carousel":true,"quiz":true,"countdown":true,"reviews":true,"faq":true,"promotions":true,"pricing":true,"contact":true}
-  reviews    String?  // JSON string: [{ "name": "...", "text": "..." }]
-  faq        String?  // JSON string: [{ "q": "...", "a": "..." }]
-  promotions String?  // JSON string: [{ "label": "...", "detail": "..." }]
-  pricing    String?  // JSON string: [{ "name": "...", "price": "...", "features": "...", "highlight": true }]
-  contact    String?  // JSON string: { "phone": "...", "line": "...", "email": "...", "address": "..." }
+  // ---- pixel / CAPI ----
+  fbPixelIds      String? // JSON string[] of pixel ids
+  capiAccessToken String?
+  capiEndpointUrl String?
+  capiEventName   String  @default("subscribe") // "subscribe" | "purchase"
+  ctaLayout       String  @default("horizontal") // "vertical" | "horizontal"
 
-  clicks     Int      @default(0)
-  createdAt  DateTime @default(now())
+  // ---- bot / whitepage cloak ----
+  landingUrl           String?
+  whitepageRedirectUrl String?
+  useSameLandingForAll Boolean @default(true)
+  cloakToLandingUrl    Boolean @default(false)
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String
+  // ---- hero text ----
+  heroHeadline String?
+  heroSubtext  String?
+
+  // ---- sections (order + enabled + per-section data) ----
+  sections String @default("[]") // JSON array, see lib/sections.ts
+
+  // ---- random reviews ----
+  reviewsTitle    String?
+  reviewsSubtitle String?
+  reviews         String? // JSON: [{ member, text, stars }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  visits Visit[]
 
   @@index([userId])
+}
+
+// One row per real page view / button click, bucketed by UTC day, for the
+// Dashboard panel's stat tiles + 7-day chart + daily table.
+model Visit {
+  id        String   @id @default(cuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  day       String // "YYYY-MM-DD" UTC bucket
+  kind      String // "view" | "click_signup" | "click_line"
+  visitorId String // random id from the sc_vid cookie — approximate unique count, not PII
+  createdAt DateTime @default(now())
+
+  @@index([pageId, day])
 }

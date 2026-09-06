@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./pagevip-theme.css";
 
 export const metadata: Metadata = {
-  title: "LinkMVP — ย่อลิงก์ & หน้า Bio ของคุณ",
-  description: "เครื่องมือย่อลิงก์และสร้างหน้า Bio link แบบง่าย",
+  title: "PageVIP Pro — หลังบ้านแก้เว็บ",
+  description: "สร้างและจัดการหน้าเซลเพจของคุณ พร้อมหลังบ้านแก้เว็บครบวงจร",
 };
 
 export default function RootLayout({
@@ -13,7 +14,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body className="font-sans antialiased">{children}</body>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="pv-scope antialiased">{children}</body>
     </html>
   );
 }

@@ -1,97 +1,106 @@
 import { getSessionUserId } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { logoutAction } from "@/app/actions";
-import NewShortLinkForm from "./NewShortLinkForm";
-import NewBioPageForm from "./NewBioPageForm";
-import BioPageCard from "./BioPageCard";
-import DeleteButton from "./DeleteButton";
-import CopyButton from "./CopyButton";
+import { getOrCreateOwnPage } from "@/app/actions";
+import { lastNDays, parseSections, todayUTC } from "@/lib/sections";
+import AdminClient from "./AdminClient";
 
 export default async function DashboardPage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/login");
 
-  const links = await prisma.link.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
+  const page = await getOrCreateOwnPage(userId);
 
-  const shortLinks = links.filter((l) => l.type === "SHORT");
-  const bioPages = links.filter((l) => l.type === "BIO");
+  const todayStr = todayUTC();
+  const days7 = lastNDays(7);
+  const thirtyAgo = new Date();
+  thirtyAgo.setUTCDate(thirtyAgo.getUTCDate() - 29);
+  const thirtyAgoStr = todayUTC(thirtyAgo);
+
+  const [
+    viewsToday,
+    uniqueTodayRows,
+    signupClicksTotal,
+    lineClicksTotal,
+    signupClicksToday,
+    lineClicksToday,
+    viewsAllTime,
+    views30d,
+    dayRows,
+  ] = await Promise.all([
+    prisma.visit.count({ where: { pageId: page.id, day: todayStr, kind: "view" } }),
+    prisma.visit.findMany({ where: { pageId: page.id, day: todayStr, kind: "view" }, select: { visitorId: true }, distinct: ["visitorId"] }),
+    prisma.visit.count({ where: { pageId: page.id, kind: "click_signup" } }),
+    prisma.visit.count({ where: { pageId: page.id, kind: "click_line" } }),
+    prisma.visit.count({ where: { pageId: page.id, day: todayStr, kind: "click_signup" } }),
+    prisma.visit.count({ where: { pageId: page.id, day: todayStr, kind: "click_line" } }),
+    prisma.visit.count({ where: { pageId: page.id, kind: "view" } }),
+    prisma.visit.count({ where: { pageId: page.id, kind: "view", day: { gte: thirtyAgoStr } } }),
+    prisma.visit.findMany({ where: { pageId: page.id, day: { in: days7 } }, select: { day: true, kind: true } }),
+  ]);
+
+  const viewsByDay: Record<string, number> = Object.fromEntries(days7.map((d) => [d, 0]));
+  const signupByDay: Record<string, number> = Object.fromEntries(days7.map((d) => [d, 0]));
+  const lineByDay: Record<string, number> = Object.fromEntries(days7.map((d) => [d, 0]));
+  for (const row of dayRows) {
+    if (row.kind === "view") viewsByDay[row.day] = (viewsByDay[row.day] || 0) + 1;
+    if (row.kind === "click_signup") signupByDay[row.day] = (signupByDay[row.day] || 0) + 1;
+    if (row.kind === "click_line") lineByDay[row.day] = (lineByDay[row.day] || 0) + 1;
+  }
+
+  const ctr = viewsAllTime > 0 ? (((signupClicksTotal + lineClicksTotal) / viewsAllTime) * 100).toFixed(1) : "0.0";
+
+  const stats = {
+    viewsToday,
+    uniqueToday: uniqueTodayRows.length,
+    signupClicksToday,
+    lineClicksToday,
+    signupClicksTotal,
+    lineClicksTotal,
+    viewsAllTime,
+    views30d,
+    ctr,
+    chart: days7.map((d) => ({ label: d.slice(5).replace("-", "/"), value: viewsByDay[d] || 0 })),
+    table: [...days7].reverse().map((d) => [d.slice(5).replace("-", "/"), signupByDay[d] || 0, lineByDay[d] || 0]) as [string, number, number][],
+  };
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-  const totalClicks = links.reduce((sum, l) => sum + l.clicks, 0);
-  const stats = [
-    { label: "ลิงก์ทั้งหมด", value: links.length },
-    { label: "ย่อลิงก์", value: shortLinks.length },
-    { label: "หน้า Bio", value: bioPages.length },
-    { label: "คลิกรวม", value: totalClicks },
-  ];
+  const daysLeft = Math.max(0, Math.ceil((page.licenseExpiresAt.getTime() - Date.now()) / 86_400_000));
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">แดชบอร์ด</h1>
-        <form action={logoutAction}>
-          <button className="btn btn-outline" type="submit">ออกจากระบบ</button>
-        </form>
-      </div>
-
-      {/* STATS */}
-      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="card text-center">
-            <p className="text-2xl font-extrabold text-accent">{s.value.toLocaleString()}</p>
-            <p className="mt-1 text-xs text-mint/50">{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* SHORT LINKS */}
-      <section className="mb-12">
-        <h2 className="mb-3 text-lg font-semibold">ย่อลิงก์</h2>
-        <div className="card mb-4">
-          <NewShortLinkForm />
-        </div>
-        <div className="space-y-2">
-          {shortLinks.length === 0 && (
-            <p className="text-sm text-mint/50">ยังไม่มีลิงก์ที่ย่อไว้</p>
-          )}
-          {shortLinks.map((l) => (
-            <div key={l.id} className="card flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-medium text-accent">
-                    {baseUrl}/{l.slug}
-                  </span>
-                  <CopyButton text={`${baseUrl}/${l.slug}`} />
-                </div>
-                <p className="truncate text-sm text-mint/50">{l.targetUrl}</p>
-                <p className="mt-1 text-xs text-mint/40">คลิก {l.clicks} ครั้ง</p>
-              </div>
-              <DeleteButton linkId={l.id} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* BIO PAGES */}
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">หน้า Bio link</h2>
-        <div className="card mb-4">
-          <NewBioPageForm />
-        </div>
-        <div className="space-y-4">
-          {bioPages.length === 0 && (
-            <p className="text-sm text-mint/50">ยังไม่มีหน้า Bio</p>
-          )}
-          {bioPages.map((p) => (
-            <BioPageCard key={p.id} page={p} baseUrl={baseUrl} />
-          ))}
-        </div>
-      </section>
-    </main>
+    <AdminClient
+      page={{
+        id: page.id,
+        slug: page.slug,
+        themePreset: page.themePreset,
+        tabTitle: page.tabTitle,
+        ogDescription: page.ogDescription,
+        ogImage: page.ogImage,
+        logoUrl: page.logoUrl,
+        lineLogoUrl: page.lineLogoUrl,
+        footerText: page.footerText,
+        footerTextColor: page.footerTextColor,
+        colorOverrides: page.colorOverrides,
+        fbPixelIds: page.fbPixelIds,
+        capiAccessToken: page.capiAccessToken,
+        capiEndpointUrl: page.capiEndpointUrl,
+        capiEventName: page.capiEventName,
+        ctaLayout: page.ctaLayout,
+        landingUrl: page.landingUrl,
+        whitepageRedirectUrl: page.whitepageRedirectUrl,
+        useSameLandingForAll: page.useSameLandingForAll,
+        cloakToLandingUrl: page.cloakToLandingUrl,
+        heroHeadline: page.heroHeadline,
+        heroSubtext: page.heroSubtext,
+        sections: parseSections(page.sections),
+        reviewsTitle: page.reviewsTitle,
+        reviewsSubtitle: page.reviewsSubtitle,
+        reviews: page.reviews ? JSON.parse(page.reviews) : [],
+        licenseExpiresAt: page.licenseExpiresAt.toISOString().slice(0, 10),
+        daysLeft,
+      }}
+      stats={stats}
+      baseUrl={baseUrl}
+    />
   );
 }
