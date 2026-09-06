@@ -107,6 +107,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
   };
 
   const [saveState, saveAction] = useFormState(saveSettingsAction, {});
+  const [themePreset, setThemePreset] = useState(page.themePreset);
   const colors = page.colorOverrides ? (JSON.parse(page.colorOverrides) as Record<string, string>) : {};
   const pixelIds: string[] = page.fbPixelIds ? JSON.parse(page.fbPixelIds) : [];
 
@@ -298,9 +299,10 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
               <HiddenCarry page={page} except={["themePreset"]} />
+              <input type="hidden" name="themePreset" value={themePreset} />
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "var(--gap-grid)" }}>
                 {THEME_PRESETS.map((p) => (
-                  <ThemeSwatchCard key={p.key} name={p.name} icon={p.icon} base={p.base} primary={p.primary} accent={p.accent} selected={page.themePreset === p.key} onSelectValue={p.key} radioName="themePreset" />
+                  <ThemeSwatchCard key={p.key} name={p.name} icon={p.icon} base={p.base} primary={p.primary} accent={p.accent} selected={themePreset === p.key} onSelect={() => setThemePreset(p.key)} />
                 ))}
               </div>
               <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>

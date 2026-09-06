@@ -106,10 +106,12 @@ function SectionToggle({ name, defaultEnabled }: { name: string; defaultEnabled:
   );
 }
 
-export function ThemeSwatchCard({ name, icon, base, primary, accent, selected = false, onSelectValue, radioName, style }: { name: string; icon: string; base: string; primary: string; accent: string; selected?: boolean; onSelectValue: string; radioName: string; style?: CSSProperties }) {
+// Selection is driven by the parent's state, not by a hidden radio's own
+// checked flag — a radio only the browser knows about changes nothing on
+// screen, so picking a colour looked like it did nothing at all.
+export function ThemeSwatchCard({ name, icon, base, primary, accent, selected = false, onSelect, style }: { name: string; icon: string; base: string; primary: string; accent: string; selected?: boolean; onSelect: () => void; style?: CSSProperties }) {
   return (
-    <label style={{ background: "var(--surface-inset)", border: "1px solid " + (selected ? "var(--white)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "14px 12px", cursor: "pointer", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", transition: "var(--transition-control)", ...style }}>
-      <input type="radio" name={radioName} value={onSelectValue} defaultChecked={selected} style={{ position: "absolute", opacity: 0, pointerEvents: "none" }} />
+    <button type="button" onClick={onSelect} aria-pressed={selected} style={{ background: "var(--surface-inset)", border: "1px solid " + (selected ? "var(--white)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "14px 12px", cursor: "pointer", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", transition: "var(--transition-control)", ...style }}>
       {selected ? <span aria-hidden="true" style={{ position: "absolute", top: "10px", right: "12px", color: "var(--white)", fontSize: "14px" }}>✓</span> : null}
       <span style={{ display: "flex", gap: "6px" }}>
         {[base, primary, accent].map((c, i) => <span key={i} style={{ width: "18px", height: "18px", borderRadius: "50%", background: c, border: "1px solid rgba(255,255,255,.14)" }} />)}
@@ -117,7 +119,7 @@ export function ThemeSwatchCard({ name, icon, base, primary, accent, selected = 
       <span style={{ display: "flex", alignItems: "center", gap: "6px", font: "var(--fw-semibold) var(--fs-hint)/1.2 var(--font-sans)", color: "var(--text-body)" }}>
         <span aria-hidden="true">{icon}</span>{name}
       </span>
-    </label>
+    </button>
   );
 }
 
