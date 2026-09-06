@@ -29,7 +29,7 @@ import {
   Toggle,
 } from "@/components/ds";
 import { logoutAction, moveSectionAction, renameSlugAction, saveSettingsAction } from "@/app/actions";
-import { SECTION_META, THEME_PRESETS, type SectionEntry, type SectionKey } from "@/lib/sections";
+import { FEED_BANK_SLOTS, SECTION_META, THEME_PRESETS, type SectionEntry, type SectionKey } from "@/lib/sections";
 
 type PageData = {
   id: string;
@@ -591,6 +591,25 @@ function SectionHiddenData({ sKey, data }: { sKey: SectionKey; data: Record<stri
         </span>
       ))}</>;
     }
+    case "withdraw_feed": {
+      const banks = (data as { banks?: { name: string; color: string }[] }).banks || [];
+      return (
+        <>
+          <input type="hidden" name="section_data_withdraw_feed_title" value={v.title || ""} />
+          <input type="hidden" name="section_data_withdraw_feed_statusLabel" value={v.statusLabel || ""} />
+          <input type="hidden" name="section_data_withdraw_feed_minAmount" value={v.minAmount ?? 1000} />
+          <input type="hidden" name="section_data_withdraw_feed_maxAmount" value={v.maxAmount ?? 20000} />
+          <input type="hidden" name="section_data_withdraw_feed_rows" value={v.rows ?? 5} />
+          <input type="hidden" name="section_data_withdraw_feed_intervalSec" value={v.intervalSec ?? 6} />
+          {Array.from({ length: FEED_BANK_SLOTS }).map((_, i) => (
+            <span key={i}>
+              <input type="hidden" name={`section_data_withdraw_feed_bank_name_${i}`} value={banks[i]?.name || ""} />
+              <input type="hidden" name={`section_data_withdraw_feed_bank_color_${i}`} value={banks[i]?.color || ""} />
+            </span>
+          ))}
+        </>
+      );
+    }
     case "prizes": {
       const items = (data as { items?: { label: string }[] }).items || [];
       return <>{Array.from({ length: 4 }).map((_, i) => <input key={i} type="hidden" name={`section_data_prizes_label_${i}`} value={items[i]?.label || ""} />)}</>;
@@ -664,6 +683,34 @@ function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, u
             </div>
           ))}
         </div>
+      );
+    }
+    case "withdraw_feed": {
+      const banks = (data as { banks?: { name: string; logoUrl: string; color: string }[] }).banks || [];
+      return (
+        <>
+          <Field label="หัวข้อกล่อง"><TextInput name="section_data_withdraw_feed_title" defaultValue={v.title || ""} placeholder="AUTO SYSTEM • ยืนยันยอดแล้ว" /></Field>
+          <Field label="ข้อความป้ายสถานะ"><TextInput name="section_data_withdraw_feed_statusLabel" defaultValue={v.statusLabel || ""} placeholder="สำเร็จแล้ว" /></Field>
+          <Field label="ยอดถอนต่ำสุด (บาท)"><TextInput name="section_data_withdraw_feed_minAmount" type="number" defaultValue={String(v.minAmount ?? 1000)} /></Field>
+          <Field label="ยอดถอนสูงสุด (บาท)"><TextInput name="section_data_withdraw_feed_maxAmount" type="number" defaultValue={String(v.maxAmount ?? 20000)} /></Field>
+          <Field label="แสดงกี่รายการ" hint="1–20 รายการ" hintTone="muted"><TextInput name="section_data_withdraw_feed_rows" type="number" defaultValue={String(v.rows ?? 5)} /></Field>
+          <Field label="เพิ่มรายการใหม่ทุกกี่วินาที" hint="2–120 วินาที" hintTone="muted"><TextInput name="section_data_withdraw_feed_intervalSec" type="number" defaultValue={String(v.intervalSec ?? 6)} /></Field>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <p style={{ margin: "0 0 8px", font: "var(--text-label)", color: "var(--text-accent)" }}>ธนาคารที่จะสุ่มแสดง (เว้นว่างช่องที่ไม่ใช้)</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: "var(--gap-grid)" }}>
+              {Array.from({ length: FEED_BANK_SLOTS }).map((_, i) => (
+                <Field key={i} label={`ธนาคาร ${i + 1}`}>
+                  <TextInput name={`section_data_withdraw_feed_bank_name_${i}`} defaultValue={banks[i]?.name || ""} placeholder="ชื่อธนาคาร" style={{ marginBottom: "8px" }} />
+                  <TextInput name={`section_data_withdraw_feed_bank_color_${i}`} defaultValue={banks[i]?.color || ""} placeholder="สีวงกลม เช่น #4e2a84" style={{ marginBottom: "8px" }} />
+                  <ImageUploadField name={`section_file_withdraw_feed_bank_logo_${i}`} currentUrl={banks[i]?.logoUrl} note="อัปโหลดโลโก้ธนาคารเอง (ไม่ใส่ก็ได้ จะใช้วงกลมสี + ตัวอักษรแรกแทน)" />
+                </Field>
+              ))}
+            </div>
+          </div>
+          <Hint tone="warning" icon="⚠" style={{ gridColumn: "1 / -1" }}>
+            รายการในส่วนนี้ระบบสุ่มสร้างขึ้นใหม่ทุกครั้งที่มีคนเปิดหน้าเว็บ ไม่ใช่รายการถอนจริง
+          </Hint>
+        </>
       );
     }
     case "prizes": {

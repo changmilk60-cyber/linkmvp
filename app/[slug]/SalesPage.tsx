@@ -91,6 +91,7 @@ export default function SalesPage({
         {isOn("text_block_1") && <TextBlock data={get("text_block_1")!.data as { heading: string; body: string }} accent={primary} />}
         {isOn("text_block_2") && <TextBlock data={get("text_block_2")!.data as { heading: string; body: string }} accent={primary} />}
         {isOn("player_ranking") && <PlayerRanking data={get("player_ranking")!.data as { players: { name: string; amount: string }[] }} accent={primary} />}
+        {isOn("withdraw_feed") && <WithdrawFeed data={get("withdraw_feed")!.data as WithdrawFeedData} accent={primary} muted={textMuted} />}
         {isOn("prizes") && <Prizes data={get("prizes")!.data as { items: { label: string; imageUrl: string }[] }} accent={primary} />}
         {isOn("announcements") && <Announcements data={get("announcements")!.data as { items: string[] }} accent={primary} muted={textMuted} />}
         {isOn("image_slider") && <ImageSlider data={get("image_slider")!.data as { images: string[] }} />}
@@ -221,6 +222,97 @@ function PlayerRanking({ data, accent }: { data: { players: { name: string; amou
         ))}
       </div>
     </Card>
+  );
+}
+
+type FeedBank = { name: string; logoUrl: string; color: string };
+type WithdrawFeedData = {
+  title?: string;
+  statusLabel?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  rows?: number;
+  intervalSec?: number;
+  banks?: FeedBank[];
+};
+type FeedItem = { id: string; bank: FeedBank | null; user: string; amount: number; at: Date };
+
+const pad = (n: number) => String(n).padStart(2, "0");
+// Thai Buddhist year, matching how the rest of the product shows dates.
+function thaiDateTime(d: Date) {
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear() + 543} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function WithdrawFeed({ data, accent, muted }: { data: WithdrawFeedData; accent: string; muted: string }) {
+  const rows = Math.min(20, Math.max(1, Number(data.rows) || 5));
+  const intervalSec = Math.min(120, Math.max(2, Number(data.intervalSec) || 6));
+  const min = Math.max(0, Number(data.minAmount) || 0);
+  const max = Math.max(min, Number(data.maxAmount) || min);
+  const banksKey = JSON.stringify(data.banks || []);
+
+  // Seeded on the client only: the rows are random and clock-based, so
+  // rendering them on the server would mismatch on hydration.
+  const [items, setItems] = useState<FeedItem[]>([]);
+  useEffect(() => {
+    const banks: FeedBank[] = (JSON.parse(banksKey) as FeedBank[]).filter((b) => b.name || b.logoUrl);
+    const make = (secondsAgo: number): FeedItem => ({
+      id: Math.random().toString(36).slice(2),
+      bank: banks.length ? banks[Math.floor(Math.random() * banks.length)] : null,
+      user: `xxxx${Math.floor(100000 + Math.random() * 900000)}xxxx`,
+      amount: Math.floor(min + Math.random() * (max - min + 1)),
+      at: new Date(Date.now() - secondsAgo * 1000),
+    });
+
+    let elapsed = 0;
+    setItems(
+      Array.from({ length: rows }, () => {
+        elapsed += 3 + Math.floor(Math.random() * 6);
+        return make(elapsed);
+      })
+    );
+
+    const id = setInterval(() => setItems((prev) => [make(0), ...prev].slice(0, rows)), intervalSec * 1000);
+    return () => clearInterval(id);
+  }, [rows, intervalSec, min, max, banksKey]);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div style={{ background: "rgba(255,255,255,.05)", border: `1px solid ${accent}33`, borderRadius: "14px", overflow: "hidden" }}>
+      {data.title ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: `${accent}1f`, borderBottom: `1px solid ${accent}33`, fontSize: "13px", fontWeight: 700, color: accent }}>
+          <span aria-hidden="true" style={{ width: "8px", height: "8px", borderRadius: "50%", background: accent, flexShrink: 0 }} />
+          {data.title}
+        </div>
+      ) : null}
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "12px" }}>
+        {items.map((it) => (
+          <div key={it.id} style={{ display: "flex", alignItems: "center", gap: "10px", background: "rgba(0,0,0,.28)", border: "1px solid rgba(255,255,255,.08)", borderRadius: "12px", padding: "10px 12px" }}>
+            {it.bank?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={it.bank.logoUrl} alt={it.bank.name} style={{ width: "38px", height: "38px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+            ) : (
+              <span
+                aria-hidden="true"
+                style={{ width: "38px", height: "38px", borderRadius: "50%", flexShrink: 0, background: it.bank?.color || accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 700, color: "#fff" }}
+              >
+                {(it.bank?.name || "?").charAt(0)}
+              </span>
+            )}
+            <div style={{ flex: 1, minWidth: 0, fontSize: "12.5px", lineHeight: 1.5 }}>
+              <p style={{ margin: 0 }}>ยูส: {it.user}</p>
+              <p style={{ margin: 0 }}>ยอดถอน: <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{it.amount.toLocaleString()}</span> บาท</p>
+              <p style={{ margin: 0, color: muted }}>วันที่: {thaiDateTime(it.at)}</p>
+            </div>
+            {data.statusLabel ? (
+              <span style={{ flexShrink: 0, background: `${accent}26`, border: `1px solid ${accent}66`, color: accent, borderRadius: "8px", padding: "4px 10px", fontSize: "11px", fontWeight: 700 }}>
+                {data.statusLabel}
+              </span>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

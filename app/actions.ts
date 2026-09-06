@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
-import { DEFAULT_SECTIONS, parseSections, type SectionEntry, type SectionKey } from "@/lib/sections";
+import { DEFAULT_SECTIONS, FEED_BANK_SLOTS, parseSections, type SectionEntry, type SectionKey } from "@/lib/sections";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -297,6 +297,32 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
           if (name || amount) players.push({ name: name || "", amount: amount || "" });
         }
         s.data = { players };
+        break;
+      }
+      case "withdraw_feed": {
+        const banks: { name: string; logoUrl: string; color: string }[] = [];
+        const prevBanks = (s.data as { banks?: { name: string; logoUrl: string; color: string }[] }).banks || [];
+        for (let i = 0; i < FEED_BANK_SLOTS; i++) {
+          const img = await saveUpload(formData.get(`section_file_withdraw_feed_bank_logo_${i}`));
+          if (img && typeof img === "object") return img;
+          const name = STR(formData, `section_data_withdraw_feed_bank_name_${i}`);
+          const color = STR(formData, `section_data_withdraw_feed_bank_color_${i}`);
+          const logoUrl = img || prevBanks[i]?.logoUrl || "";
+          if (name || logoUrl) {
+            banks.push({ name: name || "", logoUrl, color: color || prevBanks[i]?.color || "#096c35" });
+          }
+        }
+        const min = NUM(formData, "section_data_withdraw_feed_minAmount") ?? 1000;
+        const max = NUM(formData, "section_data_withdraw_feed_maxAmount") ?? 20000;
+        s.data = {
+          title: STR(formData, "section_data_withdraw_feed_title") || "",
+          statusLabel: STR(formData, "section_data_withdraw_feed_statusLabel") || "",
+          minAmount: Math.max(0, min),
+          maxAmount: Math.max(Math.max(0, min), max),
+          rows: Math.min(20, Math.max(1, NUM(formData, "section_data_withdraw_feed_rows") ?? 5)),
+          intervalSec: Math.min(120, Math.max(2, NUM(formData, "section_data_withdraw_feed_intervalSec") ?? 6)),
+          banks,
+        };
         break;
       }
       case "prizes": {

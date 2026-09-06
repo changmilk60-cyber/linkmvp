@@ -1,4 +1,4 @@
-// The 13 sales-page section types a merchant can reorder / enable-disable
+// The sales-page section types a merchant can reorder / enable-disable
 // from the "จัดเรียง Section" panel. Each Page.sections column stores an
 // array of these, in display order — array order *is* the sort order.
 
@@ -11,6 +11,7 @@ export type SectionKey =
   | "text_block_1"
   | "text_block_2"
   | "player_ranking"
+  | "withdraw_feed"
   | "prizes"
   | "announcements"
   | "image_slider"
@@ -32,12 +33,26 @@ export const SECTION_META: Record<SectionKey, { icon: string; title: string }> =
   text_block_1: { icon: "📝", title: "ข้อความ 1" },
   text_block_2: { icon: "📝", title: "ข้อความ 2" },
   player_ranking: { icon: "🏆", title: "อันดับผู้เล่น" },
+  withdraw_feed: { icon: "🏦", title: "รายการถอนล่าสุด (สุ่มอัตโนมัติ)" },
   prizes: { icon: "🎁", title: "ของรางวัล" },
   announcements: { icon: "📣", title: "ประกาศ / ข่าว" },
   image_slider: { icon: "🎞", title: "สไลด์รูป" },
   reviews: { icon: "⭐", title: "รีวิวแบบสุ่ม" },
   signup_line_buttons: { icon: "⚪", title: "ปุ่มสมัคร + LINE" },
 };
+
+export type FeedBank = { name: string; logoUrl: string; color: string };
+
+// Names + circle colours only — merchants upload their own logo images.
+export const FEED_BANK_SLOTS = 6;
+export const DEFAULT_FEED_BANKS: FeedBank[] = [
+  { name: "ไทยพาณิชย์", logoUrl: "", color: "#4e2a84" },
+  { name: "กสิกรไทย", logoUrl: "", color: "#138f2d" },
+  { name: "กรุงเทพ", logoUrl: "", color: "#1e4598" },
+  { name: "กรุงไทย", logoUrl: "", color: "#01a6e5" },
+  { name: "ทีทีบี", logoUrl: "", color: "#1279be" },
+  { name: "กรุงศรี", logoUrl: "", color: "#c8952f" },
+];
 
 export const DEFAULT_SECTIONS: SectionEntry[] = [
   { key: "online_users", enabled: true, data: { min: 20, max: 80 } },
@@ -52,6 +67,19 @@ export const DEFAULT_SECTIONS: SectionEntry[] = [
   { key: "text_block_1", enabled: false, data: { heading: "", body: "" } },
   { key: "text_block_2", enabled: false, data: { heading: "", body: "" } },
   { key: "player_ranking", enabled: true, data: { players: [] as { name: string; amount: string }[] } },
+  {
+    key: "withdraw_feed",
+    enabled: false,
+    data: {
+      title: "AUTO SYSTEM • ยืนยันยอดแล้ว",
+      statusLabel: "สำเร็จแล้ว",
+      minAmount: 1000,
+      maxAmount: 20000,
+      rows: 5,
+      intervalSec: 6,
+      banks: DEFAULT_FEED_BANKS,
+    },
+  },
   { key: "prizes", enabled: true, data: { items: [] as { label: string; imageUrl: string }[] } },
   { key: "announcements", enabled: false, data: { items: [] as string[] } },
   { key: "image_slider", enabled: false, data: { images: ["", "", "", ""] } },
