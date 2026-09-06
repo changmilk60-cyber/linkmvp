@@ -130,3 +130,107 @@
 .pv-scope ::placeholder {
   color: var(--text-placeholder);
 }
+
+/* ---------- admin shell: sticky bar + section nav, one panel at a time ---------- */
+:root { --pv-appbar-h: 60px; }
+
+.pv-appbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--surface-accent-header);
+  border-bottom: 2px solid var(--green-500);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pv-appbar h1 {
+  margin: 0;
+  font: var(--fw-bold) 17px/1.2 var(--font-sans-pv);
+  color: var(--text-primary);
+}
+.pv-appbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pv-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.pv-nav {
+  position: sticky;
+  top: var(--pv-appbar-h);
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0;
+  background: var(--surface-page);
+  scrollbar-width: thin;
+}
+.pv-navgroup { display: none; }
+
+.pv-navitem {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-card);
+  color: var(--text-body);
+  font: var(--fw-semibold) var(--fs-label) / 1.1 var(--font-sans-pv);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-control);
+}
+.pv-navitem:hover { border-color: var(--border-accent); color: var(--text-accent); }
+.pv-navitem[aria-current="true"] {
+  background: var(--surface-accent-soft);
+  border-color: var(--border-accent-strong);
+  color: var(--text-accent);
+}
+
+.pv-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 12px 0 4px;
+  background: linear-gradient(to top, var(--surface-page) 72%, rgba(11, 11, 11, 0));
+}
+
+@media (min-width: 900px) {
+  :root { --pv-appbar-h: 62px; }
+  .pv-shell { grid-template-columns: 232px minmax(0, 1fr); padding: 18px; gap: 18px; }
+  .pv-nav {
+    flex-direction: column;
+    overflow: visible;
+    gap: 4px;
+    padding: 0;
+    background: transparent;
+    top: calc(var(--pv-appbar-h) + 18px);
+  }
+  .pv-navitem { width: 100%; justify-content: flex-start; }
+  .pv-navgroup {
+    display: block;
+    margin: 14px 0 4px 6px;
+    font: var(--fw-semibold) 11px / 1 var(--font-sans-pv);
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .pv-navgroup:first-child { margin-top: 0; }
+}

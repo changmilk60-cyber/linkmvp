@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Accordion,
@@ -13,10 +13,7 @@ import {
   Field,
   Hint,
   ImageUploadField,
-  PageHeader,
   Pill,
-  QuickNavGrid,
-  SaveBanner,
   SaveBar,
   SectionCard,
   SectionRow,
@@ -76,35 +73,65 @@ type Stats = {
   table: [string, number, number][];
 };
 
-const NAV = [
-  { icon: "📘", label: "วิธีใช้งาน", key: "manual" },
-  { icon: "📊", label: "Dashboard", key: "dashboard" },
-  { icon: "⏰", label: "วันใช้งาน", key: "license" },
-  { icon: "🔗", label: "เปลี่ยนชื่อ URL", key: "url" },
-  { icon: "🌐", label: "ใช้งาน Bot", key: "bot" },
-  { icon: "🍪", label: "ใส่ Pixel", key: "pixel" },
-  { icon: "🎨", label: "โทนสี", key: "theme" },
-  { icon: "📐", label: "จัดเรียง Section", key: "sections" },
-  { label: "ตั้งค่าหลัก", key: "main" },
-  { label: "รูปภาพ", key: "images" },
-  { label: "ข้อความหน้าเว็บ", key: "text" },
-  { label: "ปรับสีตัวอักษร", key: "colors" },
+// One panel is shown at a time, picked from this nav — grouped so 14 entries
+// stay scannable. `saves` marks the panels that live inside the settings form.
+const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: string; saves?: boolean }[] }[] = [
+  {
+    group: "ภาพรวม",
+    items: [
+      { icon: "📊", label: "Dashboard", key: "dashboard" },
+      { icon: "⏰", label: "วันใช้งาน", key: "license" },
+      { icon: "📘", label: "วิธีใช้งาน", key: "manual" },
+    ],
+  },
+  {
+    group: "หน้าเซลเพจ",
+    items: [
+      { icon: "📐", label: "จัดเรียง Section", key: "sections", saves: true },
+      { icon: "🎨", label: "โทนสีเว็บไซต์", key: "theme", saves: true },
+      { icon: "🖼", label: "รูปภาพ", key: "images", saves: true },
+      { icon: "📝", label: "ข้อความหน้าเว็บ", key: "text", saves: true },
+      { icon: "🖌", label: "ปรับสีตัวอักษร", key: "colors", saves: true },
+      { icon: "⭐", label: "รีวิวแบบสุ่ม", key: "reviews", saves: true },
+    ],
+  },
+  {
+    group: "ระบบ",
+    items: [
+      { icon: "🔗", label: "เปลี่ยนชื่อ URL", key: "url" },
+      { icon: "🍪", label: "ใส่ Pixel", key: "pixel", saves: true },
+      { icon: "🌐", label: "ใช้งาน Bot", key: "bot", saves: true },
+      { icon: "⚙", label: "ตั้งค่าหลัก", key: "main", saves: true },
+    ],
+  },
 ];
+const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
 function d(data: Record<string, unknown>) {
   return data as Record<string, string>;
 }
 
 export default function AdminClient({ page, stats, baseUrl }: { page: PageData; stats: Stats; baseUrl: string }) {
-  const [open, setOpen] = useState<Record<string, boolean>>({
-    manual: false, dashboard: true, license: true, url: true, bot: true, sections: true,
-    reviews: true, theme: true, pixel: true, main: true, images: true, text: true, colors: true,
-  });
-  const t = (k: string) => () => setOpen((o) => ({ ...o, [k]: !o[k] }));
-  const jump = (it: { key: string }) => {
-    const el = document.getElementById("panel-" + it.key);
-    if (el) window.scrollTo({ top: el.offsetTop - 16, behavior: "smooth" });
+  const [active, setActive] = useState("dashboard");
+  const activeItem = NAV_ITEMS.find((i) => i.key === active) ?? NAV_ITEMS[0];
+  const show = (key: string) => ({ style: { display: active === key ? "block" : "none" } });
+  const goTo = (key: string) => {
+    setActive(key);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // The sticky bars overlap the content unless the nav knows how tall the top
+  // bar actually is (it wraps on narrow screens).
+  const appbarRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const sync = () => {
+      const h = appbarRef.current?.offsetHeight;
+      if (h) document.documentElement.style.setProperty("--pv-appbar-h", `${h}px`);
+    };
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, []);
 
   const [saveState, saveAction] = useFormState(saveSettingsAction, {});
   const [themePreset, setThemePreset] = useState(page.themePreset);
@@ -172,32 +199,50 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </div>
         </div>
       ) : null}
-      <div style={{ maxWidth: "940px", margin: "0 auto", padding: "20px", display: "flex", flexDirection: "column", gap: "var(--gap-card)" }}>
-        <PageHeader
-          title="หลังบ้านแก้เว็บ"
-          subtitle="จัดการเป็นหมวดหมู่ กดบันทึกครั้งเดียวใช้ได้ทั้งเว็บ"
-          actions={
-            <>
-              <Pill icon="⏰">เหลือ {page.daysLeft} วัน</Pill>
-              <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="primary" icon="👁">พรีวิวหน้าเซลเพจ</Button>
-              </a>
-              <form action={logoutAction}><Button variant="ghost" type="submit">ออกจากระบบ</Button></form>
-            </>
-          }
-        />
+      {/* Always on screen, so the most-used action — previewing the sales page —
+          never needs a scroll to reach. */}
+      <header className="pv-appbar" ref={appbarRef}>
+        <h1>หลังบ้านแก้เว็บ</h1>
+        <Pill icon="⏰" tone="soft">เหลือ {page.daysLeft} วัน</Pill>
+        <div className="pv-appbar-actions">
+          <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
+            <Button variant="primary" icon="👁">พรีวิวหน้าเซลเพจ</Button>
+          </a>
+          <form action={logoutAction}><Button variant="ghost" size="sm" type="submit">ออกจากระบบ</Button></form>
+        </div>
+      </header>
 
-        {saveState?.success ? <SaveBanner message="บันทึกเรียบร้อย" version={new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")} /> : null}
-        <QuickNavGrid columns={4} items={NAV} onSelect={jump} />
+      <div className="pv-shell">
+        <nav className="pv-nav" aria-label="หมวดการตั้งค่า">
+          {NAV_GROUPS.map((g) => (
+            <Fragment key={g.group}>
+              <p className="pv-navgroup">{g.group}</p>
+              {g.items.map((it) => (
+                <button
+                  key={it.key}
+                  type="button"
+                  className="pv-navitem"
+                  aria-current={active === it.key}
+                  onClick={() => goTo(it.key)}
+                >
+                  <span aria-hidden="true">{it.icon}</span>
+                  {it.label}
+                </button>
+              ))}
+            </Fragment>
+          ))}
+        </nav>
 
-        <div id="panel-manual">
-          <SectionCard icon="📘" title="คู่มือใช้งานหลังบ้าน" subtitle="เลือกหัวข้อที่ต้องการเพื่อดูวิธีใช้งานทีละขั้นตอน" open={open.manual} onToggle={t("manual")}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--gap-card)", minWidth: 0 }}>
+
+        <div id="panel-manual" {...show("manual")}>
+          <SectionCard icon="📘" title="คู่มือใช้งานหลังบ้าน" subtitle="เลือกหัวข้อที่ต้องการเพื่อดูวิธีใช้งานทีละขั้นตอน" open>
             <ManualAccordion />
           </SectionCard>
         </div>
 
-        <div id="panel-dashboard">
-          <SectionCard icon="📊" title="Dashboard สถิติเซลเพจ" subtitle="สรุปผู้เข้าชมและจำนวนการคลิกปุ่ม อัปเดตแบบเรียลไทม์จากผู้เข้าชมจริง" open={open.dashboard} onToggle={t("dashboard")}>
+        <div id="panel-dashboard" {...show("dashboard")}>
+          <SectionCard icon="📊" title="Dashboard สถิติเซลเพจ" subtitle="สรุปผู้เข้าชมและจำนวนการคลิกปุ่ม อัปเดตแบบเรียลไทม์จากผู้เข้าชมจริง" open>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: "var(--gap-grid)" }}>
               <StatCard label="ผู้เข้าชมวันนี้" value={stats.viewsToday} note="Session" />
               <StatCard label="ผู้ชมไม่ซ้ำวันนี้" value={stats.uniqueToday} note="ประมาณจากเบราว์เซอร์" />
@@ -218,8 +263,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-license">
-          <SectionCard icon="⏰" title="วันใช้งาน (License)" subtitle="หมดอายุแล้วหน้าเว็บจะเด้งไป White Page อัตโนมัติ" open={open.license} onToggle={t("license")}>
+        <div id="panel-license" {...show("license")}>
+          <SectionCard icon="⏰" title="วันใช้งาน (License)" subtitle="หมดอายุแล้วหน้าเว็บจะเด้งไป White Page อัตโนมัติ" open>
             <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)" }}>
               <p style={{ margin: 0, font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>วันหมดอายุปัจจุบัน: <span style={{ color: "var(--text-accent-bright)" }}>{page.licenseExpiresAt}</span></p>
               <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>ต้องการต่ออายุ กรุณาติดต่อแอดมิน</p>
@@ -227,16 +272,16 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-url">
-          <UrlPanel open={open.url} onToggle={t("url")} pageId={page.id} slug={page.slug} baseUrl={baseUrl} />
+        <div id="panel-url" {...show("url")}>
+          <UrlPanel pageId={page.id} slug={page.slug} baseUrl={baseUrl} />
         </div>
 
         <form action={saveAction} encType="multipart/form-data" style={{ display: "flex", flexDirection: "column", gap: "var(--gap-card)" }}>
         <input type="hidden" name="pageId" value={page.id} />
         <input type="hidden" name="_scope" ref={scopeRef} defaultValue="all" />
 
-        <div id="panel-bot">
-          <SectionCard icon="🌐" title="ตั้งค่าใช้งาน bot" subtitle="กำหนดหน้าเดียวกันสำหรับคอมพิวเตอร์ มือถือ แท็บเล็ต และระบบตรวจสอบ" open={open.bot} onToggle={t("bot")}>
+        <div id="panel-bot" {...show("bot")}>
+          <SectionCard icon="🌐" title="ตั้งค่าใช้งาน bot" subtitle="กำหนดหน้าเดียวกันสำหรับคอมพิวเตอร์ มือถือ แท็บเล็ต และระบบตรวจสอบ" open>
               <Field label="ลิงก์ Landing Page" hint="ใส่ URL แบบเต็ม หากเว้นว่างหรือ URL ไม่ถูกต้อง ระบบจะแสดงหน้าเซลเพจเดิม" hintTone="body">
                 <TextInput mono name="landingUrl" defaultValue={page.landingUrl || ""} placeholder="https://example.com" />
               </Field>
@@ -249,8 +294,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-sections">
-          <SectionCard icon="📐" title="จัดเรียง Section" subtitle="กดลูกศรเพื่อสลับลำดับ • สลับปุ่มเพื่อเปิด/ปิด แต่ละ section • กดบันทึกทั้งหมดด้านล่างสุด" open={open.sections} onToggle={t("sections")}>
+        <div id="panel-sections" {...show("sections")}>
+          <SectionCard icon="📐" title="จัดเรียง Section" subtitle="กดลูกศรเพื่อสลับลำดับ • สลับปุ่มเพื่อเปิด/ปิด แต่ละ section • กดบันทึกทั้งหมดด้านล่างสุด" open>
               {page.sections.map((s, i) => (
                 <div key={s.key} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px", paddingTop: "12px" }}>
@@ -275,8 +320,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-reviews">
-          <SectionCard icon="⭐" title="จัดการรีวิวแบบสุ่ม" count={`${page.reviews.length} รีวิว`} subtitle="แสดงครั้งละ 1 รีวิว • เปลี่ยนอัตโนมัติทุก 4 วินาที" open={open.reviews} onToggle={t("reviews")}>
+        <div id="panel-reviews" {...show("reviews")}>
+          <SectionCard icon="⭐" title="จัดการรีวิวแบบสุ่ม" count={`${page.reviews.length} รีวิว`} subtitle="แสดงครั้งละ 1 รีวิว • เปลี่ยนอัตโนมัติทุก 4 วินาที" open>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="หัวข้อรีวิว"><TextInput name="reviewsTitle" defaultValue={page.reviewsTitle || ""} placeholder="⭐ เสียงตอบรับจากผู้ใช้งาน" /></Field>
                 <Field label="คำอธิบายใต้หัวข้อ"><TextInput name="reviewsSubtitle" defaultValue={page.reviewsSubtitle || ""} placeholder="อัปเดตรีวิวใหม่ทุก 4 วินาที" /></Field>
@@ -292,8 +337,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-theme">
-          <SectionCard icon="🎨" title="โทนสีเว็บไซต์" count="12 โทน" subtitle="เลือกโทนสีที่ต้องการ — สีและพื้นหลังหน้าเซลเพจจะเปลี่ยนให้เข้าชุดกันอัตโนมัติ" open={open.theme} onToggle={t("theme")}>
+        <div id="panel-theme" {...show("theme")}>
+          <SectionCard icon="🎨" title="โทนสีเว็บไซต์" count="12 โทน" subtitle="เลือกโทนสีที่ต้องการ — สีและพื้นหลังหน้าเซลเพจจะเปลี่ยนให้เข้าชุดกันอัตโนมัติ" open>
               <input type="hidden" name="themePreset" value={themePreset} />
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: "var(--gap-grid)" }}>
                 {THEME_PRESETS.map((p) => (
@@ -304,8 +349,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-pixel">
-          <SectionCard title="Pixel" icon="🍪" subtitle="ตั้งค่าก่อนขึ้นแอด — สำคัญมาก" open={open.pixel} onToggle={t("pixel")}>
+        <div id="panel-pixel" {...show("pixel")}>
+          <SectionCard title="Pixel" icon="🍪" subtitle="ตั้งค่าก่อนขึ้นแอด — สำคัญมาก" open>
               <Field label="Facebook Pixel ID (ขึ้นบรรทัดใหม่ต่อ 1 ไอดี)">
                 <Textarea name="fbPixelIds" defaultValue={pixelIds.join("\n")} rows={3} placeholder={"960483503717089"} />
               </Field>
@@ -314,8 +359,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-main">
-          <SectionCard title="ตั้งค่าหลัก" subtitle="Tab Title, OG, CAPI และอื่นๆ" open={open.main} onToggle={t("main")}>
+        <div id="panel-main" {...show("main")}>
+          <SectionCard title="ตั้งค่าหลัก" subtitle="Tab Title, OG, CAPI และอื่นๆ" open>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="ชื่อแท็บเบราว์เซอร์ (Tab Title)"><TextInput name="tabTitle" defaultValue={page.tabTitle || ""} /></Field>
                 <Field label="OG Description" hint="ข้อความสั้นๆ ที่แสดงใต้ชื่อตอนแชร์ลิงก์" hintTone="body"><TextInput name="ogDescription" defaultValue={page.ogDescription || ""} /></Field>
@@ -335,8 +380,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-images">
-          <SectionCard title="รูปภาพ" subtitle="โลโก้และโลโก้ LINE ของเว็บ" open={open.images} onToggle={t("images")}>
+        <div id="panel-images" {...show("images")}>
+          <SectionCard title="รูปภาพ" subtitle="โลโก้และโลโก้ LINE ของเว็บ" open>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <ImageUploadField label="โลโก้" name="file_logoUrl" currentUrl={page.logoUrl} recommend="ขนาดแนะนำ: 138 × 78 px — แนวนอน พื้นหลังโปร่งใส (.png)" />
                 <ImageUploadField label="โลโก้ LINE" name="file_lineLogoUrl" currentUrl={page.lineLogoUrl} recommend="ขนาดแนะนำ: 28 × 28 px — สี่เหลี่ยมจัตุรัส" />
@@ -346,8 +391,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-text">
-          <SectionCard title="ข้อความหน้าเว็บ" subtitle="หัวข้อ/คำโปรย และท้ายเว็บ" open={open.text} onToggle={t("text")}>
+        <div id="panel-text" {...show("text")}>
+          <SectionCard title="ข้อความหน้าเว็บ" subtitle="หัวข้อ/คำโปรย และท้ายเว็บ" open>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="หัวข้อหลัก"><TextInput name="heroHeadline" defaultValue={page.heroHeadline || ""} /></Field>
                 <Field label="คำโปรย"><TextInput name="heroSubtext" defaultValue={page.heroSubtext || ""} /></Field>
@@ -358,8 +403,8 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-colors">
-          <SectionCard title="ปรับสีตัวอักษร" subtitle="ปรับสีอิสระ — ทับ Theme Preset ปล่อยว่าง = ใช้สีจาก Theme" open={open.colors} onToggle={t("colors")}>
+        <div id="panel-colors" {...show("colors")}>
+          <SectionCard title="ปรับสีตัวอักษร" subtitle="ปรับสีอิสระ — ทับ Theme Preset ปล่อยว่าง = ใช้สีจาก Theme" open>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 {[
                   ["primary", "สีหลัก (หัวข้อ / ปุ่ม)"],
@@ -376,8 +421,13 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
         </div>
 
         {saveState?.error ? <p style={{ margin: 0, color: "var(--text-danger)", font: "var(--text-hint)" }}>{saveState.error}</p> : null}
-        <SaveBar label="บันทึกทั้งหมด" onClick={() => setScope("all")} />
+        {activeItem.saves ? (
+          <div className="pv-savebar">
+            <SaveBar label={`บันทึก · ${activeItem.label}`} onClick={() => setScope(active)} />
+          </div>
+        ) : null}
         </form>
+        </div>
       </div>
     </div>
   );
@@ -459,10 +509,10 @@ function ManualAccordion() {
   );
 }
 
-function UrlPanel({ open, onToggle, pageId, slug, baseUrl }: { open: boolean; onToggle: () => void; pageId: string; slug: string; baseUrl: string }) {
+function UrlPanel({ pageId, slug, baseUrl }: { pageId: string; slug: string; baseUrl: string }) {
   const [state, formAction] = useFormState(renameSlugAction, {});
   return (
-    <SectionCard icon="🔗" title="เปลี่ยนชื่อ URL ของเซลเพจ" subtitle="เปลี่ยนชื่อโฟลเดอร์เว็บไซต์ โดยไม่แก้ไขรูป ข้อความ หรือการตั้งค่าภายใน" open={open} onToggle={onToggle}>
+    <SectionCard icon="🔗" title="เปลี่ยนชื่อ URL ของเซลเพจ" subtitle="เปลี่ยนชื่อโฟลเดอร์เว็บไซต์ โดยไม่แก้ไขรูป ข้อความ หรือการตั้งค่าภายใน" open>
       <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)" }}>
         <label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>URL ปัจจุบัน</label>
         <TextInput mono readOnly value={`${baseUrl.replace(/^https?:\/\//, "")}/${slug}`} />

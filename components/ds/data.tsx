@@ -71,6 +71,10 @@ export function SectionRow({
   children?: ReactNode;
   style?: CSSProperties;
 }) {
+  // Details stay mounted when collapsed (display:none, not unmounted) so their
+  // fields still submit — otherwise saving a collapsed row would blank it.
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = Boolean(children);
   return (
     <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", overflow: "hidden", ...style }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 14px" }}>
@@ -79,9 +83,21 @@ export function SectionRow({
         <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px", font: "var(--fw-semibold) var(--fs-section-title)/1.2 var(--font-sans)", color: "var(--text-primary)" }}>
           {icon ? <span aria-hidden="true">{icon}</span> : null}{title}
         </span>
+        {hasDetails ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            style={{ flexShrink: 0, background: "var(--surface-raised)", color: expanded ? "var(--text-accent)" : "var(--text-muted)", border: "1px solid " + (expanded ? "var(--border-accent)" : "var(--border-hairline)"), borderRadius: "var(--radius-button)", padding: "6px 10px", font: "var(--fw-medium) var(--fs-hint)/1.1 var(--font-sans)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px", transition: "var(--transition-control)" }}
+          >
+            แก้ไข<span aria-hidden="true">{expanded ? "▲" : "▼"}</span>
+          </button>
+        ) : null}
         <SectionToggle name={onToggleName} defaultEnabled={enabled} />
       </div>
-      {children ? <div style={{ padding: "0 14px 14px", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "var(--gap-grid)" }}>{children}</div> : null}
+      {hasDetails ? (
+        <div style={{ display: expanded ? "grid" : "none", padding: "0 14px 14px", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "var(--gap-grid)" }}>{children}</div>
+      ) : null}
     </div>
   );
 }
