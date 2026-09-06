@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Accordion,
@@ -109,6 +109,17 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
   const [saveState, saveAction] = useFormState(saveSettingsAction, {});
   const colors = page.colorOverrides ? (JSON.parse(page.colorOverrides) as Record<string, string>) : {};
   const pixelIds: string[] = page.fbPixelIds ? JSON.parse(page.fbPixelIds) : [];
+
+  // Every panel's own "บันทึกส่วนนี้" button — and the bottom SaveBar — share
+  // this one saveAction/saveState pair. Whichever one fired, the success
+  // banner lives up at the header, so scroll there on every successful save
+  // or the user (who may have clicked Save far down a long page) sees no
+  // feedback at all.
+  useEffect(() => {
+    if (saveState?.success) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [saveState]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--surface-page)" }}>
