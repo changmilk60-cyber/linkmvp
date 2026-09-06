@@ -111,18 +111,60 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
   const pixelIds: string[] = page.fbPixelIds ? JSON.parse(page.fbPixelIds) : [];
 
   // Every panel's own "บันทึกส่วนนี้" button — and the bottom SaveBar — share
-  // this one saveAction/saveState pair. Whichever one fired, the success
-  // banner lives up at the header, so scroll there on every successful save
-  // or the user (who may have clicked Save far down a long page) sees no
-  // feedback at all.
+  // this one saveAction/saveState pair, so a single popup here covers all of
+  // them regardless of scroll position. Auto-dismisses after 3s.
+  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
+  const [toastShown, setToastShown] = useState(false);
   useEffect(() => {
     if (saveState?.success) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setToast({ ok: true, text: "บันทึกเรียบร้อย" });
+    } else if (saveState?.error) {
+      setToast({ ok: false, text: saveState.error });
+    } else {
+      return;
     }
+    setToastShown(true);
+    const showTimer = setTimeout(() => setToastShown(false), 3000);
+    return () => clearTimeout(showTimer);
   }, [saveState]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--surface-page)" }}>
+      {toast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            zIndex: 9999,
+            transform: `translateX(-50%) translateY(${toastShown ? "0" : "-16px"})`,
+            opacity: toastShown ? 1 : 0,
+            pointerEvents: "none",
+            transition: "opacity 220ms var(--ease-standard), transform 220ms var(--ease-standard)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: "var(--surface-card)",
+              border: "1px solid " + (toast.ok ? "var(--border-accent)" : "var(--border-danger)"),
+              borderRadius: "var(--radius-card)",
+              padding: "14px 22px",
+              boxShadow: "0 8px 28px rgba(0,0,0,.45)",
+              font: "var(--fw-bold) var(--fs-section-title)/1.2 var(--font-sans)",
+              color: toast.ok ? "var(--text-accent)" : "var(--text-danger)",
+              maxWidth: "90vw",
+            }}
+          >
+            <span aria-hidden="true">{toast.ok ? "✅" : "⚠"}</span>
+            {toast.text}
+          </div>
+        </div>
+      ) : null}
       <div style={{ maxWidth: "940px", margin: "0 auto", padding: "20px", display: "flex", flexDirection: "column", gap: "var(--gap-card)" }}>
         <PageHeader
           title="หลังบ้านแก้เว็บ"
