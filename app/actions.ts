@@ -151,6 +151,16 @@ export async function moveSectionAction(index: number, direction: "up" | "down",
   if (!page) return;
 
   const sections = parseSections(page.sections);
+
+  // The arrows live inside the sections form, so its on/off switches come
+  // along with the submission — keep them rather than dropping whatever the
+  // user just toggled but hasn't pressed Save for yet.
+  for (const s of sections) {
+    if (formData.has(`section_enabled_${s.key}`)) {
+      s.enabled = formData.get(`section_enabled_${s.key}`) === "on";
+    }
+  }
+
   const swapWith = direction === "up" ? index - 1 : index + 1;
   if (swapWith < 0 || swapWith >= sections.length) return;
   [sections[index], sections[swapWith]] = [sections[swapWith], sections[index]];

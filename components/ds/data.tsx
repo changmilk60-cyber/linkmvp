@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 export function StatCard({ label, value, note, noteTone = "accent", style }: { label: string; value: ReactNode; note?: string; noteTone?: "accent" | "muted"; style?: CSSProperties }) {
@@ -72,43 +75,34 @@ export function SectionRow({
         <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px", font: "var(--fw-semibold) var(--fs-section-title)/1.2 var(--font-sans)", color: "var(--text-primary)" }}>
           {icon ? <span aria-hidden="true">{icon}</span> : null}{title}
         </span>
-        <label style={{ display: "inline-flex" }}>
-          <input type="checkbox" name={onToggleName} defaultChecked={enabled} style={{ display: "none" }} />
-          <ToggleVisual enabled={enabled} />
-        </label>
+        <SectionToggle name={onToggleName} defaultEnabled={enabled} />
       </div>
       {children ? <div style={{ padding: "0 14px 14px", display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: "var(--gap-grid)" }}>{children}</div> : null}
     </div>
   );
 }
 
-// Visual-only switch that mirrors a sibling checkbox's checked state via a
-// tiny client wrapper isn't needed here — the row is inside a form that
-// re-renders from server state on save, so we just reflect the initial value
-// and let the browser's native checkbox toggle (input hidden, styled below).
-function ToggleVisual({ enabled }: { enabled: boolean }) {
+// A real controlled switch. The previous version styled a <span> inside a
+// <label> wrapping a hidden checkbox and flipped `.checked` imperatively —
+// which the label's own activation behaviour then flipped straight back, so
+// the switch looked on but submitted off. React state is the single source of
+// truth here, and the hidden input carries it into the form exactly the way a
+// checked checkbox would ("on" when set, empty otherwise).
+function SectionToggle({ name, defaultEnabled }: { name: string; defaultEnabled: boolean }) {
+  const [on, setOn] = useState(defaultEnabled);
   return (
-    <span
-      onClick={(e) => {
-        const input = (e.currentTarget.previousSibling as HTMLInputElement) || (e.currentTarget.parentElement?.querySelector("input") as HTMLInputElement);
-        if (input) {
-          input.checked = !input.checked;
-          e.currentTarget.dataset.on = input.checked ? "1" : "0";
-          const knob = e.currentTarget.firstChild as HTMLElement;
-          if (knob) {
-            knob.style.left = input.checked ? "29px" : "3px";
-          }
-          e.currentTarget.style.background = input.checked ? "var(--surface-primary)" : "var(--surface-raised)";
-          e.currentTarget.style.borderColor = input.checked ? "var(--green-500)" : "var(--border-hairline)";
-        }
-      }}
-      role="switch"
-      aria-checked={enabled}
-      data-on={enabled ? "1" : "0"}
-      style={{ width: "56px", height: "30px", flex: "0 0 auto", borderRadius: "var(--radius-pill)", border: "1px solid " + (enabled ? "var(--green-500)" : "var(--border-hairline)"), background: enabled ? "var(--surface-primary)" : "var(--surface-raised)", position: "relative", cursor: "pointer", transition: "var(--transition-control)", display: "inline-block" }}
-    >
-      <span style={{ position: "absolute", top: "3px", left: enabled ? "29px" : "3px", width: "22px", height: "22px", borderRadius: "50%", background: "var(--white)", transition: "left var(--dur-base) var(--ease-standard)" }} />
-    </span>
+    <>
+      <input type="hidden" name={name} value={on ? "on" : ""} />
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        onClick={() => setOn((v) => !v)}
+        style={{ width: "56px", height: "30px", flex: "0 0 auto", borderRadius: "var(--radius-pill)", border: "1px solid " + (on ? "var(--green-500)" : "var(--border-hairline)"), background: on ? "var(--surface-primary)" : "var(--surface-raised)", position: "relative", cursor: "pointer", transition: "var(--transition-control)", padding: 0 }}
+      >
+        <span style={{ position: "absolute", top: "3px", left: on ? "29px" : "3px", width: "22px", height: "22px", borderRadius: "50%", background: "var(--white)", transition: "left var(--dur-base) var(--ease-standard)" }} />
+      </button>
+    </>
   );
 }
 

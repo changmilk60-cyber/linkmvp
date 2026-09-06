@@ -246,7 +246,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard icon="📐" title="จัดเรียง Section" subtitle="กดลูกศรเพื่อสลับลำดับ • สลับปุ่มเพื่อเปิด/ปิด แต่ละ section • กดบันทึกทั้งหมดด้านล่างสุด" open={open.sections} onToggle={t("sections")}>
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={[]} skipSections />
+              <HiddenCarry page={page} except={[]} ownsSections />
               {page.sections.map((s, i) => (
                 <div key={s.key} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px", paddingTop: "12px" }}>
@@ -276,7 +276,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard icon="⭐" title="จัดการรีวิวแบบสุ่ม" count={`${page.reviews.length} รีวิว`} subtitle="แสดงครั้งละ 1 รีวิว • เปลี่ยนอัตโนมัติทุก 4 วินาที" open={open.reviews} onToggle={t("reviews")}>
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["reviewsTitle", "reviewsSubtitle"]} skipSections carrySections skipReviews />
+              <HiddenCarry page={page} except={["reviewsTitle", "reviewsSubtitle"]} ownsReviews />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
                 <Field label="หัวข้อรีวิว"><TextInput name="reviewsTitle" defaultValue={page.reviewsTitle || ""} placeholder="⭐ เสียงตอบรับจากผู้ใช้งาน" /></Field>
                 <Field label="คำอธิบายใต้หัวข้อ"><TextInput name="reviewsSubtitle" defaultValue={page.reviewsSubtitle || ""} placeholder="อัปเดตรีวิวใหม่ทุก 4 วินาที" /></Field>
@@ -297,7 +297,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard icon="🎨" title="โทนสีเว็บไซต์" count="12 โทน" subtitle="เลือกโทนสีที่ต้องการ — สีและพื้นหลังหน้าเซลเพจจะเปลี่ยนให้เข้าชุดกันอัตโนมัติ" open={open.theme} onToggle={t("theme")}>
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["themePreset"]} skipSections carrySections />
+              <HiddenCarry page={page} except={["themePreset"]} />
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "var(--gap-grid)" }}>
                 {THEME_PRESETS.map((p) => (
                   <ThemeSwatchCard key={p.key} name={p.name} icon={p.icon} base={p.base} primary={p.primary} accent={p.accent} selected={page.themePreset === p.key} onSelectValue={p.key} radioName="themePreset" />
@@ -312,7 +312,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard title="Pixel" icon="🍪" subtitle="ตั้งค่าก่อนขึ้นแอด — สำคัญมาก" open={open.pixel} onToggle={t("pixel")}>
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["fbPixelIds"]} skipSections carrySections />
+              <HiddenCarry page={page} except={["fbPixelIds"]} />
               <Field label="Facebook Pixel ID (ขึ้นบรรทัดใหม่ต่อ 1 ไอดี)">
                 <Textarea name="fbPixelIds" defaultValue={pixelIds.join("\n")} rows={3} placeholder={"960483503717089"} />
               </Field>
@@ -326,7 +326,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard title="ตั้งค่าหลัก" subtitle="Tab Title, OG, CAPI และอื่นๆ" open={open.main} onToggle={t("main")}>
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["tabTitle", "ogDescription", "capiAccessToken", "capiEndpointUrl", "capiEventName", "ctaLayout"]} skipSections carrySections />
+              <HiddenCarry page={page} except={["tabTitle", "ogDescription", "capiAccessToken", "capiEndpointUrl", "capiEventName", "ctaLayout"]} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
                 <Field label="ชื่อแท็บเบราว์เซอร์ (Tab Title)"><TextInput name="tabTitle" defaultValue={page.tabTitle || ""} /></Field>
                 <Field label="OG Description" hint="ข้อความสั้นๆ ที่แสดงใต้ชื่อตอนแชร์ลิงก์" hintTone="body"><TextInput name="ogDescription" defaultValue={page.ogDescription || ""} /></Field>
@@ -351,7 +351,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard title="รูปภาพ" subtitle="โลโก้และโลโก้ LINE ของเว็บ" open={open.images} onToggle={t("images")}>
             <form action={saveAction} style={{ display: "contents" }} encType="multipart/form-data">
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={[]} skipSections carrySections />
+              <HiddenCarry page={page} except={[]} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
                 <ImageUploadField label="โลโก้" name="file_logoUrl" currentUrl={page.logoUrl} recommend="ขนาดแนะนำ: 138 × 78 px — แนวนอน พื้นหลังโปร่งใส (.png)" />
                 <ImageUploadField label="โลโก้ LINE" name="file_lineLogoUrl" currentUrl={page.lineLogoUrl} recommend="ขนาดแนะนำ: 28 × 28 px — สี่เหลี่ยมจัตุรัส" />
@@ -366,7 +366,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard title="ข้อความหน้าเว็บ" subtitle="หัวข้อ/คำโปรย และท้ายเว็บ" open={open.text} onToggle={t("text")}>
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["heroHeadline", "heroSubtext", "footerText", "footerTextColor"]} skipSections carrySections />
+              <HiddenCarry page={page} except={["heroHeadline", "heroSubtext", "footerText", "footerTextColor"]} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
                 <Field label="หัวข้อหลัก"><TextInput name="heroHeadline" defaultValue={page.heroHeadline || ""} /></Field>
                 <Field label="คำโปรย"><TextInput name="heroSubtext" defaultValue={page.heroSubtext || ""} /></Field>
@@ -382,7 +382,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <SectionCard title="ปรับสีตัวอักษร" subtitle="ปรับสีอิสระ — ทับ Theme Preset ปล่อยว่าง = ใช้สีจาก Theme" open={open.colors} onToggle={t("colors")}>
             <form action={saveAction} style={{ display: "contents" }}>
               <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={[]} skipSections carrySections skipColors />
+              <HiddenCarry page={page} except={[]} ownsColors />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
                 {[
                   ["primary", "สีหลัก (หัวข้อ / ปุ่ม)"],
@@ -401,7 +401,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
 
         <form action={saveAction}>
           <input type="hidden" name="pageId" value={page.id} />
-          <HiddenCarry page={page} except={[]} skipSections carrySections />
+          <HiddenCarry page={page} except={[]} />
           {saveState?.error ? <p style={{ color: "var(--text-danger)", font: "var(--text-hint)" }}>{saveState.error}</p> : null}
           <SaveBar label="บันทึกทั้งหมด" />
         </form>
@@ -507,17 +507,19 @@ function UrlPanel({ open, onToggle, pageId, slug, baseUrl }: { open: boolean; on
 function HiddenCarry({
   page,
   except,
-  skipSections,
-  carrySections,
-  skipColors,
-  skipReviews,
+  ownsSections,
+  ownsColors,
+  ownsReviews,
 }: {
   page: PageData;
   except: string[];
-  skipSections?: boolean;
-  carrySections?: boolean;
-  skipColors?: boolean;
-  skipReviews?: boolean;
+  /** Set only by the panel that renders the real controls for that area, so
+   *  its visible inputs aren't shadowed by duplicates carried here. Any panel
+   *  that does NOT own an area must carry it, or saveSettingsAction sees the
+   *  fields missing and writes the area blank. */
+  ownsSections?: boolean;
+  ownsColors?: boolean;
+  ownsReviews?: boolean;
 }) {
   const skip = new Set(except);
   const colors = page.colorOverrides ? (JSON.parse(page.colorOverrides) as Record<string, string>) : {};
@@ -542,20 +544,22 @@ function HiddenCarry({
       {!skip.has("cloakToLandingUrl") && page.cloakToLandingUrl && <input type="hidden" name="cloakToLandingUrl" value="on" />}
       {!skip.has("reviewsTitle") && <input type="hidden" name="reviewsTitle" value={page.reviewsTitle || ""} />}
       {!skip.has("reviewsSubtitle") && <input type="hidden" name="reviewsSubtitle" value={page.reviewsSubtitle || ""} />}
-      {!skipReviews && page.reviews.map((r, i) => (
+      {!ownsReviews && page.reviews.map((r, i) => (
         <span key={i}>
           <input type="hidden" name={`review_member_${i}`} value={r.member} />
           <input type="hidden" name={`review_text_${i}`} value={r.text} />
           <input type="hidden" name={`review_stars_${i}`} value={r.stars} />
         </span>
       ))}
-      {!skipColors && ["primary", "body", "muted", "cta_text", "line_cta_text"].map((k) => (
+      {!ownsColors && ["primary", "body", "muted", "cta_text", "line_cta_text"].map((k) => (
         <input key={k} type="hidden" name={`color_${k}`} value={colors[k] || ""} />
       ))}
-      {!skipSections && page.sections.map((s) => (
-        <input key={s.key} type="hidden" name={`section_enabled_${s.key}`} value={s.enabled ? "on" : ""} />
+      {!ownsSections && page.sections.map((s) => (
+        <span key={s.key}>
+          <input type="hidden" name={`section_enabled_${s.key}`} value={s.enabled ? "on" : ""} />
+          <SectionHiddenData sKey={s.key} data={s.data} />
+        </span>
       ))}
-      {(carrySections || !skipSections) && page.sections.map((s) => <SectionHiddenData key={s.key} sKey={s.key} data={s.data} />)}
     </>
   );
 }
