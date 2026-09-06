@@ -58,7 +58,7 @@ export function QuickNavGrid({
   style?: CSSProperties;
 }) {
   return (
-    <nav style={{ background: "var(--surface-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-card)", padding: "var(--pad-card)", display: "grid", gridTemplateColumns: "repeat(" + columns + ",minmax(0,1fr))", gap: "var(--gap-grid)", ...style }}>
+    <nav style={{ background: "var(--surface-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-card)", padding: "var(--pad-card)", display: "grid", gridTemplateColumns: `repeat(auto-fit,minmax(140px,1fr))`, gap: "var(--gap-grid)", ...style }}>
       {items.map((it, i) => (
         <button
           key={i}
@@ -74,11 +74,12 @@ export function QuickNavGrid({
   );
 }
 
-export function SaveBar({ label = "บันทึกทั้งหมด", pending, style }: { label?: string; pending?: boolean; style?: CSSProperties }) {
+export function SaveBar({ label = "บันทึกทั้งหมด", pending, onClick, style }: { label?: string; pending?: boolean; onClick?: () => void; style?: CSSProperties }) {
   return (
     <button
       type="submit"
       disabled={pending}
+      onClick={onClick}
       style={{ width: "100%", background: "var(--surface-primary)", color: "var(--text-on-primary)", border: "1px solid var(--green-500)", borderRadius: "var(--radius-card)", padding: "22px", font: "var(--fw-bold) 20px/1 var(--font-sans)", cursor: pending ? "wait" : "pointer", boxShadow: "var(--shadow-primary)", transition: "var(--transition-control)", opacity: pending ? 0.7 : 1, ...style }}
     >
       {pending ? "กำลังบันทึก..." : label}

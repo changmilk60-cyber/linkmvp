@@ -39,15 +39,20 @@ async function saveUpload(file: FormDataEntryValue | null): Promise<string | nul
 
 // ---------- AUTH ----------
 
-async function uniqueSlugFromEmail(email: string) {
-  const base = cleanSlug(email.split("@")[0] || "page") || "page";
-  let slug = base;
-  let n = 1;
-  // eslint-disable-next-line no-await-in-loop
-  while (await prisma.page.findUnique({ where: { slug } })) {
-    slug = `${base}-${++n}`;
+// Deliberately random, never derived from the account: the slug is the
+// page's public URL, so a slug built from the email's local-part would hand
+// every visitor the owner's address. Merchants rename it in the admin.
+const SLUG_ALPHABET = "abcdefghijkmnopqrstuvwxyz23456789";
+async function newRandomSlug() {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    let slug = "";
+    for (let i = 0; i < 10; i++) {
+      slug += SLUG_ALPHABET[Math.floor(Math.random() * SLUG_ALPHABET.length)];
+    }
+    // eslint-disable-next-line no-await-in-loop
+    if (!(await prisma.page.findUnique({ where: { slug } }))) return slug;
   }
-  return slug;
+  return `p${Date.now().toString(36)}`;
 }
 
 export async function registerAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -64,7 +69,7 @@ export async function registerAction(_prevState: ActionState, formData: FormData
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({ data: { email, passwordHash } });
 
-  const slug = await uniqueSlugFromEmail(email);
+  const slug = await newRandomSlug();
   await prisma.page.create({
     data: {
       slug,
@@ -102,8 +107,7 @@ export async function logoutAction() {
 export async function getOrCreateOwnPage(userId: string) {
   const existing = await prisma.page.findFirst({ where: { userId } });
   if (existing) return existing;
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  const slug = await uniqueSlugFromEmail(user?.email || nanoid(6));
+  const slug = await newRandomSlug();
   return prisma.page.create({
     data: { slug, userId, sections: JSON.stringify(DEFAULT_SECTIONS) },
   });
@@ -180,6 +184,12 @@ const STR = (fd: FormData, k: string) => {
   return v || undefined;
 };
 
+// The admin is one form, but each panel's own save button stamps its name
+// into `_scope` first, so a panel only ever writes its own columns. Anything
+// outside the submitted scope is left exactly as it is in the database —
+// no more carrying the whole page's state through every save.
+type SaveScope = "all" | "bot" | "sections" | "reviews" | "theme" | "pixel" | "main" | "images" | "text" | "colors";
+
 export async function saveSettingsAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
   if (!userId) redirect("/login");
@@ -188,55 +198,82 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
   const page = await prisma.page.findFirst({ where: { id: pageId, userId } });
   if (!page) return { error: "ไม่พบหน้านี้" };
 
-  // ---- appearance / main settings ----
-  const themePreset = STR(formData, "themePreset") || page.themePreset;
-  const tabTitle = STR(formData, "tabTitle") ?? null;
-  const ogDescription = STR(formData, "ogDescription") ?? null;
-  const capiEventName = formData.get("capiEventName") === "purchase" ? "purchase" : "subscribe";
-  const ctaLayout = formData.get("ctaLayout") === "vertical" ? "vertical" : "horizontal";
-  const capiAccessToken = STR(formData, "capiAccessToken") ?? null;
-  const capiEndpointUrl = STR(formData, "capiEndpointUrl") ?? null;
+  const scope = String(formData.get("_scope") || "all") as SaveScope;
+  const wants = (s: Exclude<SaveScope, "all">) => scope === "all" || scope === s;
 
-  const heroHeadline = STR(formData, "heroHeadline") ?? null;
-  const heroSubtext = STR(formData, "heroSubtext") ?? null;
-  const footerText = STR(formData, "footerText") ?? null;
-  const footerTextColor = STR(formData, "footerTextColor") ?? null;
+  const data: Record<string, unknown> = {};
 
-  const fbPixelIdsRaw = String(formData.get("fbPixelIds") || "");
-  const fbPixelIds = fbPixelIdsRaw
-    .split(/[\n,]/)
-    .map((s) => s.trim())
-    .filter((s) => /^\d{5,20}$/.test(s));
-
-  const landingUrl = STR(formData, "landingUrl") ?? null;
-  const whitepageRedirectUrl = STR(formData, "whitepageRedirectUrl") ?? null;
-  const useSameLandingForAll = formData.get("useSameLandingForAll") === "on";
-  const cloakToLandingUrl = formData.get("cloakToLandingUrl") === "on";
-
-  const colorFields = ["primary", "body", "muted", "cta_text", "line_cta_text"] as const;
-  const colorOverrides: Record<string, string> = {};
-  for (const k of colorFields) {
-    const v = STR(formData, `color_${k}`);
-    if (v) colorOverrides[k] = v;
+  if (wants("theme")) {
+    data.themePreset = STR(formData, "themePreset") || page.themePreset;
   }
 
-  const reviewsTitle = STR(formData, "reviewsTitle") ?? null;
-  const reviewsSubtitle = STR(formData, "reviewsSubtitle") ?? null;
-  const reviews: { member: string; text: string; stars: string }[] = [];
-  for (let i = 0; i < 5; i++) {
-    if (formData.get(`review_remove_${i}`) === "on") continue;
-    const member = String(formData.get(`review_member_${i}`) || "").trim();
-    const text = String(formData.get(`review_text_${i}`) || "").trim();
-    const stars = String(formData.get(`review_stars_${i}`) || "5 ดาว");
-    if (member || text) reviews.push({ member: member || "สมาชิก", text, stars });
+  if (wants("main")) {
+    data.tabTitle = STR(formData, "tabTitle") ?? null;
+    data.ogDescription = STR(formData, "ogDescription") ?? null;
+    data.capiEventName = formData.get("capiEventName") === "purchase" ? "purchase" : "subscribe";
+    data.ctaLayout = formData.get("ctaLayout") === "vertical" ? "vertical" : "horizontal";
+    data.capiAccessToken = STR(formData, "capiAccessToken") ?? null;
+    data.capiEndpointUrl = STR(formData, "capiEndpointUrl") ?? null;
   }
 
-  // ---- image uploads ----
-  const uploads: Record<string, string | null> = {};
-  for (const field of ["logoUrl", "lineLogoUrl", "ogImage"] as const) {
-    const saved = await saveUpload(formData.get(`file_${field}`));
-    if (saved && typeof saved === "object") return saved;
-    if (saved) uploads[field] = saved;
+  if (wants("text")) {
+    data.heroHeadline = STR(formData, "heroHeadline") ?? null;
+    data.heroSubtext = STR(formData, "heroSubtext") ?? null;
+    data.footerText = STR(formData, "footerText") ?? null;
+    data.footerTextColor = STR(formData, "footerTextColor") ?? null;
+  }
+
+  if (wants("pixel")) {
+    const fbPixelIds = String(formData.get("fbPixelIds") || "")
+      .split(/[\n,]/)
+      .map((v) => v.trim())
+      .filter((v) => /^\d{5,20}$/.test(v));
+    data.fbPixelIds = fbPixelIds.length ? JSON.stringify(fbPixelIds) : null;
+  }
+
+  if (wants("bot")) {
+    data.landingUrl = STR(formData, "landingUrl") ?? null;
+    data.whitepageRedirectUrl = STR(formData, "whitepageRedirectUrl") ?? null;
+    data.useSameLandingForAll = formData.get("useSameLandingForAll") === "on";
+    data.cloakToLandingUrl = formData.get("cloakToLandingUrl") === "on";
+  }
+
+  if (wants("colors")) {
+    const colorOverrides: Record<string, string> = {};
+    for (const k of ["primary", "body", "muted", "cta_text", "line_cta_text"] as const) {
+      const v = STR(formData, `color_${k}`);
+      if (v) colorOverrides[k] = v;
+    }
+    data.colorOverrides = Object.keys(colorOverrides).length ? JSON.stringify(colorOverrides) : null;
+  }
+
+  if (wants("reviews")) {
+    data.reviewsTitle = STR(formData, "reviewsTitle") ?? null;
+    data.reviewsSubtitle = STR(formData, "reviewsSubtitle") ?? null;
+    const reviews: { member: string; text: string; stars: string }[] = [];
+    for (let i = 0; i < 5; i++) {
+      if (formData.get(`review_remove_${i}`) === "on") continue;
+      const member = String(formData.get(`review_member_${i}`) || "").trim();
+      const text = String(formData.get(`review_text_${i}`) || "").trim();
+      const stars = String(formData.get(`review_stars_${i}`) || "5 ดาว");
+      if (member || text) reviews.push({ member: member || "สมาชิก", text, stars });
+    }
+    data.reviews = reviews.length ? JSON.stringify(reviews) : null;
+  }
+
+  if (wants("images")) {
+    for (const field of ["logoUrl", "lineLogoUrl", "ogImage"] as const) {
+      const saved = await saveUpload(formData.get(`file_${field}`));
+      if (saved && typeof saved === "object") return saved;
+      if (saved) data[field] = saved;
+    }
+  }
+
+  if (!wants("sections")) {
+    await prisma.page.update({ where: { id: page.id }, data });
+    revalidatePath("/dashboard");
+    revalidatePath(`/${page.slug}`);
+    return { success: true };
   }
 
   // ---- sections ----
@@ -370,33 +407,9 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
     }
   }
 
-  await prisma.page.update({
-    where: { id: page.id },
-    data: {
-      themePreset,
-      tabTitle,
-      ogDescription,
-      ...uploads,
-      capiEventName,
-      ctaLayout,
-      capiAccessToken,
-      capiEndpointUrl,
-      heroHeadline,
-      heroSubtext,
-      footerText,
-      footerTextColor,
-      fbPixelIds: fbPixelIds.length ? JSON.stringify(fbPixelIds) : null,
-      landingUrl,
-      whitepageRedirectUrl,
-      useSameLandingForAll,
-      cloakToLandingUrl,
-      colorOverrides: Object.keys(colorOverrides).length ? JSON.stringify(colorOverrides) : null,
-      reviewsTitle,
-      reviewsSubtitle,
-      reviews: reviews.length ? JSON.stringify(reviews) : null,
-      sections: JSON.stringify(sections satisfies SectionEntry[]),
-    },
-  });
+  data.sections = JSON.stringify(sections satisfies SectionEntry[]);
+
+  await prisma.page.update({ where: { id: page.id }, data });
 
   revalidatePath("/dashboard");
   revalidatePath(`/${page.slug}`);

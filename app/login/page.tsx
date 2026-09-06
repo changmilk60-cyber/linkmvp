@@ -31,6 +31,9 @@ export default function LoginPage() {
           {state?.error ? <p style={{ margin: 0, color: "var(--text-danger)", font: "var(--text-hint)" }}>{state.error}</p> : null}
           <SubmitButton />
           <p style={{ margin: "4px 0 0", textAlign: "center", font: "var(--text-hint)", color: "var(--text-muted)" }}>
+            <Link href="/forgot-password" style={{ color: "var(--text-accent)" }}>ลืมรหัสผ่าน?</Link>
+          </p>
+          <p style={{ margin: 0, textAlign: "center", font: "var(--text-hint)", color: "var(--text-muted)" }}>
             ยังไม่มีบัญชี? <Link href="/register" style={{ color: "var(--text-accent)" }}>สมัครสมาชิก</Link>
           </p>
         </form>

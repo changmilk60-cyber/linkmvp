@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Accordion,
@@ -108,6 +108,12 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
 
   const [saveState, saveAction] = useFormState(saveSettingsAction, {});
   const [themePreset, setThemePreset] = useState(page.themePreset);
+  // The whole admin is one form; each save button stamps its panel name here
+  // first so the server only writes that panel's columns.
+  const scopeRef = useRef<HTMLInputElement>(null);
+  const setScope = (scope: string) => {
+    if (scopeRef.current) scopeRef.current.value = scope;
+  };
   const colors = page.colorOverrides ? (JSON.parse(page.colorOverrides) as Record<string, string>) : {};
   const pixelIds: string[] = page.fbPixelIds ? JSON.parse(page.fbPixelIds) : [];
 
@@ -192,7 +198,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
 
         <div id="panel-dashboard">
           <SectionCard icon="📊" title="Dashboard สถิติเซลเพจ" subtitle="สรุปผู้เข้าชมและจำนวนการคลิกปุ่ม อัปเดตแบบเรียลไทม์จากผู้เข้าชมจริง" open={open.dashboard} onToggle={t("dashboard")}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: "var(--gap-grid)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: "var(--gap-grid)" }}>
               <StatCard label="ผู้เข้าชมวันนี้" value={stats.viewsToday} note="Session" />
               <StatCard label="ผู้ชมไม่ซ้ำวันนี้" value={stats.uniqueToday} note="ประมาณจากเบราว์เซอร์" />
               <StatCard label="คลิกปุ่มสมัครทั้งหมด" value={stats.signupClicksTotal} note={`วันนี้ ${stats.signupClicksToday} คลิก`} />
@@ -202,7 +208,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
               <StatCard label="ผู้ชม 30 วันล่าสุด" value={stats.views30d} note="รวม" />
               <StatCard label="สถานะ" value={page.daysLeft > 0 ? "ใช้งานได้" : "หมดอายุ"} noteTone="muted" />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1.55fr 1fr", gap: "var(--gap-grid)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "var(--gap-grid)" }}>
               <BarChart title="ผู้เข้าชมย้อนหลัง 7 วัน" height={230} data={stats.chart} />
               <DataTable title="คลิกรายวัน" columns={["วันที่", "สมัคร", "LINE"]} rows={stats.table} />
             </div>
@@ -225,11 +231,12 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           <UrlPanel open={open.url} onToggle={t("url")} pageId={page.id} slug={page.slug} baseUrl={baseUrl} />
         </div>
 
+        <form action={saveAction} encType="multipart/form-data" style={{ display: "flex", flexDirection: "column", gap: "var(--gap-card)" }}>
+        <input type="hidden" name="pageId" value={page.id} />
+        <input type="hidden" name="_scope" ref={scopeRef} defaultValue="all" />
+
         <div id="panel-bot">
           <SectionCard icon="🌐" title="ตั้งค่าใช้งาน bot" subtitle="กำหนดหน้าเดียวกันสำหรับคอมพิวเตอร์ มือถือ แท็บเล็ต และระบบตรวจสอบ" open={open.bot} onToggle={t("bot")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["landingUrl", "whitepageRedirectUrl", "useSameLandingForAll", "cloakToLandingUrl"]} />
               <Field label="ลิงก์ Landing Page" hint="ใส่ URL แบบเต็ม หากเว้นว่างหรือ URL ไม่ถูกต้อง ระบบจะแสดงหน้าเซลเพจเดิม" hintTone="body">
                 <TextInput mono name="landingUrl" defaultValue={page.landingUrl || ""} placeholder="https://example.com" />
               </Field>
@@ -238,16 +245,12 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
               </Field>
               <ToggleRow name="cloakToLandingUrl" title="ใช้ Landing Page แทนหน้าเซลเพจเดิม" sub="เปิดไว้ = ผู้เข้าชมทุกคนถูกส่งไปที่ลิงก์ Landing Page แทน" defaultChecked={page.cloakToLandingUrl} />
               <ToggleRow name="useSameLandingForAll" title="คอมและมือถือเห็นหน้าเดียวกัน" sub="ทุกอุปกรณ์แสดงหน้าเซลเพจหลัก" defaultChecked={page.useSameLandingForAll} />
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="bot" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-sections">
           <SectionCard icon="📐" title="จัดเรียง Section" subtitle="กดลูกศรเพื่อสลับลำดับ • สลับปุ่มเพื่อเปิด/ปิด แต่ละ section • กดบันทึกทั้งหมดด้านล่างสุด" open={open.sections} onToggle={t("sections")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={[]} ownsSections />
               {page.sections.map((s, i) => (
                 <div key={s.key} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px", paddingTop: "12px" }}>
@@ -268,17 +271,13 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                 </div>
               ))}
               {/* per-row data fields above are collected by name into the same form; a reorder click submits via moveSectionAction instead, which only reads pageId */}
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="sections" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-reviews">
           <SectionCard icon="⭐" title="จัดการรีวิวแบบสุ่ม" count={`${page.reviews.length} รีวิว`} subtitle="แสดงครั้งละ 1 รีวิว • เปลี่ยนอัตโนมัติทุก 4 วินาที" open={open.reviews} onToggle={t("reviews")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["reviewsTitle", "reviewsSubtitle"]} ownsReviews />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="หัวข้อรีวิว"><TextInput name="reviewsTitle" defaultValue={page.reviewsTitle || ""} placeholder="⭐ เสียงตอบรับจากผู้ใช้งาน" /></Field>
                 <Field label="คำอธิบายใต้หัวข้อ"><TextInput name="reviewsSubtitle" defaultValue={page.reviewsSubtitle || ""} placeholder="อัปเดตรีวิวใหม่ทุก 4 วินาที" /></Field>
               </div>
@@ -289,47 +288,35 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                 })}
               </div>
               <Hint tone="muted">เว้นว่างแถวที่ไม่ใช้ • ชื่อผู้รีวิวจะแสดงตามที่กรอก</Hint>
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="reviews" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-theme">
           <SectionCard icon="🎨" title="โทนสีเว็บไซต์" count="12 โทน" subtitle="เลือกโทนสีที่ต้องการ — สีและพื้นหลังหน้าเซลเพจจะเปลี่ยนให้เข้าชุดกันอัตโนมัติ" open={open.theme} onToggle={t("theme")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["themePreset"]} />
               <input type="hidden" name="themePreset" value={themePreset} />
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "var(--gap-grid)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: "var(--gap-grid)" }}>
                 {THEME_PRESETS.map((p) => (
                   <ThemeSwatchCard key={p.key} name={p.name} icon={p.icon} base={p.base} primary={p.primary} accent={p.accent} selected={themePreset === p.key} onSelect={() => setThemePreset(p.key)} />
                 ))}
               </div>
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="theme" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-pixel">
           <SectionCard title="Pixel" icon="🍪" subtitle="ตั้งค่าก่อนขึ้นแอด — สำคัญมาก" open={open.pixel} onToggle={t("pixel")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["fbPixelIds"]} />
               <Field label="Facebook Pixel ID (ขึ้นบรรทัดใหม่ต่อ 1 ไอดี)">
                 <Textarea name="fbPixelIds" defaultValue={pixelIds.join("\n")} rows={3} placeholder={"960483503717089"} />
               </Field>
               <Hint tone="body">กรอก Pixel ID แยกบรรทัด ระบบจะรวมค่าให้อัตโนมัติ</Hint>
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="pixel" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-main">
           <SectionCard title="ตั้งค่าหลัก" subtitle="Tab Title, OG, CAPI และอื่นๆ" open={open.main} onToggle={t("main")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["tabTitle", "ogDescription", "capiAccessToken", "capiEndpointUrl", "capiEventName", "ctaLayout"]} />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="ชื่อแท็บเบราว์เซอร์ (Tab Title)"><TextInput name="tabTitle" defaultValue={page.tabTitle || ""} /></Field>
                 <Field label="OG Description" hint="ข้อความสั้นๆ ที่แสดงใต้ชื่อตอนแชร์ลิงก์" hintTone="body"><TextInput name="ogDescription" defaultValue={page.ogDescription || ""} /></Field>
                 <Field label="CAPI Access Token" hint="จาก Facebook Events Manager" hintTone="body">
@@ -344,48 +331,36 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                   <SegCtaLayout defaultValue={page.ctaLayout} />
                 </Field>
               </div>
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="main" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-images">
           <SectionCard title="รูปภาพ" subtitle="โลโก้และโลโก้ LINE ของเว็บ" open={open.images} onToggle={t("images")}>
-            <form action={saveAction} style={{ display: "contents" }} encType="multipart/form-data">
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={[]} />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <ImageUploadField label="โลโก้" name="file_logoUrl" currentUrl={page.logoUrl} recommend="ขนาดแนะนำ: 138 × 78 px — แนวนอน พื้นหลังโปร่งใส (.png)" />
                 <ImageUploadField label="โลโก้ LINE" name="file_lineLogoUrl" currentUrl={page.lineLogoUrl} recommend="ขนาดแนะนำ: 28 × 28 px — สี่เหลี่ยมจัตุรัส" />
                 <ImageUploadField label="OG Image (รูปตอนแชร์ลิงก์)" name="file_ogImage" currentUrl={page.ogImage} recommend="ขนาดแนะนำ: 1200 × 630 px — แนวนอน (1.91:1)" />
               </div>
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="images" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-text">
           <SectionCard title="ข้อความหน้าเว็บ" subtitle="หัวข้อ/คำโปรย และท้ายเว็บ" open={open.text} onToggle={t("text")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={["heroHeadline", "heroSubtext", "footerText", "footerTextColor"]} />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="หัวข้อหลัก"><TextInput name="heroHeadline" defaultValue={page.heroHeadline || ""} /></Field>
                 <Field label="คำโปรย"><TextInput name="heroSubtext" defaultValue={page.heroSubtext || ""} /></Field>
               </div>
               <Field label="ข้อความท้ายเว็บ"><Textarea name="footerText" defaultValue={page.footerText || ""} rows={2} /></Field>
               <ColorField label="🎨 สีข้อความท้ายเว็บ" name="footerTextColor" value={page.footerTextColor || ""} swatch={page.footerTextColor || "#ffffff"} />
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="text" onScope={setScope} />
           </SectionCard>
         </div>
 
         <div id="panel-colors">
           <SectionCard title="ปรับสีตัวอักษร" subtitle="ปรับสีอิสระ — ทับ Theme Preset ปล่อยว่าง = ใช้สีจาก Theme" open={open.colors} onToggle={t("colors")}>
-            <form action={saveAction} style={{ display: "contents" }}>
-              <input type="hidden" name="pageId" value={page.id} />
-              <HiddenCarry page={page} except={[]} ownsColors />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--gap-grid)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 {[
                   ["primary", "สีหลัก (หัวข้อ / ปุ่ม)"],
                   ["body", "สีข้อความทั่วไป"],
@@ -396,16 +371,12 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                   <ColorField key={key} label={label} name={`color_${key}`} value={colors[key] || ""} swatch={colors[key] || "#ffffff"} />
                 ))}
               </div>
-              <Button type="submit" variant="quiet">บันทึกส่วนนี้</Button>
-            </form>
+              <ScopeSave scope="colors" onScope={setScope} />
           </SectionCard>
         </div>
 
-        <form action={saveAction}>
-          <input type="hidden" name="pageId" value={page.id} />
-          <HiddenCarry page={page} except={[]} />
-          {saveState?.error ? <p style={{ color: "var(--text-danger)", font: "var(--text-hint)" }}>{saveState.error}</p> : null}
-          <SaveBar label="บันทึกทั้งหมด" />
+        {saveState?.error ? <p style={{ margin: 0, color: "var(--text-danger)", font: "var(--text-hint)" }}>{saveState.error}</p> : null}
+        <SaveBar label="บันทึกทั้งหมด" onClick={() => setScope("all")} />
         </form>
       </div>
     </div>
@@ -413,6 +384,14 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
 }
 
 // ---------------- small helpers ----------------
+
+function ScopeSave({ scope, onScope }: { scope: string; onScope: (s: string) => void }) {
+  return (
+    <Button type="submit" variant="quiet" onClick={() => onScope(scope)}>
+      บันทึกส่วนนี้
+    </Button>
+  );
+}
 
 function ToggleRow({ name, title, sub, defaultChecked }: { name: string; title: string; sub: string; defaultChecked: boolean }) {
   const [val, setVal] = useState(defaultChecked);
@@ -450,7 +429,7 @@ function SegCtaLayout({ defaultValue }: { defaultValue: string }) {
 function ReviewRowForm({ index, member, text, stars }: { index: number; member: string; text: string; stars: string }) {
   const inp = { background: "var(--surface-field)", border: "1px solid var(--border-field)", borderRadius: "var(--radius-field)", padding: "var(--pad-field)", color: "var(--text-body)", font: "var(--text-body-default)", outline: "none" as const, minWidth: 0 };
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto auto", gap: "var(--gap-grid)", alignItems: "center" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: "var(--gap-grid)", alignItems: "center" }}>
       <input name={`review_member_${index}`} defaultValue={member} placeholder="สมาชิก" style={inp} />
       <input name={`review_text_${index}`} defaultValue={text} placeholder="ข้อความรีวิว" style={inp} />
       <Select name={`review_stars_${index}`} defaultValue={stars} options={["5 ดาว", "4 ดาว", "3 ดาว", "2 ดาว", "1 ดาว"].map((s) => ({ value: s, label: s }))} />
@@ -487,7 +466,7 @@ function UrlPanel({ open, onToggle, pageId, slug, baseUrl }: { open: boolean; on
       <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)" }}>
         <label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>URL ปัจจุบัน</label>
         <TextInput mono readOnly value={`${baseUrl.replace(/^https?:\/\//, "")}/${slug}`} />
-        <form action={formAction} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "var(--gap-grid)", alignItems: "end", marginTop: "12px" }}>
+        <form action={formAction} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "var(--gap-grid)", alignItems: "end", marginTop: "12px" }}>
           <input type="hidden" name="pageId" value={pageId} />
           <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>ชื่อลิงก์ใหม่</label><TextInput name="newSlug" placeholder="เช่น new-name" /></div>
           <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>รหัสผ่านยืนยัน</label><TextInput name="confirmPassword" type="password" /></div>
@@ -499,130 +478,6 @@ function UrlPanel({ open, onToggle, pageId, slug, baseUrl }: { open: boolean; on
       </div>
     </SectionCard>
   );
-}
-
-// Carries every field the big form needs from `page`/`sections`, as hidden
-// inputs, so that submitting from any one panel's own <form> — or the final
-// SaveBar's <form> — always sends the *complete* settings snapshot through
-// the same saveSettingsAction. Panels list which fields *they* own as
-// visible inputs via `except`; everything else rides along hidden.
-function HiddenCarry({
-  page,
-  except,
-  ownsSections,
-  ownsColors,
-  ownsReviews,
-}: {
-  page: PageData;
-  except: string[];
-  /** Set only by the panel that renders the real controls for that area, so
-   *  its visible inputs aren't shadowed by duplicates carried here. Any panel
-   *  that does NOT own an area must carry it, or saveSettingsAction sees the
-   *  fields missing and writes the area blank. */
-  ownsSections?: boolean;
-  ownsColors?: boolean;
-  ownsReviews?: boolean;
-}) {
-  const skip = new Set(except);
-  const colors = page.colorOverrides ? (JSON.parse(page.colorOverrides) as Record<string, string>) : {};
-  const pixelIds: string[] = page.fbPixelIds ? JSON.parse(page.fbPixelIds) : [];
-  return (
-    <>
-      {!skip.has("themePreset") && <input type="hidden" name="themePreset" value={page.themePreset} />}
-      {!skip.has("tabTitle") && <input type="hidden" name="tabTitle" value={page.tabTitle || ""} />}
-      {!skip.has("ogDescription") && <input type="hidden" name="ogDescription" value={page.ogDescription || ""} />}
-      {!skip.has("capiEventName") && <input type="hidden" name="capiEventName" value={page.capiEventName} />}
-      {!skip.has("ctaLayout") && <input type="hidden" name="ctaLayout" value={page.ctaLayout} />}
-      {!skip.has("capiAccessToken") && <input type="hidden" name="capiAccessToken" value={page.capiAccessToken || ""} />}
-      {!skip.has("capiEndpointUrl") && <input type="hidden" name="capiEndpointUrl" value={page.capiEndpointUrl || ""} />}
-      {!skip.has("heroHeadline") && <input type="hidden" name="heroHeadline" value={page.heroHeadline || ""} />}
-      {!skip.has("heroSubtext") && <input type="hidden" name="heroSubtext" value={page.heroSubtext || ""} />}
-      {!skip.has("footerText") && <input type="hidden" name="footerText" value={page.footerText || ""} />}
-      {!skip.has("footerTextColor") && <input type="hidden" name="footerTextColor" value={page.footerTextColor || ""} />}
-      {!skip.has("fbPixelIds") && <input type="hidden" name="fbPixelIds" value={pixelIds.join("\n")} />}
-      {!skip.has("landingUrl") && <input type="hidden" name="landingUrl" value={page.landingUrl || ""} />}
-      {!skip.has("whitepageRedirectUrl") && <input type="hidden" name="whitepageRedirectUrl" value={page.whitepageRedirectUrl || ""} />}
-      {!skip.has("useSameLandingForAll") && page.useSameLandingForAll && <input type="hidden" name="useSameLandingForAll" value="on" />}
-      {!skip.has("cloakToLandingUrl") && page.cloakToLandingUrl && <input type="hidden" name="cloakToLandingUrl" value="on" />}
-      {!skip.has("reviewsTitle") && <input type="hidden" name="reviewsTitle" value={page.reviewsTitle || ""} />}
-      {!skip.has("reviewsSubtitle") && <input type="hidden" name="reviewsSubtitle" value={page.reviewsSubtitle || ""} />}
-      {!ownsReviews && page.reviews.map((r, i) => (
-        <span key={i}>
-          <input type="hidden" name={`review_member_${i}`} value={r.member} />
-          <input type="hidden" name={`review_text_${i}`} value={r.text} />
-          <input type="hidden" name={`review_stars_${i}`} value={r.stars} />
-        </span>
-      ))}
-      {!ownsColors && ["primary", "body", "muted", "cta_text", "line_cta_text"].map((k) => (
-        <input key={k} type="hidden" name={`color_${k}`} value={colors[k] || ""} />
-      ))}
-      {!ownsSections && page.sections.map((s) => (
-        <span key={s.key}>
-          <input type="hidden" name={`section_enabled_${s.key}`} value={s.enabled ? "on" : ""} />
-          <SectionHiddenData sKey={s.key} data={s.data} />
-        </span>
-      ))}
-    </>
-  );
-}
-
-function SectionHiddenData({ sKey, data }: { sKey: SectionKey; data: Record<string, unknown> }) {
-  const v = d(data);
-  switch (sKey) {
-    case "online_users":
-      return <><input type="hidden" name="section_data_online_users_min" value={v.min ?? 20} /><input type="hidden" name="section_data_online_users_max" value={v.max ?? 80} /></>;
-    case "bonus_total":
-      return <><input type="hidden" name="section_data_bonus_total_baseAmount" value={v.baseAmount ?? 0} /><input type="hidden" name="section_data_bonus_total_perHourIncrement" value={v.perHourIncrement ?? 0} /></>;
-    case "gif_signup_button":
-      return <input type="hidden" name="section_data_gif_signup_button_linkUrl" value={v.linkUrl || ""} />;
-    case "text_block_1":
-    case "text_block_2":
-      return <><input type="hidden" name={`section_data_${sKey}_heading`} value={v.heading || ""} /><input type="hidden" name={`section_data_${sKey}_body`} value={v.body || ""} /></>;
-    case "top_games": {
-      const games = (data as { games?: { name: string }[] }).games || [];
-      return <>{games.map((g, i) => <input key={i} type="hidden" name={`section_data_top_games_name_${i}`} value={g.name || ""} />)}</>;
-    }
-    case "player_ranking": {
-      const players = (data as { players?: { name: string; amount: string }[] }).players || [];
-      return <>{Array.from({ length: 5 }).map((_, i) => (
-        <span key={i}>
-          <input type="hidden" name={`section_data_player_ranking_name_${i}`} value={players[i]?.name || ""} />
-          <input type="hidden" name={`section_data_player_ranking_amount_${i}`} value={players[i]?.amount || ""} />
-        </span>
-      ))}</>;
-    }
-    case "withdraw_feed": {
-      const banks = (data as { banks?: { name: string; color: string }[] }).banks || [];
-      return (
-        <>
-          <input type="hidden" name="section_data_withdraw_feed_title" value={v.title || ""} />
-          <input type="hidden" name="section_data_withdraw_feed_statusLabel" value={v.statusLabel || ""} />
-          <input type="hidden" name="section_data_withdraw_feed_minAmount" value={v.minAmount ?? 1000} />
-          <input type="hidden" name="section_data_withdraw_feed_maxAmount" value={v.maxAmount ?? 20000} />
-          <input type="hidden" name="section_data_withdraw_feed_rows" value={v.rows ?? 5} />
-          <input type="hidden" name="section_data_withdraw_feed_intervalSec" value={v.intervalSec ?? 6} />
-          {Array.from({ length: FEED_BANK_SLOTS }).map((_, i) => (
-            <span key={i}>
-              <input type="hidden" name={`section_data_withdraw_feed_bank_name_${i}`} value={banks[i]?.name || ""} />
-              <input type="hidden" name={`section_data_withdraw_feed_bank_color_${i}`} value={banks[i]?.color || ""} />
-            </span>
-          ))}
-        </>
-      );
-    }
-    case "prizes": {
-      const items = (data as { items?: { label: string }[] }).items || [];
-      return <>{Array.from({ length: 4 }).map((_, i) => <input key={i} type="hidden" name={`section_data_prizes_label_${i}`} value={items[i]?.label || ""} />)}</>;
-    }
-    case "announcements": {
-      const items = (data as { items?: string[] }).items || [];
-      return <>{Array.from({ length: 5 }).map((_, i) => <input key={i} type="hidden" name={`section_data_announcements_text_${i}`} value={items[i] || ""} />)}</>;
-    }
-    case "signup_line_buttons":
-      return <><input type="hidden" name="section_data_signup_line_buttons_signupUrl" value={v.signupUrl || ""} /><input type="hidden" name="section_data_signup_line_buttons_lineUrl" value={v.lineUrl || ""} /></>;
-    default:
-      return null;
-  }
 }
 
 function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, unknown> }) {
@@ -677,7 +532,7 @@ function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, u
       return (
         <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "8px" }}>
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "8px" }}>
               <TextInput name={`section_data_player_ranking_name_${i}`} defaultValue={players[i]?.name || ""} placeholder={`ชื่อผู้เล่นอันดับ ${i + 1}`} />
               <TextInput name={`section_data_player_ranking_amount_${i}`} defaultValue={players[i]?.amount || ""} placeholder="ยอด" />
             </div>
@@ -697,7 +552,7 @@ function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, u
           <Field label="เพิ่มรายการใหม่ทุกกี่วินาที" hint="2–120 วินาที" hintTone="muted"><TextInput name="section_data_withdraw_feed_intervalSec" type="number" defaultValue={String(v.intervalSec ?? 6)} /></Field>
           <div style={{ gridColumn: "1 / -1" }}>
             <p style={{ margin: "0 0 8px", font: "var(--text-label)", color: "var(--text-accent)" }}>ธนาคารที่จะสุ่มแสดง (เว้นว่างช่องที่ไม่ใช้)</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: "var(--gap-grid)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "var(--gap-grid)" }}>
               {Array.from({ length: FEED_BANK_SLOTS }).map((_, i) => (
                 <Field key={i} label={`ธนาคาร ${i + 1}`}>
                   <TextInput name={`section_data_withdraw_feed_bank_name_${i}`} defaultValue={banks[i]?.name || ""} placeholder="ชื่อธนาคาร" style={{ marginBottom: "8px" }} />
