@@ -36,7 +36,6 @@ type PageData = {
   ogDescription: string | null;
   ogImage: string | null;
   logoUrl: string | null;
-  lineLogoUrl: string | null;
   footerText: string | null;
   footerTextColor: string | null;
   colorOverrides: string | null;
@@ -372,10 +371,9 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
         </div>
 
         <div id="panel-images" {...show("images")}>
-          <SectionCard title="รูปภาพ" subtitle="โลโก้และโลโก้ LINE ของเว็บ" open>
+          <SectionCard title="รูปภาพ" subtitle="โลโก้และรูปตอนแชร์ลิงก์ของเว็บ" open>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <ImageUploadField label="โลโก้" name="file_logoUrl" currentUrl={page.logoUrl} recommend="ขนาดแนะนำ: 138 × 78 px — แนวนอน พื้นหลังโปร่งใส (.png)" />
-                <ImageUploadField label="โลโก้ LINE" name="file_lineLogoUrl" currentUrl={page.lineLogoUrl} recommend="ขนาดแนะนำ: 28 × 28 px — สี่เหลี่ยมจัตุรัส" />
                 <ImageUploadField label="OG Image (รูปตอนแชร์ลิงก์)" name="file_ogImage" currentUrl={page.ogImage} recommend="ขนาดแนะนำ: 1200 × 630 px — แนวนอน (1.91:1)" />
               </div>
               <ScopeSave scope="images" onScope={setScope} />

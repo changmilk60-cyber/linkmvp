@@ -31,7 +31,6 @@ model Page {
   ogDescription   String?
   ogImage         String?
   logoUrl         String?
-  lineLogoUrl     String?
   footerText      String?
   footerTextColor String?
   colorOverrides  String? // JSON: {primary?, textPrimary?, textBody?, textMuted?, ctaText?, lineCtaText?}

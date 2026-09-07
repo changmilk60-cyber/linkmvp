@@ -264,7 +264,7 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
   }
 
   if (wants("images")) {
-    for (const field of ["logoUrl", "lineLogoUrl", "ogImage"] as const) {
+    for (const field of ["logoUrl", "ogImage"] as const) {
       const saved = await saveUpload(formData.get(`file_${field}`));
       if (saved && typeof saved === "object") return saved;
       if (saved) data[field] = saved;

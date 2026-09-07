@@ -77,7 +77,6 @@ export default async function DashboardPage() {
         ogDescription: page.ogDescription,
         ogImage: page.ogImage,
         logoUrl: page.logoUrl,
-        lineLogoUrl: page.lineLogoUrl,
         footerText: page.footerText,
         footerTextColor: page.footerTextColor,
         colorOverrides: page.colorOverrides,
