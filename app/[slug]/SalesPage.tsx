@@ -231,14 +231,20 @@ function PlayerRanking({ data, accent }: { data: { players: { name: string; amou
 type FeedBank = { name: string; logoUrl: string; color: string };
 type WithdrawFeedData = {
   title?: string;
+  /** Older pages stored a single badge label; it becomes the success label. */
   statusLabel?: string;
+  successLabel?: string;
+  successColor?: string;
+  pendingLabel?: string;
+  pendingColor?: string;
+  pendingPercent?: number;
   minAmount?: number;
   maxAmount?: number;
   rows?: number;
   intervalSec?: number;
   banks?: FeedBank[];
 };
-type FeedItem = { id: string; bank: FeedBank | null; user: string; amount: number; at: Date };
+type FeedItem = { id: string; bank: FeedBank | null; user: string; amount: number; at: Date; pending: boolean };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 // Thai Buddhist year, matching how the rest of the product shows dates.
@@ -253,6 +259,14 @@ function WithdrawFeed({ data, accent, muted }: { data: WithdrawFeedData; accent:
   const max = Math.max(min, Number(data.maxAmount) || min);
   const banksKey = JSON.stringify(data.banks || []);
 
+  // Each row draws its own status. `statusLabel` is what older pages stored
+  // for the single badge they had, so it keeps working as the success label.
+  const successLabel = data.successLabel || data.statusLabel || "";
+  const pendingLabel = data.pendingLabel || "";
+  const successColor = data.successColor || "#00cc66";
+  const pendingColor = data.pendingColor || "#f5a524";
+  const pendingPercent = pendingLabel ? Math.min(100, Math.max(0, Number(data.pendingPercent) ?? 25)) : 0;
+
   // Seeded on the client only: the rows are random and clock-based, so
   // rendering them on the server would mismatch on hydration.
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -264,6 +278,7 @@ function WithdrawFeed({ data, accent, muted }: { data: WithdrawFeedData; accent:
       user: `xxxx${Math.floor(100000 + Math.random() * 900000)}xxxx`,
       amount: Math.floor(min + Math.random() * (max - min + 1)),
       at: new Date(Date.now() - secondsAgo * 1000),
+      pending: Math.random() * 100 < pendingPercent,
     });
 
     let elapsed = 0;
@@ -276,7 +291,7 @@ function WithdrawFeed({ data, accent, muted }: { data: WithdrawFeedData; accent:
 
     const id = setInterval(() => setItems((prev) => [make(0), ...prev].slice(0, rows)), intervalSec * 1000);
     return () => clearInterval(id);
-  }, [rows, intervalSec, min, max, banksKey]);
+  }, [rows, intervalSec, min, max, banksKey, pendingPercent]);
 
   if (items.length === 0) return null;
 
@@ -307,9 +322,9 @@ function WithdrawFeed({ data, accent, muted }: { data: WithdrawFeedData; accent:
               <p style={{ margin: 0 }}>ยอดถอน: <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{it.amount.toLocaleString()}</span> บาท</p>
               <p style={{ margin: 0, color: muted }}>วันที่: {thaiDateTime(it.at)}</p>
             </div>
-            {data.statusLabel ? (
-              <span style={{ flexShrink: 0, background: `${accent}26`, border: `1px solid ${accent}66`, color: accent, borderRadius: "8px", padding: "4px 10px", fontSize: "11px", fontWeight: 700 }}>
-                {data.statusLabel}
+            {(it.pending ? pendingLabel : successLabel) ? (
+              <span style={{ flexShrink: 0, background: `${it.pending ? pendingColor : successColor}26`, border: `1px solid ${it.pending ? pendingColor : successColor}66`, color: it.pending ? pendingColor : successColor, borderRadius: "8px", padding: "4px 10px", fontSize: "11px", fontWeight: 700 }}>
+                {it.pending ? pendingLabel : successLabel}
               </span>
             ) : null}
           </div>

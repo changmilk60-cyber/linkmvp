@@ -602,7 +602,11 @@ function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, u
       return (
         <>
           <Field label="หัวข้อกล่อง"><TextInput name="section_data_withdraw_feed_title" defaultValue={v.title || ""} placeholder="AUTO SYSTEM • ยืนยันยอดแล้ว" /></Field>
-          <Field label="ข้อความป้ายสถานะ"><TextInput name="section_data_withdraw_feed_statusLabel" defaultValue={v.statusLabel || ""} placeholder="สำเร็จแล้ว" /></Field>
+          <Field label="ข้อความสถานะ “สำเร็จ”"><TextInput name="section_data_withdraw_feed_successLabel" defaultValue={v.successLabel || v.statusLabel || ""} placeholder="สำเร็จแล้ว" /></Field>
+          <ColorField label="สีป้าย “สำเร็จ”" name="section_data_withdraw_feed_successColor" value={v.successColor || ""} swatch="#00cc66" placeholder="#00cc66" hint="ปล่อยว่าง = ใช้สีเขียว #00cc66" />
+          <Field label="ข้อความสถานะ “รอทำรายการ”" hint="เว้นว่าง = ไม่สุ่มสถานะนี้ ทุกแถวจะเป็น “สำเร็จ”" hintTone="muted"><TextInput name="section_data_withdraw_feed_pendingLabel" defaultValue={v.pendingLabel || ""} placeholder="รอทำรายการ" /></Field>
+          <ColorField label="สีป้าย “รอทำรายการ”" name="section_data_withdraw_feed_pendingColor" value={v.pendingColor || ""} swatch="#f5a524" placeholder="#f5a524" hint="ปล่อยว่าง = ใช้สีส้มเหลือง #f5a524" />
+          <Field label="โอกาสสุ่มเป็น “รอทำรายการ” (%)" hint="0–100 • เช่น 25 = ประมาณ 1 ใน 4 รายการ" hintTone="muted"><TextInput name="section_data_withdraw_feed_pendingPercent" type="number" defaultValue={String(v.pendingPercent ?? 25)} /></Field>
           <Field label="ยอดถอนต่ำสุด (บาท)"><TextInput name="section_data_withdraw_feed_minAmount" type="number" defaultValue={String(v.minAmount ?? 1000)} /></Field>
           <Field label="ยอดถอนสูงสุด (บาท)"><TextInput name="section_data_withdraw_feed_maxAmount" type="number" defaultValue={String(v.maxAmount ?? 20000)} /></Field>
           <Field label="แสดงกี่รายการ" hint="1–20 รายการ" hintTone="muted"><TextInput name="section_data_withdraw_feed_rows" type="number" defaultValue={String(v.rows ?? 5)} /></Field>

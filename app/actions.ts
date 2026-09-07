@@ -352,9 +352,17 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
         }
         const min = NUM(formData, "section_data_withdraw_feed_minAmount") ?? 1000;
         const max = NUM(formData, "section_data_withdraw_feed_maxAmount") ?? 20000;
+        // Two statuses are drawn at random per row; the merchant sets the
+        // wording, the badge colour and how often "pending" comes up.
+        const prev = s.data as { statusLabel?: string };
+        const pendingPercent = NUM(formData, "section_data_withdraw_feed_pendingPercent") ?? 25;
         s.data = {
           title: STR(formData, "section_data_withdraw_feed_title") || "",
-          statusLabel: STR(formData, "section_data_withdraw_feed_statusLabel") || "",
+          successLabel: STR(formData, "section_data_withdraw_feed_successLabel") || prev.statusLabel || "",
+          successColor: STR(formData, "section_data_withdraw_feed_successColor") || "",
+          pendingLabel: STR(formData, "section_data_withdraw_feed_pendingLabel") || "",
+          pendingColor: STR(formData, "section_data_withdraw_feed_pendingColor") || "",
+          pendingPercent: Math.min(100, Math.max(0, pendingPercent)),
           minAmount: Math.max(0, min),
           maxAmount: Math.max(Math.max(0, min), max),
           rows: Math.min(20, Math.max(1, NUM(formData, "section_data_withdraw_feed_rows") ?? 5)),

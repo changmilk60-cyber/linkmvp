@@ -72,7 +72,11 @@ export const DEFAULT_SECTIONS: SectionEntry[] = [
     enabled: false,
     data: {
       title: "AUTO SYSTEM • ยืนยันยอดแล้ว",
-      statusLabel: "สำเร็จแล้ว",
+      successLabel: "สำเร็จแล้ว",
+      successColor: "#00cc66",
+      pendingLabel: "รอทำรายการ",
+      pendingColor: "#f5a524",
+      pendingPercent: 25,
       minAmount: 1000,
       maxAmount: 20000,
       rows: 5,

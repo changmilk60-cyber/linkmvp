@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { ChangeEvent, CSSProperties, ReactNode } from "react";
 
 export function Field({
@@ -159,16 +162,23 @@ export function SegmentedChoice({ options, value, onChange, columns, style }: { 
 }
 
 export function ColorField({ label, value = "", swatch = "#ffffff", placeholder = "เช่น #ff9900", onChange, name, hint = "ปล่อยว่าง = ใช้สีจาก Theme Preset อัตโนมัติ", style }: { label?: ReactNode; value?: string; swatch?: string; placeholder?: string; onChange?: (v: string) => void; name?: string; hint?: ReactNode; style?: CSSProperties }) {
+  // Without an onChange this was a controlled input React refuses to let you
+  // edit — the colour boxes simply could not be typed in. When the caller does
+  // not drive the value, the field keeps its own and `value` is the starting
+  // point; the swatch previews whatever is currently typed.
+  const [inner, setInner] = useState(value);
+  const controlled = typeof onChange === "function";
+  const current = controlled ? value : inner;
   return (
     <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", ...style }}>
       {label ? <label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>{label}</label> : null}
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <span style={{ width: "40px", height: "40px", flex: "0 0 auto", borderRadius: "var(--radius-swatch)", background: swatch || "#00000000", border: "1px solid var(--border-hairline)" }} />
+        <span style={{ width: "40px", height: "40px", flex: "0 0 auto", borderRadius: "var(--radius-swatch)", background: current || swatch || "#00000000", border: "1px solid var(--border-hairline)" }} />
         <input
           name={name}
-          value={value}
+          value={current}
           placeholder={placeholder}
-          onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+          onChange={(e) => (controlled ? onChange!(e.target.value) : setInner(e.target.value))}
           style={{ flex: 1, minWidth: 0, background: "var(--surface-field)", border: "1px solid var(--border-field)", borderRadius: "var(--radius-field)", padding: "var(--pad-field)", color: "var(--text-body)", font: "var(--text-body-default)", outline: "none" }}
         />
       </div>
