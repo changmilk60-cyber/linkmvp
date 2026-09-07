@@ -188,7 +188,7 @@ const STR = (fd: FormData, k: string) => {
 // into `_scope` first, so a panel only ever writes its own columns. Anything
 // outside the submitted scope is left exactly as it is in the database —
 // no more carrying the whole page's state through every save.
-type SaveScope = "all" | "bot" | "sections" | "reviews" | "theme" | "pixel" | "main" | "images" | "text" | "colors";
+type SaveScope = "all" | "bot" | "sections" | "theme" | "pixel" | "main" | "images" | "text" | "colors";
 
 export async function saveSettingsAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
@@ -247,7 +247,9 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
     data.colorOverrides = Object.keys(colorOverrides).length ? JSON.stringify(colorOverrides) : null;
   }
 
-  if (wants("reviews")) {
+  // The reviews editor lives inside the "จัดเรียง Section" panel now,
+  // so it is written by the sections scope rather than one of its own.
+  if (wants("sections")) {
     data.reviewsTitle = STR(formData, "reviewsTitle") ?? null;
     data.reviewsSubtitle = STR(formData, "reviewsSubtitle") ?? null;
     const reviews: { member: string; text: string; stars: string }[] = [];
@@ -296,7 +298,6 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
         const img = await saveUpload(formData.get("section_file_gif_signup_button_image"));
         if (img && typeof img === "object") return img;
         s.data = {
-          linkUrl: STR(formData, "section_data_gif_signup_button_linkUrl") || "",
           imageUrl: img || (s.data as { imageUrl?: string }).imageUrl || "",
         };
         break;

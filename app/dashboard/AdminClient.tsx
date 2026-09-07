@@ -92,7 +92,6 @@ const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: st
       { icon: "🖼", label: "รูปภาพ", key: "images", saves: true },
       { icon: "📝", label: "ข้อความหน้าเว็บ", key: "text", saves: true },
       { icon: "🖌", label: "ปรับสีตัวอักษร", key: "colors", saves: true },
-      { icon: "⭐", label: "รีวิวแบบสุ่ม", key: "reviews", saves: true },
     ],
   },
   {
@@ -310,30 +309,22 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                       enabled={s.enabled}
                       onToggleName={`section_enabled_${s.key}`}
                     >
-                      <SectionExtra sKey={s.key} data={s.data} />
+                      {s.key === "reviews" ? (
+                        <ReviewsEditor title={page.reviewsTitle} subtitle={page.reviewsSubtitle} reviews={page.reviews} />
+                      ) : (
+                        <SectionExtra sKey={s.key} data={s.data} />
+                      )}
                     </SectionRow>
                   </div>
                 </div>
               ))}
               {/* per-row data fields above are collected by name into the same form; a reorder click submits via moveSectionAction instead, which only reads pageId */}
-              <ScopeSave scope="sections" onScope={setScope} />
-          </SectionCard>
-        </div>
-
-        <div id="panel-reviews" {...show("reviews")}>
-          <SectionCard icon="⭐" title="จัดการรีวิวแบบสุ่ม" count={`${page.reviews.length} รีวิว`} subtitle="แสดงครั้งละ 1 รีวิว • เปลี่ยนอัตโนมัติทุก 4 วินาที" open>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
-                <Field label="หัวข้อรีวิว"><TextInput name="reviewsTitle" defaultValue={page.reviewsTitle || ""} placeholder="⭐ เสียงตอบรับจากผู้ใช้งาน" /></Field>
-                <Field label="คำอธิบายใต้หัวข้อ"><TextInput name="reviewsSubtitle" defaultValue={page.reviewsSubtitle || ""} placeholder="อัปเดตรีวิวใหม่ทุก 4 วินาที" /></Field>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+                <ScopeSave scope="sections" onScope={setScope} />
+                <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
+                  <Button variant="primary" icon="👁">พรีวิวหน้าเซลเพจ</Button>
+                </a>
               </div>
-              <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const r = page.reviews[i] || { member: "", text: "", stars: "5 ดาว" };
-                  return <ReviewRowForm key={i} index={i} member={r.member} text={r.text} stars={r.stars} />;
-                })}
-              </div>
-              <Hint tone="muted">เว้นว่างแถวที่ไม่ใช้ • ชื่อผู้รีวิวจะแสดงตามที่กรอก</Hint>
-              <ScopeSave scope="reviews" onScope={setScope} />
           </SectionCard>
         </div>
 
@@ -476,6 +467,25 @@ function SegCtaLayout({ defaultValue }: { defaultValue: string }) {
   );
 }
 
+// The reviews editor used to be its own nav panel; it now sits inside the
+// "รีวิวแบบสุ่ม" row of จัดเรียง Section, so the section's on/off switch and
+// its content are edited (and saved) in the same place.
+function ReviewsEditor({ title, subtitle, reviews }: { title: string | null; subtitle: string | null; reviews: { member: string; text: string; stars: string }[] }) {
+  return (
+    <>
+      <Field label="หัวข้อรีวิว"><TextInput name="reviewsTitle" defaultValue={title || ""} placeholder="⭐ เสียงตอบรับจากผู้ใช้งาน" /></Field>
+      <Field label="คำอธิบายใต้หัวข้อ"><TextInput name="reviewsSubtitle" defaultValue={subtitle || ""} placeholder="อัปเดตรีวิวใหม่ทุก 4 วินาที" /></Field>
+      <div style={{ gridColumn: "1 / -1", background: "var(--surface-raised)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
+        {Array.from({ length: 5 }).map((_, i) => {
+          const r = reviews[i] || { member: "", text: "", stars: "5 ดาว" };
+          return <ReviewRowForm key={i} index={i} member={r.member} text={r.text} stars={r.stars} />;
+        })}
+        <Hint tone="muted">เว้นว่างแถวที่ไม่ใช้ • แสดงครั้งละ 1 รีวิว เปลี่ยนอัตโนมัติทุก 4 วินาที</Hint>
+      </div>
+    </>
+  );
+}
+
 function ReviewRowForm({ index, member, text, stars }: { index: number; member: string; text: string; stars: string }) {
   const inp = { background: "var(--surface-field)", border: "1px solid var(--border-field)", borderRadius: "var(--radius-field)", padding: "var(--pad-field)", color: "var(--text-body)", font: "var(--text-body-default)", outline: "none" as const, minWidth: 0 };
   return (
@@ -548,12 +558,9 @@ function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, u
         </>
       );
     case "gif_signup_button":
-      return (
-        <>
-          <Field label="ลิงก์ปุ่ม GIF สมัคร" hint="ใส่ลิงก์ปลายทางแบบเต็ม เริ่มด้วย https://" hintTone="accent"><TextInput name="section_data_gif_signup_button_linkUrl" defaultValue={v.linkUrl || ""} placeholder="https://example.com" /></Field>
-          <ImageUploadField label="รูปปุ่ม GIF สมัคร" name="section_file_gif_signup_button_image" currentUrl={v.imageUrl} recommend="แนวนอน กว้าง 396 px ขึ้นไป (.gif หรือ .png)" />
-        </>
-      );
+      // No link field here: the banner uses the signup URL from
+      // "ปุ่มสมัคร + LINE" so there is only one place to keep it up to date.
+      return <ImageUploadField label="รูปปุ่ม GIF สมัคร" name="section_file_gif_signup_button_image" currentUrl={v.imageUrl} recommend="แนวนอน กว้าง 396 px ขึ้นไป (.gif หรือ .png)" note="ลิงก์ปลายทางใช้ลิงก์สมัครจาก section “ปุ่มสมัคร + LINE”" style={{ gridColumn: "1 / -1" }} />;
     case "hero_image":
       return <ImageUploadField label="รูปหลัก" name="section_file_hero_image_image" currentUrl={v.imageUrl} recommend="430 × 430 px — สี่เหลี่ยมจัตุรัส (1:1)" style={{ gridColumn: "1 / -1" }} />;
     case "text_block_1":

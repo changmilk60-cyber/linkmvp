@@ -56,7 +56,7 @@ export const DEFAULT_FEED_BANKS: FeedBank[] = [
 
 export const DEFAULT_SECTIONS: SectionEntry[] = [
   { key: "online_users", enabled: true, data: { min: 20, max: 80 } },
-  { key: "gif_signup_button", enabled: true, data: { imageUrl: "", linkUrl: "" } },
+  { key: "gif_signup_button", enabled: true, data: { imageUrl: "" } },
   { key: "bonus_total", enabled: true, data: { baseAmount: 128500, perHourIncrement: 340 } },
   {
     key: "top_games",

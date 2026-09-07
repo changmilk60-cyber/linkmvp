@@ -46,6 +46,7 @@ export default function SalesPage({
   const enabled = useMemo(() => new Map(sections.map((s) => [s.key, s])), [sections]);
   const get = (key: SectionKey) => enabled.get(key);
   const isOn = (key: SectionKey) => !!enabled.get(key)?.enabled;
+  const signupUrl = (enabled.get("signup_line_buttons")?.data as { signupUrl?: string } | undefined)?.signupUrl || "";
 
   return (
     <main
@@ -73,7 +74,9 @@ export default function SalesPage({
 
         {isOn("online_users") && <OnlineUsers data={get("online_users")!.data as { min: number; max: number }} accent={primary} />}
         {isOn("gif_signup_button") && (
-          <TrackedLink slug={slug} kind="click_signup" href={(get("gif_signup_button")!.data as { linkUrl: string }).linkUrl}>
+          // The GIF banner points at the same signup link as the CTA buttons —
+          // merchants set that URL once, in the "ปุ่มสมัคร + LINE" section.
+          <TrackedLink slug={slug} kind="click_signup" href={signupUrl}>
             {(get("gif_signup_button")!.data as { imageUrl?: string }).imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={(get("gif_signup_button")!.data as { imageUrl: string }).imageUrl} alt="สมัครสมาชิก" style={{ width: "100%", borderRadius: "12px", display: "block" }} />
