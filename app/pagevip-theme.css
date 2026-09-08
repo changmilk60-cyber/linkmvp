@@ -63,6 +63,11 @@
   --text-on-primary: var(--ink-950);
 
   --font-sans-pv: "Kanit", "Noto Sans Thai", "Segoe UI", system-ui, sans-serif;
+  /* Inline `font:` shorthands across the admin refer to --font-sans. It was
+     never defined, and an unresolvable var invalidates the whole shorthand —
+     so their size and weight were silently dropped and the text fell back to
+     the browser default. Aliasing it makes those declarations take effect. */
+  --font-sans: var(--font-sans-pv);
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --fs-page-title: 28px;
