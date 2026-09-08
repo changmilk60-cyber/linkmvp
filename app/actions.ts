@@ -410,6 +410,13 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
         };
         break;
       }
+      case "youtube_video": {
+        s.data = {
+          title: STR(formData, "section_data_youtube_video_title") || "",
+          url: STR(formData, "section_data_youtube_video_url") || "",
+        };
+        break;
+      }
       case "reviews":
         // content lives in the top-level reviews/reviewsTitle fields above
         break;

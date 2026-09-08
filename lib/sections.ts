@@ -16,7 +16,8 @@ export type SectionKey =
   | "announcements"
   | "image_slider"
   | "reviews"
-  | "signup_line_buttons";
+  | "signup_line_buttons"
+  | "youtube_video";
 
 export type SectionEntry = {
   key: SectionKey;
@@ -39,6 +40,7 @@ export const SECTION_META: Record<SectionKey, { icon: string; title: string }> =
   image_slider: { icon: "🎞", title: "สไลด์รูป" },
   reviews: { icon: "⭐", title: "รีวิวแบบสุ่ม" },
   signup_line_buttons: { icon: "⚪", title: "ปุ่มสมัคร + LINE" },
+  youtube_video: { icon: "🎬", title: "วีดีโอ YouTube" },
 };
 
 export type FeedBank = { name: string; logoUrl: string; color: string };
@@ -89,6 +91,7 @@ export const DEFAULT_SECTIONS: SectionEntry[] = [
   { key: "image_slider", enabled: false, data: { images: ["", "", "", ""] } },
   { key: "reviews", enabled: true, data: {} },
   { key: "signup_line_buttons", enabled: true, data: { signupUrl: "", lineUrl: "" } },
+  { key: "youtube_video", enabled: false, data: { title: "", url: "" } },
 ];
 
 export function parseSections(json: string | null | undefined): SectionEntry[] {
@@ -137,4 +140,13 @@ export function lastNDays(n: number) {
     out.push(todayUTC(d));
   }
   return out;
+}
+
+// Accepts any common YouTube URL shape (watch, youtu.be, shorts, embed,
+// live) plus surrounding text, and returns the 11-char video ID or null.
+export function extractYoutubeId(url: string): string | null {
+  const m = url.trim().match(
+    /(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/
+  );
+  return m ? m[1] : null;
 }

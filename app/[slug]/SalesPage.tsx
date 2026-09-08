@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Script from "next/script";
 import { ViewTracker, TrackedLink } from "./Tracker";
-import { themeFor, type SectionEntry, type SectionKey } from "@/lib/sections";
+import { extractYoutubeId, themeFor, type SectionEntry, type SectionKey } from "@/lib/sections";
 
 type Review = { member: string; text: string; stars: string };
 
@@ -98,6 +98,7 @@ export default function SalesPage({
         {isOn("prizes") && <Prizes data={get("prizes")!.data as { items: { label: string; imageUrl: string }[] }} accent={primary} />}
         {isOn("announcements") && <Announcements data={get("announcements")!.data as { items: string[] }} accent={primary} muted={textMuted} />}
         {isOn("image_slider") && <ImageSlider data={get("image_slider")!.data as { images: string[] }} />}
+        {isOn("youtube_video") && <YoutubeVideo data={get("youtube_video")!.data as { title?: string; url: string }} accent={primary} />}
         {isOn("reviews") && reviews.length > 0 && (
           <ReviewsCarousel title={reviewsTitle} subtitle={reviewsSubtitle} reviews={reviews} accent={primary} muted={textMuted} />
         )}
@@ -207,6 +208,25 @@ function TextBlock({ data, accent }: { data: { heading: string; body: string }; 
     <div>
       {data.heading ? <h2 style={{ margin: "0 0 6px", fontSize: "17px", fontWeight: 700, color: accent }}>{data.heading}</h2> : null}
       {data.body ? <p style={{ margin: 0, fontSize: "13px", lineHeight: 1.6, whiteSpace: "pre-line" }}>{data.body}</p> : null}
+    </div>
+  );
+}
+
+function YoutubeVideo({ data, accent }: { data: { title?: string; url: string }; accent: string }) {
+  const videoId = extractYoutubeId(data.url || "");
+  if (!videoId) return null;
+  return (
+    <div>
+      {data.title ? <h2 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 700, color: accent }}>{data.title}</h2> : null}
+      <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "14px", overflow: "hidden", background: "#000" }}>
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+          title={data.title || "วีดีโอ"}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
     </div>
   );
 }

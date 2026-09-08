@@ -26,7 +26,7 @@ import {
   Toggle,
 } from "@/components/ds";
 import { logoutAction, moveSectionAction, renameSlugAction, saveSettingsAction } from "@/app/actions";
-import { FEED_BANK_SLOTS, SECTION_META, THEME_PRESETS, type SectionEntry, type SectionKey } from "@/lib/sections";
+import { extractYoutubeId, FEED_BANK_SLOTS, SECTION_META, THEME_PRESETS, type SectionEntry, type SectionKey } from "@/lib/sections";
 
 type PageData = {
   id: string;
@@ -484,6 +484,36 @@ function ReviewsEditor({ title, subtitle, reviews }: { title: string | null; sub
   );
 }
 
+// Shows a live embed preview as the merchant types/pastes a link, so a
+// broken or non-YouTube URL is obvious before saving rather than after.
+function YoutubeVideoFields({ title, url }: { title: string; url: string }) {
+  const [value, setValue] = useState(url);
+  const videoId = extractYoutubeId(value);
+  return (
+    <>
+      <Field label="หัวข้อวีดีโอ (ไม่บังคับ)"><TextInput name="section_data_youtube_video_title" defaultValue={title} placeholder="ดูวิธีสมัครแบบเต็ม" /></Field>
+      <Field label="ลิงก์วีดีโอ YouTube" hint="วางลิงก์จาก YouTube ได้ทุกแบบ เช่น youtube.com/watch?v=... หรือ youtu.be/..." hintTone="accent">
+        <TextInput mono name="section_data_youtube_video_url" value={value} onChange={setValue} placeholder="https://www.youtube.com/watch?v=..." />
+      </Field>
+      <div style={{ gridColumn: "1 / -1" }}>
+        {videoId ? (
+          <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "var(--radius-inset)", overflow: "hidden", background: "#000" }}>
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+              title="ตัวอย่างวีดีโอ"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        ) : value ? (
+          <Hint tone="warning" icon="⚠">ไม่พบวีดีโอจากลิงก์นี้ — ตรวจสอบว่าเป็นลิงก์ YouTube ที่ถูกต้อง</Hint>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
 function ReviewRowForm({ index, member, text, stars }: { index: number; member: string; text: string; stars: string }) {
   const inp = { background: "var(--surface-field)", border: "1px solid var(--border-field)", borderRadius: "var(--radius-field)", padding: "var(--pad-field)", color: "var(--text-body)", font: "var(--text-body-default)", outline: "none" as const, minWidth: 0 };
   return (
@@ -667,6 +697,8 @@ function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, u
           <Field label="🔗 ลิงก์ LINE" hint="ใส่ลิงก์ปลายทางแบบเต็ม เริ่มด้วย https://" hintTone="accent"><TextInput name="section_data_signup_line_buttons_lineUrl" defaultValue={v.lineUrl || ""} placeholder="https://example.com" /></Field>
         </>
       );
+    case "youtube_video":
+      return <YoutubeVideoFields title={v.title || ""} url={v.url || ""} />;
     default:
       return null;
   }
