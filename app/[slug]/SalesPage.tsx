@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Script from "next/script";
 import { ViewTracker, TrackedLink } from "./Tracker";
 import { extractYoutubeId, themeFor, type SectionEntry, type SectionKey } from "@/lib/sections";
@@ -43,10 +43,84 @@ export default function SalesPage({
   const textBody = colorOverrides.body || "#ffffff";
   const textMuted = colorOverrides.muted || "rgba(255,255,255,.6)";
 
-  const enabled = useMemo(() => new Map(sections.map((s) => [s.key, s])), [sections]);
-  const get = (key: SectionKey) => enabled.get(key);
-  const isOn = (key: SectionKey) => !!enabled.get(key)?.enabled;
-  const signupUrl = (enabled.get("signup_line_buttons")?.data as { signupUrl?: string } | undefined)?.signupUrl || "";
+  const signupUrl = (sections.find((s) => s.key === "signup_line_buttons")?.data as { signupUrl?: string } | undefined)?.signupUrl || "";
+
+  // Sections render in the order they are stored, which is the order the
+  // admin's up/down arrows write — a fixed list here ignored that order, so
+  // reordering in the admin changed nothing on the page.
+  const renderSection = (s: SectionEntry) => {
+    switch (s.key) {
+      case "page_header":
+        if (!logoUrl && !heroHeadline && !heroSubtext) return null;
+        return (
+          <header style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", textAlign: "center", paddingTop: "8px" }}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" style={{ maxWidth: "160px", maxHeight: "90px", objectFit: "contain" }} />
+            ) : null}
+            {heroHeadline ? <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: primary }}>{heroHeadline}</h1> : null}
+            {heroSubtext ? <p style={{ margin: 0, fontSize: "14px", color: textMuted }}>{heroSubtext}</p> : null}
+          </header>
+        );
+      case "online_users":
+        return <OnlineUsers data={s.data as { min: number; max: number }} accent={primary} />;
+      case "gif_signup_button":
+        return (
+          // The GIF banner points at the same signup link as the CTA buttons —
+          // merchants set that URL once, in the "ปุ่มสมัคร + LINE" section.
+          <TrackedLink slug={slug} kind="click_signup" href={signupUrl}>
+            {(s.data as { imageUrl?: string }).imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={(s.data as { imageUrl: string }).imageUrl} alt="สมัครสมาชิก" style={{ width: "100%", borderRadius: "12px", display: "block" }} />
+            ) : (
+              <CtaButton bg={primary}>สมัครสมาชิกตอนนี้</CtaButton>
+            )}
+          </TrackedLink>
+        );
+      case "bonus_total":
+        return <BonusTotal data={s.data as { baseAmount: number; perHourIncrement: number }} accent={primary} />;
+      case "top_games":
+        return <TopGames data={s.data as { games: { name: string; imageUrl: string }[] }} accent={primary} />;
+      case "hero_image": {
+        const url = (s.data as { imageUrl?: string }).imageUrl;
+        if (!url) return null;
+        // eslint-disable-next-line @next/next/no-img-element
+        return <img src={url} alt="" style={{ width: "100%", borderRadius: "14px", display: "block" }} />;
+      }
+      case "text_block_1":
+      case "text_block_2":
+        return <TextBlock data={s.data as { heading: string; body: string }} accent={primary} />;
+      case "player_ranking":
+        return <PlayerRanking data={s.data as { players: { name: string; amount: string }[] }} accent={primary} />;
+      case "withdraw_feed":
+        return <WithdrawFeed data={s.data as WithdrawFeedData} accent={primary} muted={textMuted} />;
+      case "prizes":
+        return <Prizes data={s.data as { items: { label: string; imageUrl: string }[] }} accent={primary} />;
+      case "announcements":
+        return <Announcements data={s.data as { items: string[] }} accent={primary} muted={textMuted} />;
+      case "image_slider":
+        return <ImageSlider data={s.data as { images: string[] }} />;
+      case "youtube_video":
+        return <YoutubeVideo data={s.data as { title?: string; url: string }} accent={primary} />;
+      case "reviews":
+        if (reviews.length === 0) return null;
+        return <ReviewsCarousel title={reviewsTitle} subtitle={reviewsSubtitle} reviews={reviews} accent={primary} muted={textMuted} />;
+      case "signup_line_buttons":
+        return (
+          <div style={{ display: "flex", flexDirection: ctaLayout === "vertical" ? "column" : "row", gap: "10px", marginTop: "8px" }}>
+            <TrackedLink slug={slug} kind="click_signup" href={(s.data as { signupUrl: string }).signupUrl} style={{ flex: 1 }}>
+              <CtaButton bg={primary}>สมัครสมาชิก</CtaButton>
+            </TrackedLink>
+            <TrackedLink slug={slug} kind="click_line" href={(s.data as { lineUrl: string }).lineUrl} style={{ flex: 1 }}>
+              <CtaButton bg="#06c755">ทัก LINE</CtaButton>
+            </TrackedLink>
+          </div>
+        );
+      case "page_footer":
+        if (!footerText) return null;
+        return <p style={{ margin: "12px 0 0", textAlign: "center", fontSize: "12px", color: footerTextColor || textMuted }}>{footerText}</p>;
+    }
+  };
 
   return (
     <main
@@ -63,59 +137,7 @@ export default function SalesPage({
       ))}
 
       <div style={{ maxWidth: "480px", margin: "0 auto", padding: "20px 16px 48px", display: "flex", flexDirection: "column", gap: "18px" }}>
-        <header style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", textAlign: "center", paddingTop: "8px" }}>
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" style={{ maxWidth: "160px", maxHeight: "90px", objectFit: "contain" }} />
-          ) : null}
-          {heroHeadline ? <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700, color: primary }}>{heroHeadline}</h1> : null}
-          {heroSubtext ? <p style={{ margin: 0, fontSize: "14px", color: textMuted }}>{heroSubtext}</p> : null}
-        </header>
-
-        {isOn("online_users") && <OnlineUsers data={get("online_users")!.data as { min: number; max: number }} accent={primary} />}
-        {isOn("gif_signup_button") && (
-          // The GIF banner points at the same signup link as the CTA buttons —
-          // merchants set that URL once, in the "ปุ่มสมัคร + LINE" section.
-          <TrackedLink slug={slug} kind="click_signup" href={signupUrl}>
-            {(get("gif_signup_button")!.data as { imageUrl?: string }).imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={(get("gif_signup_button")!.data as { imageUrl: string }).imageUrl} alt="สมัครสมาชิก" style={{ width: "100%", borderRadius: "12px", display: "block" }} />
-            ) : (
-              <CtaButton bg={primary}>สมัครสมาชิกตอนนี้</CtaButton>
-            )}
-          </TrackedLink>
-        )}
-        {isOn("bonus_total") && <BonusTotal data={get("bonus_total")!.data as { baseAmount: number; perHourIncrement: number }} accent={primary} />}
-        {isOn("top_games") && <TopGames data={get("top_games")!.data as { games: { name: string; imageUrl: string }[] }} accent={primary} />}
-        {isOn("hero_image") && (get("hero_image")!.data as { imageUrl?: string }).imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={(get("hero_image")!.data as { imageUrl: string }).imageUrl} alt="" style={{ width: "100%", borderRadius: "14px", display: "block" }} />
-        ) : null}
-        {isOn("text_block_1") && <TextBlock data={get("text_block_1")!.data as { heading: string; body: string }} accent={primary} />}
-        {isOn("text_block_2") && <TextBlock data={get("text_block_2")!.data as { heading: string; body: string }} accent={primary} />}
-        {isOn("player_ranking") && <PlayerRanking data={get("player_ranking")!.data as { players: { name: string; amount: string }[] }} accent={primary} />}
-        {isOn("withdraw_feed") && <WithdrawFeed data={get("withdraw_feed")!.data as WithdrawFeedData} accent={primary} muted={textMuted} />}
-        {isOn("prizes") && <Prizes data={get("prizes")!.data as { items: { label: string; imageUrl: string }[] }} accent={primary} />}
-        {isOn("announcements") && <Announcements data={get("announcements")!.data as { items: string[] }} accent={primary} muted={textMuted} />}
-        {isOn("image_slider") && <ImageSlider data={get("image_slider")!.data as { images: string[] }} />}
-        {isOn("youtube_video") && <YoutubeVideo data={get("youtube_video")!.data as { title?: string; url: string }} accent={primary} />}
-        {isOn("reviews") && reviews.length > 0 && (
-          <ReviewsCarousel title={reviewsTitle} subtitle={reviewsSubtitle} reviews={reviews} accent={primary} muted={textMuted} />
-        )}
-        {isOn("signup_line_buttons") && (
-          <div style={{ display: "flex", flexDirection: ctaLayout === "vertical" ? "column" : "row", gap: "10px", marginTop: "8px" }}>
-            <TrackedLink slug={slug} kind="click_signup" href={(get("signup_line_buttons")!.data as { signupUrl: string }).signupUrl} style={{ flex: 1 }}>
-              <CtaButton bg={primary}>สมัครสมาชิก</CtaButton>
-            </TrackedLink>
-            <TrackedLink slug={slug} kind="click_line" href={(get("signup_line_buttons")!.data as { lineUrl: string }).lineUrl} style={{ flex: 1 }}>
-              <CtaButton bg="#06c755">ทัก LINE</CtaButton>
-            </TrackedLink>
-          </div>
-        )}
-
-        {footerText ? (
-          <p style={{ margin: "12px 0 0", textAlign: "center", fontSize: "12px", color: footerTextColor || textMuted }}>{footerText}</p>
-        ) : null}
+        {sections.map((s) => (s.enabled ? <Fragment key={s.key}>{renderSection(s)}</Fragment> : null))}
       </div>
     </main>
   );

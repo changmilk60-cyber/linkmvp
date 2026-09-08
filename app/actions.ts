@@ -188,7 +188,7 @@ const STR = (fd: FormData, k: string) => {
 // into `_scope` first, so a panel only ever writes its own columns. Anything
 // outside the submitted scope is left exactly as it is in the database —
 // no more carrying the whole page's state through every save.
-type SaveScope = "all" | "bot" | "sections" | "theme" | "pixel" | "main" | "images" | "text" | "colors";
+type SaveScope = "all" | "bot" | "sections" | "theme" | "pixel" | "main" | "colors";
 
 export async function saveSettingsAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
@@ -214,13 +214,21 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
     data.ctaLayout = formData.get("ctaLayout") === "vertical" ? "vertical" : "horizontal";
     data.capiAccessToken = STR(formData, "capiAccessToken") ?? null;
     data.capiEndpointUrl = STR(formData, "capiEndpointUrl") ?? null;
+    const og = await saveUpload(formData.get("file_ogImage"));
+    if (og && typeof og === "object") return og;
+    if (og) data.ogImage = og;
   }
 
-  if (wants("text")) {
+  // The หัวเว็บ / ท้ายเว็บ editors sit inside the "จัดเรียง Section" panel,
+  // so their columns are written by the sections scope.
+  if (wants("sections")) {
     data.heroHeadline = STR(formData, "heroHeadline") ?? null;
     data.heroSubtext = STR(formData, "heroSubtext") ?? null;
     data.footerText = STR(formData, "footerText") ?? null;
     data.footerTextColor = STR(formData, "footerTextColor") ?? null;
+    const logo = await saveUpload(formData.get("file_logoUrl"));
+    if (logo && typeof logo === "object") return logo;
+    if (logo) data.logoUrl = logo;
   }
 
   if (wants("pixel")) {
@@ -261,14 +269,6 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
       if (member || text) reviews.push({ member: member || "สมาชิก", text, stars });
     }
     data.reviews = reviews.length ? JSON.stringify(reviews) : null;
-  }
-
-  if (wants("images")) {
-    for (const field of ["logoUrl", "ogImage"] as const) {
-      const saved = await saveUpload(formData.get(`file_${field}`));
-      if (saved && typeof saved === "object") return saved;
-      if (saved) data[field] = saved;
-    }
   }
 
   if (!wants("sections")) {

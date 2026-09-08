@@ -3,6 +3,7 @@
 // array of these, in display order — array order *is* the sort order.
 
 export type SectionKey =
+  | "page_header"
   | "online_users"
   | "gif_signup_button"
   | "bonus_total"
@@ -17,7 +18,8 @@ export type SectionKey =
   | "image_slider"
   | "reviews"
   | "signup_line_buttons"
-  | "youtube_video";
+  | "youtube_video"
+  | "page_footer";
 
 export type SectionEntry = {
   key: SectionKey;
@@ -26,6 +28,7 @@ export type SectionEntry = {
 };
 
 export const SECTION_META: Record<SectionKey, { icon: string; title: string }> = {
+  page_header: { icon: "🔝", title: "หัวเว็บ (โลโก้ + หัวข้อ + คำโปรย)" },
   online_users: { icon: "👥", title: "จำนวนผู้ใช้ออนไลน์" },
   gif_signup_button: { icon: "🎯", title: "ปุ่ม GIF สมัคร" },
   bonus_total: { icon: "💰", title: "ยอดโบนัสสะสม" },
@@ -41,6 +44,7 @@ export const SECTION_META: Record<SectionKey, { icon: string; title: string }> =
   reviews: { icon: "⭐", title: "รีวิวแบบสุ่ม" },
   signup_line_buttons: { icon: "⚪", title: "ปุ่มสมัคร + LINE" },
   youtube_video: { icon: "🎬", title: "วีดีโอ YouTube" },
+  page_footer: { icon: "🔻", title: "ข้อความท้ายเว็บ" },
 };
 
 export type FeedBank = { name: string; logoUrl: string; color: string };
@@ -57,6 +61,7 @@ export const DEFAULT_FEED_BANKS: FeedBank[] = [
 ];
 
 export const DEFAULT_SECTIONS: SectionEntry[] = [
+  { key: "page_header", enabled: true, data: {} },
   { key: "online_users", enabled: true, data: { min: 20, max: 80 } },
   { key: "gif_signup_button", enabled: true, data: { imageUrl: "" } },
   { key: "bonus_total", enabled: true, data: { baseAmount: 128500, perHourIncrement: 340 } },
@@ -92,6 +97,7 @@ export const DEFAULT_SECTIONS: SectionEntry[] = [
   { key: "reviews", enabled: true, data: {} },
   { key: "signup_line_buttons", enabled: true, data: { signupUrl: "", lineUrl: "" } },
   { key: "youtube_video", enabled: false, data: { title: "", url: "" } },
+  { key: "page_footer", enabled: true, data: {} },
 ];
 
 export function parseSections(json: string | null | undefined): SectionEntry[] {
@@ -100,10 +106,19 @@ export function parseSections(json: string | null | undefined): SectionEntry[] {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_SECTIONS;
     // Merge in any section keys missing from a stored (older) array so newly
-    // added section types still show up in the admin.
-    const seen = new Set(parsed.map((s: SectionEntry) => s.key));
-    const missing = DEFAULT_SECTIONS.filter((s) => !seen.has(s.key));
-    return [...parsed, ...missing];
+    // added section types still show up in the admin. Each one goes back where
+    // it sits by default, ahead of the first section that follows it in
+    // DEFAULT_SECTIONS — appending blindly would drop the page header at the
+    // bottom of every page saved before that section existed.
+    const out: SectionEntry[] = [...parsed];
+    const defaultIndex = new Map(DEFAULT_SECTIONS.map((s, i) => [s.key, i]));
+    const seen = new Set(out.map((s) => s.key));
+    for (const missing of DEFAULT_SECTIONS.filter((s) => !seen.has(s.key))) {
+      const rank = defaultIndex.get(missing.key)!;
+      const at = out.findIndex((s) => (defaultIndex.get(s.key) ?? -1) > rank);
+      out.splice(at < 0 ? out.length : at, 0, missing);
+    }
+    return out;
   } catch {
     return DEFAULT_SECTIONS;
   }

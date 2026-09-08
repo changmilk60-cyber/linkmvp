@@ -88,8 +88,6 @@ const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: st
     items: [
       { icon: "📐", label: "จัดเรียง Section", key: "sections", saves: true },
       { icon: "🎨", label: "โทนสีเว็บไซต์", key: "theme", saves: true },
-      { icon: "🖼", label: "รูปภาพ", key: "images", saves: true },
-      { icon: "📝", label: "ข้อความหน้าเว็บ", key: "text", saves: true },
       { icon: "🖌", label: "ปรับสีตัวอักษร", key: "colors", saves: true },
     ],
   },
@@ -310,6 +308,10 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                     >
                       {s.key === "reviews" ? (
                         <ReviewsEditor title={page.reviewsTitle} subtitle={page.reviewsSubtitle} reviews={page.reviews} />
+                      ) : s.key === "page_header" ? (
+                        <PageHeaderEditor logoUrl={page.logoUrl} headline={page.heroHeadline} subtext={page.heroSubtext} />
+                      ) : s.key === "page_footer" ? (
+                        <PageFooterEditor text={page.footerText} color={page.footerTextColor} />
                       ) : (
                         <SectionExtra sKey={s.key} data={s.data} />
                       )}
@@ -354,6 +356,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="ชื่อแท็บเบราว์เซอร์ (Tab Title)"><TextInput name="tabTitle" defaultValue={page.tabTitle || ""} /></Field>
                 <Field label="OG Description" hint="ข้อความสั้นๆ ที่แสดงใต้ชื่อตอนแชร์ลิงก์" hintTone="body"><TextInput name="ogDescription" defaultValue={page.ogDescription || ""} /></Field>
+                <ImageUploadField label="OG Image (รูปตอนแชร์ลิงก์)" name="file_ogImage" currentUrl={page.ogImage} recommend="ขนาดแนะนำ: 1200 × 630 px — แนวนอน (1.91:1)" />
                 <Field label="CAPI Access Token" hint="จาก Facebook Events Manager" hintTone="body">
                   <TextInput name="capiAccessToken" defaultValue={page.capiAccessToken || ""} placeholder="EAAxxxxxxxxxxxxxx..." />
                   <Hint tone="warning" icon="⚠">เป็นความลับ — ห้ามเปิดเผย</Hint>
@@ -367,28 +370,6 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                 </Field>
               </div>
               <ScopeSave scope="main" onScope={setScope} />
-          </SectionCard>
-        </div>
-
-        <div id="panel-images" {...show("images")}>
-          <SectionCard title="รูปภาพ" subtitle="โลโก้และรูปตอนแชร์ลิงก์ของเว็บ" open>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
-                <ImageUploadField label="โลโก้" name="file_logoUrl" currentUrl={page.logoUrl} recommend="ขนาดแนะนำ: 138 × 78 px — แนวนอน พื้นหลังโปร่งใส (.png)" />
-                <ImageUploadField label="OG Image (รูปตอนแชร์ลิงก์)" name="file_ogImage" currentUrl={page.ogImage} recommend="ขนาดแนะนำ: 1200 × 630 px — แนวนอน (1.91:1)" />
-              </div>
-              <ScopeSave scope="images" onScope={setScope} />
-          </SectionCard>
-        </div>
-
-        <div id="panel-text" {...show("text")}>
-          <SectionCard title="ข้อความหน้าเว็บ" subtitle="หัวข้อ/คำโปรย และท้ายเว็บ" open>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
-                <Field label="หัวข้อหลัก"><TextInput name="heroHeadline" defaultValue={page.heroHeadline || ""} /></Field>
-                <Field label="คำโปรย"><TextInput name="heroSubtext" defaultValue={page.heroSubtext || ""} /></Field>
-              </div>
-              <Field label="ข้อความท้ายเว็บ"><Textarea name="footerText" defaultValue={page.footerText || ""} rows={2} /></Field>
-              <ColorField label="🎨 สีข้อความท้ายเว็บ" name="footerTextColor" value={page.footerTextColor || ""} swatch={page.footerTextColor || "#ffffff"} />
-              <ScopeSave scope="text" onScope={setScope} />
           </SectionCard>
         </div>
 
@@ -461,6 +442,28 @@ function SegCtaLayout({ defaultValue }: { defaultValue: string }) {
     <>
       <input type="hidden" name="ctaLayout" value={v} />
       <SegmentedChoice value={v} onChange={setV} options={[{ icon: "↕", label: "แนวตั้ง", value: "vertical" }, { icon: "↔", label: "แนวนอน", value: "horizontal" }]} />
+    </>
+  );
+}
+
+// หัวเว็บ and ท้ายเว็บ used to be the "รูปภาพ" and "ข้อความหน้าเว็บ" panels.
+// They are page-level columns rather than section data, but they render as
+// part of the page flow, so they are edited (and ordered) as section rows.
+function PageHeaderEditor({ logoUrl, headline, subtext }: { logoUrl: string | null; headline: string | null; subtext: string | null }) {
+  return (
+    <>
+      <Field label="หัวข้อหลัก"><TextInput name="heroHeadline" defaultValue={headline || ""} /></Field>
+      <Field label="คำโปรย"><TextInput name="heroSubtext" defaultValue={subtext || ""} /></Field>
+      <ImageUploadField label="โลโก้" name="file_logoUrl" currentUrl={logoUrl} recommend="ขนาดแนะนำ: 138 × 78 px — แนวนอน พื้นหลังโปร่งใส (.png)" style={{ gridColumn: "1 / -1" }} />
+    </>
+  );
+}
+
+function PageFooterEditor({ text, color }: { text: string | null; color: string | null }) {
+  return (
+    <>
+      <Field label="ข้อความท้ายเว็บ" style={{ gridColumn: "1 / -1" }}><Textarea name="footerText" defaultValue={text || ""} rows={2} /></Field>
+      <ColorField label="🎨 สีข้อความท้ายเว็บ" name="footerTextColor" value={color || ""} swatch={color || "#ffffff"} style={{ gridColumn: "1 / -1" }} />
     </>
   );
 }
