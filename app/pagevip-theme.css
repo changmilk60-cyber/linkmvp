@@ -43,6 +43,8 @@
   --surface-section-header: linear-gradient(90deg, var(--green-tint-2) 0%, var(--green-800) 100%);
   --surface-primary: linear-gradient(180deg, var(--green-400) 0%, var(--green-500) 100%);
   --surface-danger-soft: var(--red-950);
+  --surface-ghost: var(--green-900);
+  --selected-mark: var(--white);
 
   --border-hairline: var(--ink-600);
   --border-accent: var(--green-700);
@@ -233,4 +235,50 @@
     text-transform: uppercase;
   }
   .pv-navgroup:first-child { margin-top: 0; }
+}
+
+/* ---- Light scheme (admin only) --------------------------------------------
+   Applied by setting data-pv-scheme="light" on <html>, which only the admin
+   does — the sales page keeps the merchant's own dark theme regardless.
+   Only the semantic layer is redefined; the raw palette above is untouched. */
+:root[data-pv-scheme="light"] {
+  color-scheme: light;
+
+  --green-tint-1: #e9f6ee;
+  --green-tint-2: #dff1e7;
+  --green-tint-3: #d6efe1;
+
+  --surface-page: #eef2ef;
+  --surface-card: #ffffff;
+  --surface-inset: #f5f8f6;
+  --surface-field: #ffffff;
+  --surface-raised: #d2dcd6;
+  --surface-accent-soft: #e6f6ed;
+  --surface-accent-header: linear-gradient(90deg, #cdeadb 0%, #9fdcbd 100%);
+  --surface-section-header: linear-gradient(90deg, #e8f6ee 0%, #c7e9d8 100%);
+  --surface-danger-soft: #fdecea;
+  --surface-ghost: #dff1e7;
+  --selected-mark: #07733d;
+
+  --border-hairline: #d5ded8;
+  --border-accent: #86ceab;
+  --border-accent-strong: var(--green-600);
+  --border-field: #cbd6cf;
+  --border-danger: #d98b84;
+
+  --text-primary: #0e1c14;
+  --text-body: #1b2a21;
+  --text-muted: #5d6d64;
+  --text-placeholder: #90a099;
+  --text-accent: #07733d;
+  --text-accent-bright: #069150;
+  --text-warning: #8a5a00;
+  --text-danger: #b03a2e;
+
+  --shadow-primary: 0 6px 18px rgba(0, 140, 70, 0.22);
+}
+
+/* The sales page never follows the admin's scheme. */
+:root[data-pv-scheme="light"] body {
+  background: var(--surface-page);
 }

@@ -131,8 +131,8 @@ function SectionToggle({ name, defaultEnabled }: { name: string; defaultEnabled:
 // screen, so picking a colour looked like it did nothing at all.
 export function ThemeSwatchCard({ name, icon, base, primary, accent, selected = false, onSelect, style }: { name: string; icon: string; base: string; primary: string; accent: string; selected?: boolean; onSelect: () => void; style?: CSSProperties }) {
   return (
-    <button type="button" onClick={onSelect} aria-pressed={selected} style={{ background: "var(--surface-inset)", border: "1px solid " + (selected ? "var(--white)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "14px 12px", cursor: "pointer", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", transition: "var(--transition-control)", ...style }}>
-      {selected ? <span aria-hidden="true" style={{ position: "absolute", top: "10px", right: "12px", color: "var(--white)", fontSize: "14px" }}>✓</span> : null}
+    <button type="button" onClick={onSelect} aria-pressed={selected} style={{ background: "var(--surface-inset)", border: "1px solid " + (selected ? "var(--selected-mark)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "14px 12px", cursor: "pointer", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", transition: "var(--transition-control)", ...style }}>
+      {selected ? <span aria-hidden="true" style={{ position: "absolute", top: "10px", right: "12px", color: "var(--selected-mark)", fontSize: "14px" }}>✓</span> : null}
       <span style={{ display: "flex", gap: "6px" }}>
         {[base, primary, accent].map((c, i) => <span key={i} style={{ width: "18px", height: "18px", borderRadius: "50%", background: c, border: "1px solid rgba(255,255,255,.14)" }} />)}
       </span>

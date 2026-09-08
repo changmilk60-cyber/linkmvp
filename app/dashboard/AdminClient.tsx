@@ -200,6 +200,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
         <h1>หลังบ้านแก้เว็บ</h1>
         <Pill icon="⏰" tone="soft">เหลือ {page.daysLeft} วัน</Pill>
         <div className="pv-appbar-actions">
+          <SchemeToggle />
           <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
             <Button variant="primary" icon="👁">พรีวิวหน้าเซลเพจ</Button>
           </a>
@@ -559,6 +560,47 @@ function LicenseSummary({ daysLeft, expiresAt, whitepageUrl, onGoTo }: { daysLef
         )}
       </div>
     </div>
+  );
+}
+
+// Light/dark applies to the admin only — it is written on <html> so the
+// tokens cascade, and read back before paint by a script in the layout.
+function SchemeToggle() {
+  const [scheme, setScheme] = useState<"dark" | "light">("dark");
+
+  // Read on mount rather than during render: the server has no localStorage,
+  // so deciding earlier would mismatch on hydration.
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("pv-scheme");
+    } catch {
+      saved = null;
+    }
+    if (saved === "light") setScheme("light");
+  }, []);
+
+  const flip = () => {
+    const next = scheme === "dark" ? "light" : "dark";
+    setScheme(next);
+    if (next === "light") document.documentElement.setAttribute("data-pv-scheme", "light");
+    else document.documentElement.removeAttribute("data-pv-scheme");
+    try {
+      localStorage.setItem("pv-scheme", next);
+    } catch {
+      /* private mode — the choice just will not persist */
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={flip}
+      aria-label={scheme === "dark" ? "เปลี่ยนเป็นโหมดสว่าง" : "เปลี่ยนเป็นโหมดมืด"}
+    >
+      {scheme === "dark" ? "☀️ สว่าง" : "🌙 มืด"}
+    </Button>
   );
 }
 

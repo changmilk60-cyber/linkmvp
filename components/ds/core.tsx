@@ -21,7 +21,7 @@ const BUTTON_BASE: CSSProperties = {
 const BUTTON_VARIANTS: Record<ButtonVariant, CSSProperties> = {
   primary: { background: "var(--surface-primary)", color: "var(--text-on-primary)", boxShadow: "var(--shadow-primary)", borderColor: "var(--green-500)" },
   outline: { background: "var(--surface-accent-soft)", color: "var(--text-accent)", borderColor: "var(--border-accent)" },
-  ghost: { background: "var(--green-900)", color: "var(--text-accent)", borderColor: "var(--border-accent)" },
+  ghost: { background: "var(--surface-ghost)", color: "var(--text-accent)", borderColor: "var(--border-accent)" },
   quiet: { background: "var(--surface-inset)", color: "var(--text-body)", borderColor: "var(--border-hairline)" },
   white: { background: "var(--off-white)", color: "var(--ink-900)", borderColor: "var(--off-white)", fontWeight: "var(--fw-bold)" as unknown as number },
   danger: { background: "var(--surface-danger-soft)", color: "var(--text-danger)", borderColor: "var(--border-danger)" },
