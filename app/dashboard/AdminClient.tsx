@@ -362,7 +362,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
                   <Hint tone="warning" icon="⚠">เป็นความลับ — ห้ามเปิดเผย</Hint>
                 </Field>
                 <Field label="ลิงก์ CAPI Endpoint" hint="ปล่อยว่างไว้ก็ได้" hintTone="body"><TextInput name="capiEndpointUrl" defaultValue={page.capiEndpointUrl || ""} /></Field>
-                <Field label="ชื่อ Event CAPI" boxed>
+                <Field label="Event ตอนกดปุ่มสมัคร" hint="ชื่อ Event ที่ส่งเข้า Facebook Pixel เมื่อมีคนกดปุ่มสมัคร • ปุ่ม LINE ส่งเป็น Contact เสมอ" hintTone="body" boxed>
                   <SegCapiEvent defaultValue={page.capiEventName} />
                 </Field>
                 <Field label="Layout ปุ่มสมัคร + LINE" hint="แนวตั้ง = ปุ่มอยู่บน–ล่าง • แนวนอน = ปุ่มอยู่ซ้าย–ขวา" hintTone="body">
@@ -566,7 +566,21 @@ function ManualAccordion() {
           ),
         },
         { icon: "🎨", title: "เลือกธีมและสีพื้นหลัง", body: "เลือกโทนสี 1 ชุด สีพื้นหลังและปุ่มจะเปลี่ยนให้อัตโนมัติ" },
-        { icon: "🍪", title: "เพิ่ม Pixel และเลือก Event CAPI", body: "กรอก Pixel ID แยกบรรทัด ระบบจะรวมค่าให้อัตโนมัติ" },
+        {
+          icon: "🍪",
+          title: "เพิ่ม Pixel และตรวจสอบว่า Event เข้าจริง",
+          body: (
+            <ManualList
+              items={[
+                "กรอก Pixel ID แยกบรรทัด (1 บรรทัดต่อ 1 ไอดี) ระบบจะรวมค่าให้อัตโนมัติ",
+                "ต้องใช้เลข Pixel ID ที่ตรงกับที่แสดงในหน้า Events Manager ของ Facebook มิฉะนั้นจะทดสอบเท่าไหร่ก็ไม่เจอ Event",
+                "Event ที่เว็บส่งให้: PageView ตอนเปิดหน้า • Subscribe (หรือ Purchase ตามที่เลือกใน ตั้งค่าหลัก) ตอนกดปุ่มสมัคร • Contact ตอนกดปุ่มทัก LINE",
+                "ทดสอบด้วย Test Events ใน Events Manager: ใส่ URL ของหน้าเซลเพจ (ไม่ใช่ URL หน้าหลังบ้าน) แล้วกดปุ่มบนหน้าเว็บดู",
+                "ถ้าไม่เห็น Event เลย ให้ปิด Ad Blocker หรือลองเบราว์เซอร์อื่นก่อน เพราะตัวบล็อกโฆษณาจะบล็อกสคริปต์ของ Facebook",
+              ]}
+            />
+          ),
+        },
         { icon: "🔗", title: "เปลี่ยนชื่อ URL เว็บไซต์", body: "URL เดิมจะเปิดไม่ได้หลังเปลี่ยนชื่อ กรุณาอัปเดตลิงก์ที่นำไปใช้งานทั้งหมด" },
         {
           icon: "⚙",
@@ -578,7 +592,8 @@ function ManualAccordion() {
                 "OG Description = ข้อความสั้นๆ ที่ขึ้นใต้ชื่อเว็บตอนแชร์ลิงก์ลง Facebook หรือ LINE",
                 "OG Image = รูปที่ขึ้นตอนแชร์ลิงก์ ขนาดแนะนำ 1200 × 630 px (แนวนอน)",
                 "Layout ปุ่มสมัคร + LINE = เลือกให้ปุ่มทั้งสองเรียงบน–ล่าง (แนวตั้ง) หรือ ซ้าย–ขวา (แนวนอน)",
-                "ช่อง CAPI ทั้ง 3 ช่อง (Access Token, Endpoint, ชื่อ Event) กรอกและบันทึกได้ แต่ตอนนี้ระบบยังไม่ได้ส่งข้อมูลไป Facebook จริง จึงยังไม่มีผลกับการยิงแอด",
+                "Event ตอนกดปุ่มสมัคร = ชื่อ Event ที่ส่งเข้า Facebook Pixel เมื่อมีคนกดปุ่มสมัคร (Subscribe หรือ Purchase) ส่วนปุ่มทัก LINE ส่งเป็น Contact เสมอ",
+                "CAPI Access Token และ ลิงก์ CAPI Endpoint กรอกและบันทึกได้ แต่ตอนนี้ยังไม่ถูกใช้งาน — การส่ง Event ทำจากฝั่งเบราว์เซอร์ผ่าน Pixel เท่านั้น ยังไม่ได้ส่งจากเซิร์ฟเวอร์",
                 "กด “บันทึกส่วนนี้” ทุกครั้งหลังแก้ไข",
               ]}
             />

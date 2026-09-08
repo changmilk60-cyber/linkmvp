@@ -22,6 +22,7 @@ export default function SalesPage({
   reviews,
   fbPixelIds,
   ctaLayout,
+  signupEventName,
 }: {
   slug: string;
   themePreset: string;
@@ -37,6 +38,8 @@ export default function SalesPage({
   reviews: Review[];
   fbPixelIds: string[];
   ctaLayout: "vertical" | "horizontal";
+  /** Meta event fired when a visitor clicks a signup button. */
+  signupEventName: "Subscribe" | "Purchase";
 }) {
   const theme = themeFor(themePreset);
   const primary = colorOverrides.primary || theme.primary;
@@ -68,7 +71,7 @@ export default function SalesPage({
         return (
           // The GIF banner points at the same signup link as the CTA buttons —
           // merchants set that URL once, in the "ปุ่มสมัคร + LINE" section.
-          <TrackedLink slug={slug} kind="click_signup" href={signupUrl}>
+          <TrackedLink slug={slug} kind="click_signup" fbEvent={signupEventName} href={signupUrl}>
             {(s.data as { imageUrl?: string }).imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={(s.data as { imageUrl: string }).imageUrl} alt="สมัครสมาชิก" style={{ width: "100%", borderRadius: "12px", display: "block" }} />
@@ -108,10 +111,10 @@ export default function SalesPage({
       case "signup_line_buttons":
         return (
           <div style={{ display: "flex", flexDirection: ctaLayout === "vertical" ? "column" : "row", gap: "10px", marginTop: "8px" }}>
-            <TrackedLink slug={slug} kind="click_signup" href={(s.data as { signupUrl: string }).signupUrl} style={{ flex: 1 }}>
+            <TrackedLink slug={slug} kind="click_signup" fbEvent={signupEventName} href={(s.data as { signupUrl: string }).signupUrl} style={{ flex: 1 }}>
               <CtaButton bg={primary}>สมัครสมาชิก</CtaButton>
             </TrackedLink>
-            <TrackedLink slug={slug} kind="click_line" href={(s.data as { lineUrl: string }).lineUrl} style={{ flex: 1 }}>
+            <TrackedLink slug={slug} kind="click_line" fbEvent="Contact" href={(s.data as { lineUrl: string }).lineUrl} style={{ flex: 1 }}>
               <CtaButton bg="#06c755">ทัก LINE</CtaButton>
             </TrackedLink>
           </div>
