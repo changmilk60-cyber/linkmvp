@@ -19,3 +19,22 @@ a {
 a:hover {
   color: var(--text-accent-bright, #00ff88);
 }
+
+/* Online-status dot on the sales page: a slow pulse reads as "live" without
+   the jitter of a hard blink. */
+@keyframes pv-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 204, 102, 0.55); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 6px rgba(0, 204, 102, 0); }
+}
+.pv-live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #00cc66;
+  flex-shrink: 0;
+  display: inline-block;
+  animation: pv-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-live-dot { animation: none; }
+}

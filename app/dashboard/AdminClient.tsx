@@ -238,6 +238,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
 
         <div id="panel-dashboard" {...show("dashboard")}>
           <SectionCard icon="📊" title="Dashboard สถิติเซลเพจ" subtitle="สรุปผู้เข้าชมและจำนวนการคลิกปุ่ม อัปเดตแบบเรียลไทม์จากผู้เข้าชมจริง" open>
+            <LicenseSummary daysLeft={page.daysLeft} expiresAt={page.licenseExpiresAt} whitepageUrl={page.whitepageRedirectUrl} onGoTo={goTo} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: "var(--gap-grid)" }}>
               <StatCard label="ผู้เข้าชมวันนี้" value={stats.viewsToday} note="Session" />
               <StatCard label="ผู้ชมไม่ซ้ำวันนี้" value={stats.uniqueToday} note="ประมาณจากเบราว์เซอร์" />
@@ -525,6 +526,38 @@ function ReviewRowForm({ index, member, text, stars }: { index: number; member: 
       <label style={{ display: "inline-flex", alignItems: "center", gap: "6px", font: "var(--fw-bold) var(--fs-label)/1 var(--font-sans)", color: "var(--text-danger)", cursor: "pointer" }}>
         <input type="checkbox" name={`review_remove_${index}`} />✖
       </label>
+    </div>
+  );
+}
+
+// Expiry only bites once the licence runs out, and what happens then depends
+// on a field in another panel — so both are shown together on the Dashboard.
+function LicenseSummary({ daysLeft, expiresAt, whitepageUrl, onGoTo }: { daysLeft: number; expiresAt: string; whitepageUrl: string | null; onGoTo: (key: string) => void }) {
+  const soon = daysLeft <= 30;
+  const tone = daysLeft <= 0 ? "var(--text-danger)" : soon ? "var(--text-warning)" : "var(--text-accent)";
+  return (
+    <div style={{ background: "var(--surface-inset)", border: "1px solid " + (soon ? "var(--border-accent)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
+      <div>
+        <p style={{ margin: 0, font: "var(--fw-medium) var(--fs-label)/1.3 var(--font-sans)", color: "var(--text-muted)" }}>วันใช้งานคงเหลือ</p>
+        <p style={{ margin: "6px 0 0", font: "var(--text-stat)", color: tone }}>{daysLeft > 0 ? `${daysLeft} วัน` : "หมดอายุแล้ว"}</p>
+        <p style={{ margin: "4px 0 0", font: "var(--text-hint)", color: "var(--text-muted)" }}>หมดอายุ {expiresAt}</p>
+      </div>
+      <div>
+        <p style={{ margin: 0, font: "var(--fw-medium) var(--fs-label)/1.3 var(--font-sans)", color: "var(--text-muted)" }}>เมื่อหมดอายุ ผู้เข้าชมจะเจอ</p>
+        {whitepageUrl ? (
+          <>
+            <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.4 var(--font-sans)", color: "var(--text-primary)", wordBreak: "break-all" }}>ถูกส่งไป {whitepageUrl}</p>
+            <p style={{ margin: "4px 0 0", font: "var(--text-hint)", color: "var(--text-muted)" }}>ตั้งค่าที่เมนู “ใช้งาน Bot” → ลิงก์ Redirect หน้า Whitepage</p>
+          </>
+        ) : (
+          <>
+            <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.4 var(--font-sans)", color: "var(--text-warning)" }}>หน้าหมดอายุเปล่า (ยังไม่ได้ตั้งลิงก์)</p>
+            <button type="button" onClick={() => onGoTo("bot")} style={{ marginTop: "8px", background: "var(--surface-raised)", color: "var(--text-accent)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-button)", padding: "6px 12px", font: "var(--fw-medium) var(--fs-hint)/1.1 var(--font-sans)", cursor: "pointer" }}>
+              ตั้งลิงก์ Whitepage
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

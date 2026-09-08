@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { parseSections } from "@/lib/sections";
@@ -7,6 +8,27 @@ import { headers } from "next/headers";
 import SalesPage from "./SalesPage";
 
 export const dynamic = "force-dynamic";
+
+// Without this the sales page inherits the layout's metadata, so a customer's
+// browser tab reads "PageVIP Pro — LINKMVP" — the admin's name, on a page
+// meant for their visitors. Each page supplies its own from ตั้งค่าหลัก.
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const page = await prisma.page.findUnique({
+    where: { slug: params.slug },
+    select: { tabTitle: true, ogDescription: true, ogImage: true, heroHeadline: true },
+  });
+  if (!page) return { title: "" };
+
+  const title = page.tabTitle || page.heroHeadline || "";
+  const description = page.ogDescription || undefined;
+  const images = page.ogImage ? [page.ogImage] : undefined;
+  return {
+    title,
+    description,
+    openGraph: { title: title || undefined, description, images },
+    twitter: { card: images ? "summary_large_image" : "summary", title: title || undefined, description, images },
+  };
+}
 
 export default async function SlugPage({ params }: { params: { slug: string } }) {
   const page = await prisma.page.findUnique({ where: { slug: params.slug } });

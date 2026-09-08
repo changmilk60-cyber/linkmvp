@@ -182,7 +182,7 @@ function OnlineUsers({ data, accent }: { data: { min: number; max: number }; acc
   }, [data.min, data.max]);
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: `${accent}1a`, border: `1px solid ${accent}55`, borderRadius: "999px", padding: "8px 14px", fontSize: "13px", fontWeight: 600, color: accent }}>
-      <span aria-hidden="true">👥</span> มีผู้ใช้งานออนไลน์ {n} คน
+      <span aria-hidden="true" className="pv-live-dot" /> มีผู้ใช้งานออนไลน์ {n} คน
     </div>
   );
 }
@@ -202,7 +202,7 @@ function BonusTotal({ data, accent }: { data: { baseAmount: number; perHourIncre
   return (
     <Card accent={accent}>
       <p style={{ margin: 0, fontSize: "12px", color: "inherit", opacity: 0.7, textAlign: "center" }}>ยอดโบนัสสะสม</p>
-      <p style={{ margin: "4px 0 0", fontSize: "28px", fontWeight: 800, textAlign: "center", color: accent, fontVariantNumeric: "tabular-nums" }}>{amount.toLocaleString()}</p>
+      <p style={{ margin: "6px 0 0", fontSize: "38px", lineHeight: 1.15, fontWeight: 800, textAlign: "center", color: accent, fontVariantNumeric: "tabular-nums" }}>{amount.toLocaleString()}</p>
     </Card>
   );
 }
@@ -344,7 +344,7 @@ function WithdrawFeed({ data, accent, muted }: { data: WithdrawFeedData; accent:
     <div style={{ background: "rgba(255,255,255,.05)", border: `1px solid ${accent}33`, borderRadius: "14px", overflow: "hidden" }}>
       {data.title ? (
         <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: `${accent}1f`, borderBottom: `1px solid ${accent}33`, fontSize: "13px", fontWeight: 700, color: accent }}>
-          <span aria-hidden="true" style={{ width: "8px", height: "8px", borderRadius: "50%", background: accent, flexShrink: 0 }} />
+          <span aria-hidden="true" className="pv-live-dot" />
           {data.title}
         </div>
       ) : null}
