@@ -58,27 +58,47 @@ a:hover {
   .pv-game-out { display: none; }
 }
 
-/* Sales-page CTA glow. The halo is drawn by a blurred copy of the button that
-   inherits its background, so it is always exactly the button's own colour —
-   the theme colour and the button itself are untouched. No z-index on the
-   button: leaving it out of the stacking context keeps the halo behind it. */
+/* Sales-page CTA. Measured off the reference clip: the halo around the button
+   is steady, and a highlight sweeps across the face left to right in about
+   0.75s, roughly every 3s. Both the halo and the button colour come from the
+   button itself, so the theme colour is never overridden. */
 .pv-cta {
   position: relative;
 }
-.pv-cta::before {
-  content: "";
+/* Halo — a blurred copy of the button, sitting behind it. */
+.pv-cta-glow {
   position: absolute;
   inset: 0;
   z-index: -1;
   border-radius: inherit;
   background: inherit;
-  filter: blur(9px);
-  animation: pv-cta-glow 2s ease-in-out infinite;
+  filter: blur(11px);
+  opacity: 0.85;
 }
-@keyframes pv-cta-glow {
-  0%, 100% { opacity: 0.2; transform: scale(0.96); }
-  50%      { opacity: 1; transform: scale(1.09); }
+/* Clipping layer, so the sweep stays inside the button's shape while the
+   halo above is free to spill outside it. */
+.pv-cta-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pv-cta-shine::before {
+  content: "";
+  position: absolute;
+  top: -60%;
+  bottom: -60%;
+  width: 55%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: translateX(-180%);
+  animation: pv-cta-shine 3s linear infinite;
+}
+@keyframes pv-cta-shine {
+  0%   { transform: translateX(-180%) skewX(-18deg); }
+  28%  { transform: translateX(330%) skewX(-18deg); }
+  100% { transform: translateX(330%) skewX(-18deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pv-cta::before { animation: none; opacity: 0.5; transform: scale(1.02); }
+  .pv-cta-shine::before { animation: none; opacity: 0; }
 }
