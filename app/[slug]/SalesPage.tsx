@@ -163,7 +163,7 @@ function FbPixel({ id }: { id: string }) {
 
 function CtaButton({ bg, children }: { bg: string; children: React.ReactNode }) {
   return (
-    <span style={{ display: "block", width: "100%", background: bg, color: "#fff", textAlign: "center", padding: "14px", borderRadius: "12px", fontWeight: 700, fontSize: "15px" }}>
+    <span className="pv-cta" style={{ display: "block", width: "100%", background: bg, color: "#fff", textAlign: "center", padding: "14px", borderRadius: "12px", fontWeight: 700, fontSize: "15px" }}>
       {children}
     </span>
   );

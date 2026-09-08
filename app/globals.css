@@ -57,3 +57,28 @@ a:hover {
   .pv-game-in { animation: none; }
   .pv-game-out { display: none; }
 }
+
+/* Sales-page CTA glow. The halo is drawn by a blurred copy of the button that
+   inherits its background, so it is always exactly the button's own colour —
+   the theme colour and the button itself are untouched. No z-index on the
+   button: leaving it out of the stacking context keeps the halo behind it. */
+.pv-cta {
+  position: relative;
+}
+.pv-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(9px);
+  animation: pv-cta-glow 2s ease-in-out infinite;
+}
+@keyframes pv-cta-glow {
+  0%, 100% { opacity: 0.2; transform: scale(0.96); }
+  50%      { opacity: 1; transform: scale(1.09); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-cta::before { animation: none; opacity: 0.5; transform: scale(1.02); }
+}
