@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, ReactNode } from "react";
 
 export function Field({
@@ -208,14 +208,62 @@ export function ImageUploadField({
   removeName?: string;
   style?: CSSProperties;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const [picked, setPicked] = useState<{ name: string; url: string } | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  // Dropped files have to be handed to the <input> itself: the form reads its
+  // .files when it submits, so a drop that only updated React state would look
+  // right and upload nothing.
+  const accept = (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setProblem("ไฟล์นี้ไม่ใช่รูปภาพ");
+      return;
+    }
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    if (inputRef.current) inputRef.current.files = transfer.files;
+    setProblem(null);
+    setPicked((prev) => {
+      if (prev) URL.revokeObjectURL(prev.url);
+      return { name: file.name, url: URL.createObjectURL(file) };
+    });
+  };
+
+  const preview = picked?.url || currentUrl;
   return (
-    <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", ...style }}>
+    <div
+      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false); }}
+      onDrop={(e) => { e.preventDefault(); setDragging(false); accept(e.dataTransfer.files); }}
+      style={{ background: "var(--surface-inset)", border: "1px " + (dragging ? "dashed var(--green-500)" : "solid var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", transition: "var(--transition-control)", ...style }}
+    >
       {label ? <label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>{label}</label> : null}
-      {currentUrl ? (
+      {preview ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={currentUrl} alt="" style={{ width: "100%", maxWidth: "220px", borderRadius: "var(--radius-field)", display: "block", marginBottom: "8px", border: "1px solid var(--border-hairline)" }} />
+        <img src={preview} alt="" style={{ width: "100%", maxWidth: "220px", borderRadius: "var(--radius-field)", display: "block", marginBottom: "8px", border: "1px solid " + (picked ? "var(--green-500)" : "var(--border-hairline)") }} />
       ) : null}
-      <input type="file" name={name} accept="image/*" style={{ width: "100%", color: "var(--text-body)", font: "var(--text-hint)" }} />
+      <input
+        ref={inputRef}
+        type="file"
+        name={name}
+        accept="image/*"
+        onChange={(e) => accept(e.target.files)}
+        style={{ width: "100%", color: "var(--text-body)", font: "var(--text-hint)" }}
+      />
+      <p style={{ margin: "6px 0 0", font: "var(--text-hint)", color: dragging ? "var(--text-accent)" : "var(--text-muted)" }}>
+        {dragging ? "วางรูปตรงนี้ได้เลย" : "ลากรูปจากคอมมาวางในกรอบนี้ก็ได้"}
+      </p>
+      {picked ? (
+        <p style={{ margin: "4px 0 0", font: "var(--fw-semibold) var(--fs-hint)/1.3 var(--font-sans)", color: "var(--text-accent)" }}>
+          <span aria-hidden="true">🆕</span> {picked.name} — กดบันทึกเพื่อใช้รูปนี้
+        </p>
+      ) : null}
+      {problem ? <p style={{ margin: "4px 0 0", font: "var(--fw-semibold) var(--fs-hint)/1.3 var(--font-sans)", color: "var(--text-danger)" }}><span aria-hidden="true">⚠</span> {problem}</p> : null}
       {currentSize ? (
         <p style={{ margin: "8px 0 0", font: "var(--fw-bold) var(--fs-hint)/1.2 var(--font-sans)", color: "var(--text-accent)" }}><span aria-hidden="true">📐</span> ขนาดปัจจุบัน: {currentSize}</p>
       ) : null}

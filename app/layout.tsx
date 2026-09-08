@@ -3,7 +3,7 @@ import "./globals.css";
 import "./pagevip-theme.css";
 
 export const metadata: Metadata = {
-  title: "PageVIP Pro — หลังบ้านแก้เว็บ",
+  title: "PageVIP Pro — LINKMVP",
   description: "สร้างและจัดการหน้าเซลเพจของคุณ พร้อมหลังบ้านแก้เว็บครบวงจร",
 };
 
