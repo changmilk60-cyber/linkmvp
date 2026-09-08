@@ -65,6 +65,12 @@ export default async function DashboardPage() {
   };
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+  // Formatted on the server so the client renders the same string it was sent —
+  // a locale-dependent date built in the browser would differ on hydration.
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, createdAt: true } });
+  const thaiDate = (d: Date) =>
+    `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear() + 543}`;
   const daysLeft = Math.max(0, Math.ceil((page.licenseExpiresAt.getTime() - Date.now()) / 86_400_000));
 
   return (
@@ -96,6 +102,12 @@ export default async function DashboardPage() {
         reviews: page.reviews ? JSON.parse(page.reviews) : [],
         licenseExpiresAt: page.licenseExpiresAt.toISOString().slice(0, 10),
         daysLeft,
+      }}
+      account={{
+        email: user?.email ?? "",
+        joinedAt: user ? thaiDate(user.createdAt) : "-",
+        pageCreatedAt: thaiDate(page.createdAt),
+        pageUrl: `${baseUrl.replace(/\/$/, "")}/${page.slug}`,
       }}
       stats={stats}
       baseUrl={baseUrl}

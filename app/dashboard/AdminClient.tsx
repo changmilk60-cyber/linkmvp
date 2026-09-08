@@ -2,6 +2,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { Fragment, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Accordion,
@@ -73,6 +74,13 @@ type Stats = {
 
 // One panel is shown at a time, picked from this nav — grouped so 14 entries
 // stay scannable. `saves` marks the panels that live inside the settings form.
+type AccountInfo = {
+  email: string;
+  joinedAt: string;
+  pageCreatedAt: string;
+  pageUrl: string;
+};
+
 const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: string; saves?: boolean }[] }[] = [
   {
     group: "ภาพรวม",
@@ -106,7 +114,7 @@ function d(data: Record<string, unknown>) {
   return data as Record<string, string>;
 }
 
-export default function AdminClient({ page, stats, baseUrl }: { page: PageData; stats: Stats; baseUrl: string }) {
+export default function AdminClient({ page, stats, account, baseUrl }: { page: PageData; stats: Stats; account: AccountInfo; baseUrl: string }) {
   const [active, setActive] = useState("dashboard");
   const activeItem = NAV_ITEMS.find((i) => i.key === active) ?? NAV_ITEMS[0];
   const show = (key: string) => ({ style: { display: active === key ? "block" : "none" } });
@@ -257,6 +265,7 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
             <p style={{ margin: 0, font: "var(--fw-medium) var(--fs-micro)/1.4 var(--font-sans)", color: "var(--text-muted)" }}>
               นับจากการเข้าชมหน้าเซลเพจจริงและการคลิกปุ่มสมัคร/LINE จริง • ผู้ชมไม่ซ้ำประมาณจากคุกกี้เบราว์เซอร์
             </p>
+            <AccountCard account={account} daysLeft={page.daysLeft} expiresAt={page.licenseExpiresAt} />
           </SectionCard>
         </div>
 
@@ -528,6 +537,55 @@ function ReviewRowForm({ index, member, text, stars }: { index: number; member: 
       <label style={{ display: "inline-flex", alignItems: "center", gap: "6px", font: "var(--fw-bold) var(--fs-label)/1 var(--font-sans)", color: "var(--text-danger)", cursor: "pointer" }}>
         <input type="checkbox" name={`review_remove_${index}`} />✖
       </label>
+    </div>
+  );
+}
+
+function AccountRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p style={{ margin: 0, font: "var(--fw-medium) var(--fs-hint)/1.3 var(--font-sans)", color: "var(--text-muted)" }}>{label}</p>
+      <p style={{ margin: "4px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.45 var(--font-sans)", color: "var(--text-primary)", wordBreak: "break-all" }}>{children}</p>
+    </div>
+  );
+}
+
+function AccountCard({ account, daysLeft, expiresAt }: { account: AccountInfo; daysLeft: number; expiresAt: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(account.pageUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard blocked — the link is selectable as text anyway */
+    }
+  };
+  return (
+    <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
+      <p style={{ margin: 0, font: "var(--fw-bold) var(--fs-section-title)/1.2 var(--font-sans)", color: "var(--text-accent)" }}>
+        <span aria-hidden="true">👤</span> ข้อมูลบัญชีผู้ใช้งาน
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: "var(--gap-grid)" }}>
+        <AccountRow label="อีเมลที่ใช้สมัคร">{account.email || "-"}</AccountRow>
+        <AccountRow label="วันที่สมัครใช้งาน">{account.joinedAt}</AccountRow>
+        <AccountRow label="วันที่สร้างเซลเพจ">{account.pageCreatedAt}</AccountRow>
+        <AccountRow label="สถานะบัญชี">
+          <span style={{ color: daysLeft > 0 ? "var(--text-accent)" : "var(--text-danger)" }}>
+            {daysLeft > 0 ? `ใช้งานได้ • เหลือ ${daysLeft} วัน` : "หมดอายุแล้ว"}
+          </span>
+          <span style={{ display: "block", font: "var(--text-hint)", color: "var(--text-muted)", fontWeight: 400 }}>ถึง {expiresAt}</span>
+        </AccountRow>
+      </div>
+      <div>
+        <p style={{ margin: 0, font: "var(--fw-medium) var(--fs-hint)/1.3 var(--font-sans)", color: "var(--text-muted)" }}>ลิงก์เซลเพจของคุณ</p>
+        <div style={{ marginTop: "6px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
+          <a href={account.pageUrl} target="_blank" rel="noopener noreferrer" style={{ font: "var(--fw-regular) var(--fs-body)/1.4 var(--font-mono)", wordBreak: "break-all" }}>
+            {account.pageUrl}
+          </a>
+          <Button type="button" variant="quiet" size="sm" onClick={copy}>{copied ? "คัดลอกแล้ว ✓" : "คัดลอกลิงก์"}</Button>
+        </div>
+      </div>
     </div>
   );
 }
