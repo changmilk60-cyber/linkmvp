@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { parseSections } from "@/lib/sections";
+import { normalizeExternalUrl } from "@/lib/url";
 import SalesPage from "./SalesPage";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,8 @@ export default async function SlugPage({ params }: { params: { slug: string } })
 
   const expired = page.licenseExpiresAt.getTime() < Date.now();
   if (expired) {
-    if (page.whitepageRedirectUrl) redirect(page.whitepageRedirectUrl);
+    const whitepage = normalizeExternalUrl(page.whitepageRedirectUrl);
+    if (whitepage) redirect(whitepage);
     return (
       <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0b0b0b", color: "#aaa", fontFamily: "system-ui, sans-serif", textAlign: "center", padding: "40px" }}>
         <p>หน้านี้หมดอายุการใช้งานแล้ว</p>
@@ -19,8 +21,11 @@ export default async function SlugPage({ params }: { params: { slug: string } })
     );
   }
 
-  if (page.cloakToLandingUrl && page.landingUrl) {
-    redirect(page.landingUrl);
+  // An unusable landing link shows the sales page rather than redirecting to
+  // a path on our own domain.
+  const landing = normalizeExternalUrl(page.landingUrl);
+  if (page.cloakToLandingUrl && landing) {
+    redirect(landing);
   }
 
   const colorOverrides = page.colorOverrides ? JSON.parse(page.colorOverrides) : {};

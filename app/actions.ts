@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { normalizeExternalUrl } from "@/lib/url";
 import { nanoid } from "nanoid";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
@@ -240,8 +241,14 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
   }
 
   if (wants("bot")) {
-    data.landingUrl = STR(formData, "landingUrl") ?? null;
-    data.whitepageRedirectUrl = STR(formData, "whitepageRedirectUrl") ?? null;
+    for (const [field, label] of [["landingUrl", "Landing Page"], ["whitepageRedirectUrl", "Redirect หน้า Whitepage"]] as const) {
+      const typed = STR(formData, field);
+      const normalized = normalizeExternalUrl(typed);
+      if (typed && !normalized) {
+        return { error: `ลิงก์ ${label} ไม่ถูกต้อง — ใส่ลิงก์แบบเต็ม เช่น https://example.com` };
+      }
+      data[field] = normalized;
+    }
     data.useSameLandingForAll = formData.get("useSameLandingForAll") === "on";
     data.cloakToLandingUrl = formData.get("cloakToLandingUrl") === "on";
   }
