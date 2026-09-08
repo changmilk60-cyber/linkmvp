@@ -282,3 +282,57 @@
 :root[data-pv-scheme="light"] body {
   background: var(--surface-page);
 }
+
+/* ---- Admin light/dark switch ----------------------------------------------
+   Pure CSS + inline SVG: no library, no image request. aria-checked is the
+   single source of truth for both the colours and the knob position, so the
+   look can never disagree with the state screen readers announce. */
+.pv-scheme-switch {
+  --pv-switch-track: #0b3f5c;
+  --pv-switch-knob: #29b6ea;
+  position: relative;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--pv-switch-track);
+  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-standard);
+}
+.pv-scheme-switch[aria-checked="true"] {
+  --pv-switch-track: #f7ecc2;
+  --pv-switch-knob: #f0c419;
+}
+.pv-scheme-switch:focus-visible {
+  outline: 2px solid var(--green-300);
+  outline-offset: 2px;
+}
+.pv-scheme-switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 31px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--pv-switch-knob);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  transition: left var(--dur-base) var(--ease-standard), background var(--dur-base) var(--ease-standard);
+}
+.pv-scheme-switch[aria-checked="true"] .pv-scheme-switch__knob {
+  left: 3px;
+}
+.pv-scheme-switch__knob svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-scheme-switch,
+  .pv-scheme-switch__knob {
+    transition: none;
+  }
+}

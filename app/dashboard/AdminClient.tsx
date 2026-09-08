@@ -581,8 +581,9 @@ function SchemeToggle() {
     if (saved === "light") setScheme("light");
   }, []);
 
+  const light = scheme === "light";
   const flip = () => {
-    const next = scheme === "dark" ? "light" : "dark";
+    const next = light ? "dark" : "light";
     setScheme(next);
     if (next === "light") document.documentElement.setAttribute("data-pv-scheme", "light");
     else document.documentElement.removeAttribute("data-pv-scheme");
@@ -594,14 +595,37 @@ function SchemeToggle() {
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
+      type="button"
+      role="switch"
+      aria-checked={light}
       onClick={flip}
-      aria-label={scheme === "dark" ? "เปลี่ยนเป็นโหมดสว่าง" : "เปลี่ยนเป็นโหมดมืด"}
+      className="pv-scheme-switch"
+      title={light ? "โหมดสว่าง — กดเพื่อเปลี่ยนเป็นโหมดมืด" : "โหมดมืด — กดเพื่อเปลี่ยนเป็นโหมดสว่าง"}
+      aria-label="โหมดสว่าง"
     >
-      {scheme === "dark" ? "☀️ สว่าง" : "🌙 มืด"}
-    </Button>
+      <span className="pv-scheme-switch__knob" aria-hidden="true">
+        {light ? (
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="5" />
+            <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.2" y1="4.2" x2="5.6" y2="5.6" />
+              <line x1="18.4" y1="18.4" x2="19.8" y2="19.8" />
+              <line x1="4.2" y1="19.8" x2="5.6" y2="18.4" />
+              <line x1="18.4" y1="5.6" x2="19.8" y2="4.2" />
+            </g>
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+          </svg>
+        )}
+      </span>
+    </button>
   );
 }
 
