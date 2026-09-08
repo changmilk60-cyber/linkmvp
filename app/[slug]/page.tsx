@@ -19,10 +19,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   });
   if (!page) return { title: "" };
 
+  // og:image has to be an absolute URL or the crawlers cannot fetch it. Next
+  // resolves relative paths against metadataBase, which defaults to localhost
+  // when unset — that would ship a preview image nobody outside the server can
+  // load. Take the host the link was actually requested on.
+  const h = headers();
+  const host = h.get("x-forwarded-host") || h.get("host");
+  const proto = h.get("x-forwarded-proto") || (host && /^(localhost|127\.)/.test(host) ? "http" : "https");
+  const base = host ? `${proto}://${host}` : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
   const title = page.tabTitle || page.heroHeadline || "";
   const description = page.ogDescription || undefined;
   const images = page.ogImage ? [page.ogImage] : undefined;
   return {
+    metadataBase: new URL(base),
     title,
     description,
     openGraph: { title: title || undefined, description, images },
