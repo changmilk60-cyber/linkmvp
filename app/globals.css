@@ -38,3 +38,22 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   .pv-live-dot { animation: none; }
 }
+
+/* Top-games slideshow: the outgoing image fades away to the left while the
+   next one arrives from the right. Both layers are stacked, so neither the
+   height nor the surrounding layout moves during the change. */
+@keyframes pv-game-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-36px); }
+}
+@keyframes pv-game-in {
+  from { opacity: 0; transform: translateX(36px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.pv-game-layer { position: absolute; inset: 0; }
+.pv-game-out { animation: pv-game-out 500ms var(--ease-standard, ease) forwards; }
+.pv-game-in  { animation: pv-game-in 500ms var(--ease-standard, ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pv-game-in { animation: none; }
+  .pv-game-out { display: none; }
+}

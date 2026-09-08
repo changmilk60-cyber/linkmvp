@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import Script from "next/script";
 import { ViewTracker, TrackedLink } from "./Tracker";
 import { extractYoutubeId, themeFor, type SectionEntry, type SectionKey } from "@/lib/sections";
@@ -209,20 +210,57 @@ function BonusTotal({ data, accent }: { data: { baseAmount: number; perHourIncre
 
 function TopGames({ data, accent }: { data: { games: { name: string; imageUrl: string }[] }; accent: string }) {
   const games = data.games.filter((g) => g.name || g.imageUrl);
+  const [index, setIndex] = useState(0);
+  // The image being replaced stays mounted just long enough to animate out.
+  const [leaving, setLeaving] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (games.length < 2) return;
+    const id = setInterval(() => {
+      setIndex((current) => {
+        setLeaving(current);
+        return (current + 1) % games.length;
+      });
+    }, 3000);
+    return () => clearInterval(id);
+  }, [games.length]);
+
   if (games.length === 0) return null;
+
+  const current = games[index % games.length];
+  const previous = leaving === null ? null : games[leaving % games.length];
+
+  // Same footprint as รูปหลัก: full width, square, 14px corners — so a game
+  // image reads at the same size as the main image rather than a thumbnail.
+  const frame: CSSProperties = { width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: "14px", display: "block" };
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${games.length}, 1fr)`, gap: "8px" }}>
-      {games.map((g, i) => (
-        <div key={i} style={{ textAlign: "center" }}>
-          {g.imageUrl ? (
+    <div>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "1" }}>
+        {previous ? (
+          <div className="pv-game-layer pv-game-out" onAnimationEnd={() => setLeaving(null)} aria-hidden="true">
+            {previous.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previous.imageUrl} alt="" style={frame} />
+            ) : (
+              <div style={{ ...frame, background: `${accent}22` }} />
+            )}
+          </div>
+        ) : null}
+        <div key={index} className="pv-game-layer pv-game-in">
+          {current.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={g.imageUrl} alt={g.name} style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: "10px", border: `1px solid ${accent}55` }} />
+            <img src={current.imageUrl} alt={current.name} style={frame} />
           ) : (
-            <div style={{ width: "100%", aspectRatio: "1", borderRadius: "10px", background: `${accent}22` }} />
+            <div style={{ ...frame, background: `${accent}22` }} />
           )}
-          {g.name ? <p style={{ margin: "4px 0 0", fontSize: "11px" }}>{g.name}</p> : null}
         </div>
-      ))}
+      </div>
+      {current.name ? (
+        <p key={`name-${index}`} className="pv-game-in" style={{ margin: "8px 0 0", textAlign: "center", fontSize: "13px", fontWeight: 600, color: accent }}>
+          {current.name}
+        </p>
+      ) : null}
     </div>
   );
 }
