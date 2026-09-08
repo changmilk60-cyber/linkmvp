@@ -78,7 +78,7 @@ const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: st
     group: "ภาพรวม",
     items: [
       { icon: "📊", label: "Dashboard", key: "dashboard" },
-      { icon: "⏰", label: "วันใช้งาน", key: "license" },
+      { icon: "⏰", label: "วันใช้งาน", key: "license", saves: true },
       { icon: "📘", label: "วิธีใช้งาน", key: "manual" },
     ],
   },
@@ -260,15 +260,6 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
           </SectionCard>
         </div>
 
-        <div id="panel-license" {...show("license")}>
-          <SectionCard icon="⏰" title="วันใช้งาน (License)" subtitle="หมดอายุแล้วหน้าเว็บจะเด้งไป White Page อัตโนมัติ" open>
-            <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)" }}>
-              <p style={{ margin: 0, font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>วันหมดอายุปัจจุบัน: <span style={{ color: "var(--text-accent-bright)" }}>{page.licenseExpiresAt}</span></p>
-              <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>ต้องการต่ออายุ กรุณาติดต่อแอดมิน</p>
-            </div>
-          </SectionCard>
-        </div>
-
         <div id="panel-url" {...show("url")}>
           <UrlPanel pageId={page.id} slug={page.slug} baseUrl={baseUrl} />
         </div>
@@ -277,13 +268,23 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
         <input type="hidden" name="pageId" value={page.id} />
         <input type="hidden" name="_scope" ref={scopeRef} defaultValue="all" />
 
+        <div id="panel-license" {...show("license")}>
+          <SectionCard icon="⏰" title="วันใช้งาน (License)" subtitle="วันหมดอายุ และหน้าที่ผู้เข้าชมจะเจอหลังหมดอายุ" open>
+            <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)" }}>
+              <p style={{ margin: 0, font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>วันหมดอายุปัจจุบัน: <span style={{ color: "var(--text-accent-bright)" }}>{page.licenseExpiresAt}</span> (เหลือ {page.daysLeft} วัน)</p>
+              <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>ต้องการต่ออายุ กรุณาติดต่อแอดมิน</p>
+            </div>
+            <Field label="ลิงก์ Redirect หน้า Whitepage" hint="ใช้เฉพาะตอนหมดอายุเท่านั้น — ระบบจะส่งผู้เข้าชมไปยัง URL นี้ทันที หากเว้นว่างจะโชว์หน้าหมดอายุเปล่า" hintTone="body">
+              <TextInput mono name="whitepageRedirectUrl" defaultValue={page.whitepageRedirectUrl || ""} placeholder="https://example.com" />
+            </Field>
+            <ScopeSave scope="license" onScope={setScope} />
+          </SectionCard>
+        </div>
+
         <div id="panel-bot" {...show("bot")}>
           <SectionCard icon="🌐" title="ตั้งค่าใช้งาน bot" subtitle="ให้บอทและระบบตรวจสอบเห็นคนละหน้ากับผู้เข้าชมจริง" open>
               <Field label="ลิงก์ Landing Page" hint="หน้าที่บอทจะเห็นแทนหน้าเซลเพจ (ต้องเปิดสวิตช์ด้านล่างด้วย) • ใส่ URL แบบเต็ม หากเว้นว่างหรือ URL ไม่ถูกต้อง ระบบจะแสดงหน้าเซลเพจเดิม" hintTone="body">
                 <TextInput mono name="landingUrl" defaultValue={page.landingUrl || ""} placeholder="https://example.com" />
-              </Field>
-              <Field label="ลิงก์ Redirect หน้า Whitepage" hint="เมื่อหมดอายุ ระบบจะส่งผู้เข้าชมไปยัง URL นี้ทันที หากเว้นว่างจะโชว์หน้าหมดอายุเปล่า" hintTone="body">
-                <TextInput mono name="whitepageRedirectUrl" defaultValue={page.whitepageRedirectUrl || ""} placeholder="https://example.com" />
               </Field>
               <ToggleRow name="cloakToLandingUrl" title="ส่งบอทไป Landing Page" sub="เปิดไว้ = เฉพาะบอทและระบบตรวจสอบ (เช่น Facebook, Google) ถูกส่งไปที่ลิงก์ Landing Page ส่วนคนจริงยังเห็นหน้าเซลเพจตามปกติ" defaultChecked={page.cloakToLandingUrl} />
               <ScopeSave scope="bot" onScope={setScope} />
@@ -548,12 +549,12 @@ function LicenseSummary({ daysLeft, expiresAt, whitepageUrl, onGoTo }: { daysLef
         {whitepageUrl ? (
           <>
             <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.4 var(--font-sans)", color: "var(--text-primary)", wordBreak: "break-all" }}>ถูกส่งไป {whitepageUrl}</p>
-            <p style={{ margin: "4px 0 0", font: "var(--text-hint)", color: "var(--text-muted)" }}>ตั้งค่าที่เมนู “ใช้งาน Bot” → ลิงก์ Redirect หน้า Whitepage</p>
+            <p style={{ margin: "4px 0 0", font: "var(--text-hint)", color: "var(--text-muted)" }}>ตั้งค่าที่เมนู “วันใช้งาน” → ลิงก์ Redirect หน้า Whitepage</p>
           </>
         ) : (
           <>
             <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.4 var(--font-sans)", color: "var(--text-warning)" }}>หน้าหมดอายุเปล่า (ยังไม่ได้ตั้งลิงก์)</p>
-            <button type="button" onClick={() => onGoTo("bot")} style={{ marginTop: "8px", background: "var(--surface-raised)", color: "var(--text-accent)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-button)", padding: "6px 12px", font: "var(--fw-medium) var(--fs-hint)/1.1 var(--font-sans)", cursor: "pointer" }}>
+            <button type="button" onClick={() => onGoTo("license")} style={{ marginTop: "8px", background: "var(--surface-raised)", color: "var(--text-accent)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-button)", padding: "6px 12px", font: "var(--fw-medium) var(--fs-hint)/1.1 var(--font-sans)", cursor: "pointer" }}>
               ตั้งลิงก์ Whitepage
             </button>
           </>

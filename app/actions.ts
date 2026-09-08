@@ -189,7 +189,7 @@ const STR = (fd: FormData, k: string) => {
 // into `_scope` first, so a panel only ever writes its own columns. Anything
 // outside the submitted scope is left exactly as it is in the database —
 // no more carrying the whole page's state through every save.
-type SaveScope = "all" | "bot" | "sections" | "theme" | "pixel" | "main" | "colors";
+type SaveScope = "all" | "bot" | "license" | "sections" | "theme" | "pixel" | "main" | "colors";
 
 export async function saveSettingsAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
@@ -240,16 +240,26 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
     data.fbPixelIds = fbPixelIds.length ? JSON.stringify(fbPixelIds) : null;
   }
 
+  // Cloaking and licence expiry are separate features with separate panels,
+  // so they save separately too.
+  const externalUrl = (field: "landingUrl" | "whitepageRedirectUrl", label: string) => {
+    const typed = STR(formData, field);
+    const normalized = normalizeExternalUrl(typed);
+    if (typed && !normalized) return { error: `ลิงก์ ${label} ไม่ถูกต้อง — ใส่ลิงก์แบบเต็ม เช่น https://example.com` };
+    return { value: normalized };
+  };
+
   if (wants("bot")) {
-    for (const [field, label] of [["landingUrl", "Landing Page"], ["whitepageRedirectUrl", "Redirect หน้า Whitepage"]] as const) {
-      const typed = STR(formData, field);
-      const normalized = normalizeExternalUrl(typed);
-      if (typed && !normalized) {
-        return { error: `ลิงก์ ${label} ไม่ถูกต้อง — ใส่ลิงก์แบบเต็ม เช่น https://example.com` };
-      }
-      data[field] = normalized;
-    }
+    const landing = externalUrl("landingUrl", "Landing Page");
+    if (landing.error) return { error: landing.error };
+    data.landingUrl = landing.value;
     data.cloakToLandingUrl = formData.get("cloakToLandingUrl") === "on";
+  }
+
+  if (wants("license")) {
+    const whitepage = externalUrl("whitepageRedirectUrl", "Redirect หน้า Whitepage");
+    if (whitepage.error) return { error: whitepage.error };
+    data.whitepageRedirectUrl = whitepage.value;
   }
 
   if (wants("colors")) {
