@@ -45,7 +45,6 @@ model Page {
   // ---- bot / whitepage cloak ----
   landingUrl           String?
   whitepageRedirectUrl String?
-  useSameLandingForAll Boolean @default(true)
   cloakToLandingUrl    Boolean @default(false)
 
   // ---- hero text ----

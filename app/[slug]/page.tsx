@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { parseSections } from "@/lib/sections";
 import { normalizeExternalUrl } from "@/lib/url";
+import { isBotUserAgent } from "@/lib/bot";
+import { headers } from "next/headers";
 import SalesPage from "./SalesPage";
 
 export const dynamic = "force-dynamic";
@@ -21,10 +23,12 @@ export default async function SlugPage({ params }: { params: { slug: string } })
     );
   }
 
-  // An unusable landing link shows the sales page rather than redirecting to
-  // a path on our own domain.
+  // Only crawlers and link-preview fetchers are sent to the landing page;
+  // real visitors always get the sales page. An unusable landing link falls
+  // through to the sales page rather than redirecting to a path on our own
+  // domain.
   const landing = normalizeExternalUrl(page.landingUrl);
-  if (page.cloakToLandingUrl && landing) {
+  if (page.cloakToLandingUrl && landing && isBotUserAgent(headers().get("user-agent"))) {
     redirect(landing);
   }
 

@@ -87,7 +87,6 @@ export default async function DashboardPage() {
         ctaLayout: page.ctaLayout,
         landingUrl: page.landingUrl,
         whitepageRedirectUrl: page.whitepageRedirectUrl,
-        useSameLandingForAll: page.useSameLandingForAll,
         cloakToLandingUrl: page.cloakToLandingUrl,
         heroHeadline: page.heroHeadline,
         heroSubtext: page.heroSubtext,

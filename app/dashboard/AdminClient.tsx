@@ -46,7 +46,6 @@ type PageData = {
   ctaLayout: string;
   landingUrl: string | null;
   whitepageRedirectUrl: string | null;
-  useSameLandingForAll: boolean;
   cloakToLandingUrl: boolean;
   heroHeadline: string | null;
   heroSubtext: string | null;
@@ -277,15 +276,14 @@ export default function AdminClient({ page, stats, baseUrl }: { page: PageData; 
         <input type="hidden" name="_scope" ref={scopeRef} defaultValue="all" />
 
         <div id="panel-bot" {...show("bot")}>
-          <SectionCard icon="🌐" title="ตั้งค่าใช้งาน bot" subtitle="กำหนดหน้าเดียวกันสำหรับคอมพิวเตอร์ มือถือ แท็บเล็ต และระบบตรวจสอบ" open>
-              <Field label="ลิงก์ Landing Page" hint="ใส่ URL แบบเต็ม หากเว้นว่างหรือ URL ไม่ถูกต้อง ระบบจะแสดงหน้าเซลเพจเดิม" hintTone="body">
+          <SectionCard icon="🌐" title="ตั้งค่าใช้งาน bot" subtitle="ให้บอทและระบบตรวจสอบเห็นคนละหน้ากับผู้เข้าชมจริง" open>
+              <Field label="ลิงก์ Landing Page" hint="หน้าที่บอทจะเห็นแทนหน้าเซลเพจ (ต้องเปิดสวิตช์ด้านล่างด้วย) • ใส่ URL แบบเต็ม หากเว้นว่างหรือ URL ไม่ถูกต้อง ระบบจะแสดงหน้าเซลเพจเดิม" hintTone="body">
                 <TextInput mono name="landingUrl" defaultValue={page.landingUrl || ""} placeholder="https://example.com" />
               </Field>
               <Field label="ลิงก์ Redirect หน้า Whitepage" hint="เมื่อหมดอายุ ระบบจะส่งผู้เข้าชมไปยัง URL นี้ทันที หากเว้นว่างจะโชว์หน้าหมดอายุเปล่า" hintTone="body">
                 <TextInput mono name="whitepageRedirectUrl" defaultValue={page.whitepageRedirectUrl || ""} placeholder="https://example.com" />
               </Field>
-              <ToggleRow name="cloakToLandingUrl" title="ใช้ Landing Page แทนหน้าเซลเพจเดิม" sub="เปิดไว้ = ผู้เข้าชมทุกคนถูกส่งไปที่ลิงก์ Landing Page แทน" defaultChecked={page.cloakToLandingUrl} />
-              <ToggleRow name="useSameLandingForAll" title="คอมและมือถือเห็นหน้าเดียวกัน" sub="ทุกอุปกรณ์แสดงหน้าเซลเพจหลัก" defaultChecked={page.useSameLandingForAll} />
+              <ToggleRow name="cloakToLandingUrl" title="ส่งบอทไป Landing Page" sub="เปิดไว้ = เฉพาะบอทและระบบตรวจสอบ (เช่น Facebook, Google) ถูกส่งไปที่ลิงก์ Landing Page ส่วนคนจริงยังเห็นหน้าเซลเพจตามปกติ" defaultChecked={page.cloakToLandingUrl} />
               <ScopeSave scope="bot" onScope={setScope} />
           </SectionCard>
         </div>

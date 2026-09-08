@@ -249,7 +249,6 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
       }
       data[field] = normalized;
     }
-    data.useSameLandingForAll = formData.get("useSameLandingForAll") === "on";
     data.cloakToLandingUrl = formData.get("cloakToLandingUrl") === "on";
   }
 
