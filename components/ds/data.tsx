@@ -78,7 +78,6 @@ export function SectionRow({
   return (
     <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", overflow: "hidden", ...style }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 14px" }}>
-        <span aria-hidden="true" style={{ color: "var(--text-muted)", fontSize: "18px", lineHeight: 1 }}>≡</span>
         <span style={{ minWidth: "34px", height: "34px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "var(--radius-badge)", background: "var(--surface-raised)", border: "1px solid var(--border-accent)", font: "var(--fw-bold) var(--fs-badge)/1 var(--font-sans)", color: "var(--text-accent)" }}>{index}</span>
         <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px", font: "var(--fw-semibold) var(--fs-section-title)/1.2 var(--font-sans)", color: "var(--text-primary)" }}>
           {icon ? <span aria-hidden="true">{icon}</span> : null}{title}

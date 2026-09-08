@@ -88,6 +88,7 @@ const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: st
       { icon: "📊", label: "Dashboard", key: "dashboard" },
       { icon: "⏰", label: "วันใช้งาน", key: "license", saves: true },
       { icon: "📘", label: "วิธีใช้งาน", key: "manual" },
+      { icon: "👤", label: "ข้อมูลบัญชี", key: "account" },
     ],
   },
   {
@@ -172,12 +173,18 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
           role="status"
           aria-live="polite"
           style={{
+            // Centred rather than tucked under the top bar: at the bottom of a
+            // long panel the old position was off-screen, so a save looked
+            // like it had done nothing.
             position: "fixed",
-            top: "20px",
-            left: "50%",
+            inset: 0,
             zIndex: 9999,
-            transform: `translateX(-50%) translateY(${toastShown ? "0" : "-16px"})`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
             opacity: toastShown ? 1 : 0,
+            transform: `scale(${toastShown ? 1 : 0.94})`,
             pointerEvents: "none",
             transition: "opacity 220ms var(--ease-standard), transform 220ms var(--ease-standard)",
           }}
@@ -186,18 +193,25 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              gap: "14px",
               background: "var(--surface-card)",
-              border: "1px solid " + (toast.ok ? "var(--border-accent)" : "var(--border-danger)"),
+              border: "2px solid " + (toast.ok ? "var(--border-accent-strong)" : "var(--border-danger)"),
               borderRadius: "var(--radius-card)",
-              padding: "14px 22px",
-              boxShadow: "0 8px 28px rgba(0,0,0,.45)",
-              font: "var(--fw-bold) var(--fs-section-title)/1.2 var(--font-sans)",
+              padding: "26px 38px",
+              boxShadow: "0 18px 50px rgba(0,0,0,.55)",
+              // Longhand on purpose: the `font:` shorthand elsewhere references
+              // var(--font-sans), a token that is never defined, which makes the
+              // whole declaration invalid and silently drops the size with it.
+              fontFamily: "var(--font-sans-pv)",
+              fontSize: "24px",
+              fontWeight: 700,
+              lineHeight: 1.3,
               color: toast.ok ? "var(--text-accent)" : "var(--text-danger)",
               maxWidth: "90vw",
+              textAlign: "center",
             }}
           >
-            <span aria-hidden="true">{toast.ok ? "✅" : "⚠"}</span>
+            <span aria-hidden="true" style={{ fontSize: "30px", lineHeight: 1 }}>{toast.ok ? "✅" : "⚠"}</span>
             {toast.text}
           </div>
         </div>
@@ -265,7 +279,6 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
             <p style={{ margin: 0, font: "var(--fw-medium) var(--fs-micro)/1.4 var(--font-sans)", color: "var(--text-muted)" }}>
               นับจากการเข้าชมหน้าเซลเพจจริงและการคลิกปุ่มสมัคร/LINE จริง • ผู้ชมไม่ซ้ำประมาณจากคุกกี้เบราว์เซอร์
             </p>
-            <AccountCard account={account} daysLeft={page.daysLeft} expiresAt={page.licenseExpiresAt} />
           </SectionCard>
         </div>
 
@@ -276,6 +289,12 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
         <form action={saveAction} encType="multipart/form-data" style={{ display: "flex", flexDirection: "column", gap: "var(--gap-card)" }}>
         <input type="hidden" name="pageId" value={page.id} />
         <input type="hidden" name="_scope" ref={scopeRef} defaultValue="all" />
+
+        <div id="panel-account" {...show("account")}>
+          <SectionCard icon="👤" title="ข้อมูลบัญชีผู้ใช้งาน" subtitle="บัญชีที่ใช้เข้าระบบ และลิงก์เซลเพจของคุณ" open>
+            <AccountCard account={account} daysLeft={page.daysLeft} expiresAt={page.licenseExpiresAt} />
+          </SectionCard>
+        </div>
 
         <div id="panel-license" {...show("license")}>
           <SectionCard icon="⏰" title="วันใช้งาน (License)" subtitle="วันหมดอายุ และหน้าที่ผู้เข้าชมจะเจอหลังหมดอายุ" open>
@@ -563,9 +582,6 @@ function AccountCard({ account, daysLeft, expiresAt }: { account: AccountInfo; d
   };
   return (
     <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
-      <p style={{ margin: 0, font: "var(--fw-bold) var(--fs-section-title)/1.2 var(--font-sans)", color: "var(--text-accent)" }}>
-        <span aria-hidden="true">👤</span> ข้อมูลบัญชีผู้ใช้งาน
-      </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: "var(--gap-grid)" }}>
         <AccountRow label="อีเมลที่ใช้สมัคร">{account.email || "-"}</AccountRow>
         <AccountRow label="วันที่สมัครใช้งาน">{account.joinedAt}</AccountRow>
