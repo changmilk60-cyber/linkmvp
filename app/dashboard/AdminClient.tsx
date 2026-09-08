@@ -531,6 +531,17 @@ function ReviewRowForm({ index, member, text, stars }: { index: number; member: 
   );
 }
 
+function ManualList({ items }: { items: string[] }) {
+  return (
+    // Tailwind's preflight strips list markers, so ask for them back.
+    <ul style={{ margin: 0, paddingLeft: "20px", listStyleType: "disc", display: "flex", flexDirection: "column", gap: "6px" }}>
+      {items.map((t) => (
+        <li key={t}>{t}</li>
+      ))}
+    </ul>
+  );
+}
+
 function ManualAccordion() {
   const [i, setI] = useState<number | null>(null);
   return (
@@ -540,10 +551,39 @@ function ManualAccordion() {
       items={[
         { icon: "📊", title: "ดูสถิติใน Dashboard", body: "ตัวเลขทั้งหมดนับจากผู้เข้าชมจริง • ผู้ชมไม่ซ้ำเป็นค่าประมาณจากคุกกี้เบราว์เซอร์" },
         { icon: "📐", title: "เปิด–ปิด และเรียงลำดับ Section", body: "กดลูกศร ▲▼ เพื่อสลับลำดับ แล้วสลับสวิตช์เพื่อเปิด/ปิดแต่ละ section จากนั้นกดบันทึก" },
-        { icon: "🖼", title: "อัปโหลดหรือเปลี่ยนรูปภาพ", body: "เลือกไฟล์รูปในแต่ละช่อง (สูงสุด 5MB ต่อรูป)" },
+        {
+          icon: "🖼",
+          title: "อัปโหลดหรือเปลี่ยนรูปภาพ",
+          body: (
+            <ManualList
+              items={[
+                "โลโก้เว็บ อยู่ในแถว “หัวเว็บ” ของ จัดเรียง Section (กดปุ่มแก้ไขในแถวนั้น)",
+                "รูปอื่นๆ เช่น รูปหลัก ปุ่ม GIF เกมยอดนิยม ของรางวัล สไลด์รูป อยู่ในแถวของ section นั้นๆ เอง",
+                "OG Image (รูปตอนแชร์ลิงก์) อยู่ในเมนู ตั้งค่าหลัก",
+                "ไฟล์รูปต้องไม่เกิน 5MB ต่อรูป และรองรับเฉพาะไฟล์รูปภาพ",
+              ]}
+            />
+          ),
+        },
         { icon: "🎨", title: "เลือกธีมและสีพื้นหลัง", body: "เลือกโทนสี 1 ชุด สีพื้นหลังและปุ่มจะเปลี่ยนให้อัตโนมัติ" },
         { icon: "🍪", title: "เพิ่ม Pixel และเลือก Event CAPI", body: "กรอก Pixel ID แยกบรรทัด ระบบจะรวมค่าให้อัตโนมัติ" },
         { icon: "🔗", title: "เปลี่ยนชื่อ URL เว็บไซต์", body: "URL เดิมจะเปิดไม่ได้หลังเปลี่ยนชื่อ กรุณาอัปเดตลิงก์ที่นำไปใช้งานทั้งหมด" },
+        {
+          icon: "⚙",
+          title: "ตั้งค่าหลัก (Tab Title, OG, CAPI)",
+          body: (
+            <ManualList
+              items={[
+                "ชื่อแท็บเบราว์เซอร์ (Tab Title) = ข้อความที่ขึ้นบนแท็บตอนเปิดหน้าเซลเพจ",
+                "OG Description = ข้อความสั้นๆ ที่ขึ้นใต้ชื่อเว็บตอนแชร์ลิงก์ลง Facebook หรือ LINE",
+                "OG Image = รูปที่ขึ้นตอนแชร์ลิงก์ ขนาดแนะนำ 1200 × 630 px (แนวนอน)",
+                "Layout ปุ่มสมัคร + LINE = เลือกให้ปุ่มทั้งสองเรียงบน–ล่าง (แนวตั้ง) หรือ ซ้าย–ขวา (แนวนอน)",
+                "ช่อง CAPI ทั้ง 3 ช่อง (Access Token, Endpoint, ชื่อ Event) กรอกและบันทึกได้ แต่ตอนนี้ระบบยังไม่ได้ส่งข้อมูลไป Facebook จริง จึงยังไม่มีผลกับการยิงแอด",
+                "กด “บันทึกส่วนนี้” ทุกครั้งหลังแก้ไข",
+              ]}
+            />
+          ),
+        },
         { icon: "💾", title: "บันทึกและตรวจสอบหน้าเว็บ", body: "กดบันทึกทั้งหมด แล้วกดพรีวิวหน้าเซลเพจ" },
       ]}
     />

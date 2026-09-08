@@ -6,7 +6,7 @@ export function Accordion({
   onToggle,
   style,
 }: {
-  items: { icon?: string; title: string; body: string }[];
+  items: { icon?: string; title: string; body: ReactNode }[];
   openIndex: number | null;
   onToggle: (i: number | null) => void;
   style?: CSSProperties;
