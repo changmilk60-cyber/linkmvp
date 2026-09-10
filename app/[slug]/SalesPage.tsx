@@ -403,8 +403,8 @@ function WithdrawFeed({ data, accent, muted }: { data: WithdrawFeedData; accent:
               </span>
             )}
             <div style={{ flex: 1, minWidth: 0, fontSize: "12.5px", lineHeight: 1.5 }}>
-              <p style={{ margin: 0 }}>ยูส: {it.user}</p>
-              <p style={{ margin: 0 }}>ยอดถอน: <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{it.amount.toLocaleString()}</span> บาท</p>
+              <p style={{ margin: 0 }}>รายชื่อสมาชิก: {it.user}</p>
+              <p style={{ margin: 0 }}>ยอด: <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{it.amount.toLocaleString()}</span> บาท</p>
               <p style={{ margin: 0, color: muted }}>วันที่: {thaiDateTime(it.at)}</p>
             </div>
             {(it.pending ? pendingLabel : successLabel) ? (
