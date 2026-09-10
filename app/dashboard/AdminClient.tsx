@@ -104,7 +104,7 @@ const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: st
     items: [
       { icon: "🔗", label: "เปลี่ยนชื่อ URL", key: "url" },
       { icon: "🍪", label: "ใส่ Pixel", key: "pixel", saves: true },
-      { icon: "🌐", label: "ใช้งาน Bot", key: "bot", saves: true },
+      { icon: "🔀", label: "เปลี่ยนเส้นทาง", key: "bot", saves: true },
       { icon: "⚙", label: "ตั้งค่าหลัก", key: "main", saves: true },
     ],
   },
@@ -310,11 +310,11 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
         </div>
 
         <div id="panel-bot" {...show("bot")}>
-          <SectionCard icon="🌐" title="ตั้งค่าใช้งาน bot" subtitle="ให้บอทและระบบตรวจสอบเห็นคนละหน้ากับผู้เข้าชมจริง" open>
-              <Field label="ลิงก์ Landing Page" hint="หน้าที่บอทจะเห็นแทนหน้าเซลเพจ (ต้องเปิดสวิตช์ด้านล่างด้วย) • ใส่ URL แบบเต็ม หากเว้นว่างหรือ URL ไม่ถูกต้อง ระบบจะแสดงหน้าเซลเพจเดิม" hintTone="body">
+          <SectionCard icon="🔀" title="เปลี่ยนเส้นทางหน้าเซลเพจ" subtitle="ส่งผู้เข้าชมไปยังลิงก์อื่นแทนการแสดงหน้าเซลเพจ" open>
+              <Field label="ลิงก์ปลายทาง" hint="หน้าที่ผู้เข้าชมจะถูกส่งไปแทนหน้าเซลเพจ (ต้องเปิดสวิตช์ด้านล่างด้วย) • ใส่ URL แบบเต็ม หากเว้นว่างหรือ URL ไม่ถูกต้อง ระบบจะแสดงหน้าเซลเพจเดิม" hintTone="body">
                 <TextInput mono name="landingUrl" defaultValue={page.landingUrl || ""} placeholder="https://example.com" />
               </Field>
-              <ToggleRow name="cloakToLandingUrl" title="ส่งบอทไป Landing Page" sub="เปิดไว้ = เฉพาะบอทและระบบตรวจสอบ (เช่น Facebook, Google) ถูกส่งไปที่ลิงก์ Landing Page ส่วนคนจริงยังเห็นหน้าเซลเพจตามปกติ" defaultChecked={page.cloakToLandingUrl} />
+              <ToggleRow name="cloakToLandingUrl" title="ใช้ลิงก์ปลายทางแทนหน้าเซลเพจ" sub="เปิดไว้ = ผู้เข้าชมทุกคนถูกส่งไปที่ลิงก์ปลายทางทันที • ปิด = แสดงหน้าเซลเพจตามปกติ" defaultChecked={page.cloakToLandingUrl} />
               <ScopeSave scope="bot" onScope={setScope} />
           </SectionCard>
         </div>
