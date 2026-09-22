@@ -75,6 +75,19 @@ npm run dev
    migration มือ (เหมาะกับช่วง MVP ที่ schema ยังเปลี่ยนบ่อย — เมื่อมีข้อมูลจริงเยอะแล้วควรเปลี่ยนไปใช้
    `prisma migrate deploy` แทน)
 
+## ตั้งค่า Meta Pixel
+
+หลังบ้าน → ใส่ Pixel: วาง Base Code จาก Meta Events Manager หรือกรอก Pixel ID
+แยกบรรทัด เปิดสวิตช์ แล้วกดบันทึก ระบบอ่านเฉพาะ ID และติดตั้ง Pixel ให้หน้าเซลเพจ
+ไม่เรียกใช้ JavaScript ที่วางโดยตรง และไม่ติดตั้งในหน้าหลังบ้าน
+โค้ดเสริม เช่น Custom Event หรือ advanced matching ใน snippet ไม่ได้ถูกนำมาใช้
+เมื่อบันทึกแล้วให้เปิดหน้าเซลเพจใหม่และตรวจสอบผ่าน Test Events ใน Meta Events Manager
+ปิดสวิตช์เพื่อหยุด Pixel เมื่อโหลดหน้าใหม่ หรือเว้นช่องว่างแล้วบันทึกเพื่อลบการตั้งค่า
+
+Schema เพิ่มเฉพาะ `Page.fbPixelCode` (nullable) และ `Page.fbPixelEnabled` (default true)
+เพื่อรักษา Pixel เดิมของบัญชีที่มีอยู่ ต้อง sync schema ก่อนเริ่มแอปเวอร์ชันใหม่
+ทดสอบ parser และการส่ง PageView ด้วย `node --test tests/meta-pixel.test.cjs`
+
 ## โครงสร้างโปรเจกต์
 
 ```

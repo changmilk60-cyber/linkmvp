@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { parseMetaPixelIds } from "@/lib/meta-pixel";
 import {
   createSession,
   destroySession,
@@ -233,11 +234,15 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
   }
 
   if (wants("pixel")) {
-    const fbPixelIds = String(formData.get("fbPixelIds") || "")
-      .split(/[\n,]/)
-      .map((v) => v.trim())
-      .filter((v) => /^\d{5,20}$/.test(v));
-    data.fbPixelIds = fbPixelIds.length ? JSON.stringify(fbPixelIds) : null;
+    const input = String(formData.get("fbPixelCode") ?? formData.get("fbPixelIds") ?? "").trim();
+    try {
+      const ids = parseMetaPixelIds(input);
+      data.fbPixelIds = ids.length ? JSON.stringify(ids) : null;
+      data.fbPixelCode = input || null;
+      if (formData.has("fbPixelEnabled")) data.fbPixelEnabled = formData.get("fbPixelEnabled") === "on";
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "โค้ด Pixel ไม่ถูกต้อง" };
+    }
   }
 
   // Cloaking and licence expiry are separate features with separate panels,

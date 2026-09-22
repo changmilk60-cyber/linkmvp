@@ -65,7 +65,7 @@ export default async function SlugPage({ params }: { params: { slug: string } })
 
   const colorOverrides = page.colorOverrides ? JSON.parse(page.colorOverrides) : {};
   const reviews = page.reviews ? JSON.parse(page.reviews) : [];
-  const fbPixelIds: string[] = page.fbPixelIds ? JSON.parse(page.fbPixelIds) : [];
+  const fbPixelIds: string[] = page.fbPixelEnabled && page.fbPixelIds ? JSON.parse(page.fbPixelIds) : [];
 
   return (
     <SalesPage
