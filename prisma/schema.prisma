@@ -37,6 +37,8 @@ model Page {
 
   // ---- pixel / CAPI ----
   fbPixelIds      String? // JSON string[] of pixel ids
+  fbPixelCode     String? // Original base code, stored as text and never executed
+  fbPixelEnabled  Boolean @default(true)
   capiAccessToken String?
   capiEndpointUrl String?
   capiEventName   String  @default("subscribe") // "subscribe" | "purchase"

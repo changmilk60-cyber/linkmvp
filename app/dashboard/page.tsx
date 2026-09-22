@@ -87,6 +87,8 @@ export default async function DashboardPage() {
         footerTextColor: page.footerTextColor,
         colorOverrides: page.colorOverrides,
         fbPixelIds: page.fbPixelIds,
+        fbPixelCode: page.fbPixelCode,
+        fbPixelEnabled: page.fbPixelEnabled,
         capiAccessToken: page.capiAccessToken,
         capiEndpointUrl: page.capiEndpointUrl,
         capiEventName: page.capiEventName,

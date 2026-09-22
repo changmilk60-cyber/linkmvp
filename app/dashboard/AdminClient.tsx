@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import PixelSettings from "./PixelSettings";
 import {
   Accordion,
   Badge,
@@ -41,6 +42,8 @@ type PageData = {
   footerTextColor: string | null;
   colorOverrides: string | null;
   fbPixelIds: string | null;
+  fbPixelCode: string | null;
+  fbPixelEnabled: boolean;
   capiAccessToken: string | null;
   capiEndpointUrl: string | null;
   capiEventName: string;
@@ -371,11 +374,8 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
         </div>
 
         <div id="panel-pixel" {...show("pixel")}>
-          <SectionCard title="Pixel" icon="🍪" subtitle="ตั้งค่าก่อนขึ้นแอด — สำคัญมาก" open>
-              <Field label="Facebook Pixel ID (ขึ้นบรรทัดใหม่ต่อ 1 ไอดี)">
-                <Textarea name="fbPixelIds" defaultValue={pixelIds.join("\n")} rows={3} placeholder={"960483503717089"} />
-              </Field>
-              <Hint tone="body">กรอก Pixel ID แยกบรรทัด ระบบจะรวมค่าให้อัตโนมัติ</Hint>
+          <SectionCard title="Meta Pixel (Facebook)" icon="🍪" subtitle="เชื่อมต่อ Pixel สำหรับหน้าเซลเพจของคุณ" open>
+              <PixelSettings initialCode={page.fbPixelCode ?? pixelIds.join("\n")} initialEnabled={page.fbPixelEnabled} />
               <ScopeSave scope="pixel" onScope={setScope} />
           </SectionCard>
         </div>
