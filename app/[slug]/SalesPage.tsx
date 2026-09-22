@@ -285,13 +285,14 @@ function YoutubeVideo({ data, accent }: { data: { title?: string; url: string };
       {data.title ? <h2 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 700, color: accent }}>{data.title}</h2> : null}
       <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "14px", overflow: "hidden", background: "#000" }}>
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+          src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1`}
           title={data.title || "วีดีโอ"}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
       </div>
+      <p style={{ margin: "8px 0 0", fontSize: "12px", color: "rgba(255,255,255,.65)" }}>วิดีโอเริ่มเล่นแบบปิดเสียง กดเปิดเสียงที่ตัวเล่นได้ หากวิดีโอไม่เริ่มอัตโนมัติ ให้กดปุ่มเล่น</p>
     </div>
   );
 }
