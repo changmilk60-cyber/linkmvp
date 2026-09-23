@@ -3,8 +3,8 @@ import "./globals.css";
 import "./pagevip-theme.css";
 
 export const metadata: Metadata = {
-  title: "PageVIP Pro — LINKMVP",
-  description: "สร้างและจัดการหน้าเซลเพจของคุณ พร้อมหลังบ้านแก้เว็บครบวงจร",
+  title: "linkmvp",
+  description: "เครื่องมือจัดการเซลเพจครบวงจร: ย่อลิ้ง ปรับแต่งหน้า ไบโอ สร้าง เซลเพจ บริการ บอทไลน์ เพื่อธุรกิจของคุณ",
 };
 
 export default function RootLayout({
