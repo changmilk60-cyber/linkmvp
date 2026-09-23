@@ -222,7 +222,7 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
       {/* Always on screen, so the most-used action — previewing the sales page —
           never needs a scroll to reach. */}
       <header className="pv-appbar" ref={appbarRef}>
-        <h1>หลังบ้านแก้เว็บ</h1>
+        <h1>linkmvp</h1>
         <Pill icon="⏰" tone="soft">เหลือ {page.daysLeft} วัน</Pill>
         <div className="pv-appbar-actions">
           <SchemeToggle />

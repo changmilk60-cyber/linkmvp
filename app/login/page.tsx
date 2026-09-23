@@ -23,7 +23,7 @@ export default function LoginPage() {
         <div style={{ background: "var(--surface-accent-header)", borderBottom: "2px solid var(--green-500)", padding: "26px 24px", textAlign: "center" }}>
           <div aria-hidden="true" style={{ fontSize: "34px", lineHeight: 1 }}>⚙</div>
           <h1 style={{ margin: "10px 0 0", font: "var(--fw-bold) 24px/1.2 var(--font-sans)", color: "var(--text-primary)" }}>เข้าสู่ระบบหลังบ้าน</h1>
-          <p style={{ margin: "6px 0 0", font: "var(--text-hint)", color: "var(--text-muted)" }}>PageVIP Pro — จัดการหน้าเซลเพจของคุณ</p>
+          <p style={{ margin: "6px 0 0", font: "var(--text-hint)", color: "var(--text-muted)" }}>linkmvp — จัดการหน้าเซลเพจของคุณ</p>
         </div>
         <form action={formAction} style={{ padding: "var(--pad-card)", display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
           <Field label="อีเมล" boxed={false}><TextInput name="email" type="email" required /></Field>
