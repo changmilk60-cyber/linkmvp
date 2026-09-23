@@ -212,6 +212,7 @@ export function ImageUploadField({
   const [dragging, setDragging] = useState(false);
   const [picked, setPicked] = useState<{ name: string; url: string } | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [removed, setRemoved] = useState(false);
 
   // Dropped files have to be handed to the <input> itself: the form reads its
   // .files when it submits, so a drop that only updated React state would look
@@ -227,13 +228,14 @@ export function ImageUploadField({
     transfer.items.add(file);
     if (inputRef.current) inputRef.current.files = transfer.files;
     setProblem(null);
+    setRemoved(false);
     setPicked((prev) => {
       if (prev) URL.revokeObjectURL(prev.url);
       return { name: file.name, url: URL.createObjectURL(file) };
     });
   };
 
-  const preview = picked?.url || currentUrl;
+  const preview = removed ? null : picked?.url || currentUrl;
   return (
     <div
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -267,7 +269,23 @@ export function ImageUploadField({
       {currentSize ? (
         <p style={{ margin: "8px 0 0", font: "var(--fw-bold) var(--fs-hint)/1.2 var(--font-sans)", color: "var(--text-accent)" }}><span aria-hidden="true">📐</span> ขนาดปัจจุบัน: {currentSize}</p>
       ) : null}
-      {onRemove && currentUrl ? (
+      {removeName ? (
+        <>
+          <input type="hidden" name={removeName} value={removed ? "on" : ""} />
+          {preview || removed ? (
+            <button type="button" style={{ marginTop: "10px", padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border-field)", background: "var(--surface-field)", color: "var(--text-danger)", cursor: "pointer" }} onClick={() => {
+              if (removed) { setRemoved(false); return; }
+              if (inputRef.current) inputRef.current.value = "";
+              if (picked) URL.revokeObjectURL(picked.url);
+              setPicked(null);
+              setProblem(null);
+              setRemoved(true);
+              onRemove?.();
+            }}>{removed ? "ยกเลิกการลบ" : "ลบรูป"}</button>
+          ) : null}
+          {removed ? <p role="status" style={{ font: "var(--text-hint)", color: "var(--text-warning)" }}>รูปจะถูกนำออกเมื่อกดบันทึก หากเลือกรูปใหม่จะใช้รูปใหม่แทน</p> : null}
+        </>
+      ) : onRemove && currentUrl ? (
         <label style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "6px", font: "var(--fw-semibold) var(--fs-hint)/1.1 var(--font-sans)", color: "var(--text-danger)", cursor: "pointer" }}>
           <input type="checkbox" name={removeName} onChange={onRemove} />
           <span aria-hidden="true">🗑</span> ลบรูปนี้

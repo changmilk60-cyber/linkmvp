@@ -385,7 +385,7 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
                 <Field label="ชื่อแท็บเบราว์เซอร์ (Tab Title)"><TextInput name="tabTitle" defaultValue={page.tabTitle || ""} /></Field>
                 <Field label="OG Description" hint="ข้อความสั้นๆ ที่แสดงใต้ชื่อตอนแชร์ลิงก์" hintTone="body"><TextInput name="ogDescription" defaultValue={page.ogDescription || ""} /></Field>
-                <ImageUploadField label="OG Image (รูปตอนแชร์ลิงก์)" name="file_ogImage" currentUrl={page.ogImage} recommend="ขนาดแนะนำ: 1200 × 630 px — แนวนอน (1.91:1)" />
+                <ImageUploadField key={page.ogImage || "no-og-image"} label="OG Image (รูปตอนแชร์ลิงก์)" name="file_ogImage" currentUrl={page.ogImage} removeName="remove_ogImage" recommend="ขนาดแนะนำ: 1200 × 630 px — แนวนอน (1.91:1)" />
                 <Field label="CAPI Access Token" hint="จาก Facebook Events Manager" hintTone="body">
                   <TextInput name="capiAccessToken" defaultValue={page.capiAccessToken || ""} placeholder="EAAxxxxxxxxxxxxxx..." />
                   <Hint tone="warning" icon="⚠">เป็นความลับ — ห้ามเปิดเผย</Hint>
@@ -755,6 +755,19 @@ function ManualAccordion() {
         },
         { icon: "🔗", title: "เปลี่ยนชื่อ URL เว็บไซต์", body: "URL เดิมจะเปิดไม่ได้หลังเปลี่ยนชื่อ กรุณาอัปเดตลิงก์ที่นำไปใช้งานทั้งหมด" },
         {
+          icon: "🔀",
+          title: "เปลี่ยนเส้นทางหน้าเซลเพจ",
+          body: <ManualList items={[
+            "ใช้เมื่อต้องการให้ผู้เข้าชมลิงก์เซลเพจเดิมไปยังเว็บไซต์อื่นทันที เช่น เว็บไซต์ร้านค้าหรือหน้าบริการใหม่ โดยไม่ต้องเปลี่ยนลิงก์ที่แชร์ไว้",
+            "เลือกเมนู “เปลี่ยนเส้นทาง” แล้วกรอก “ลิงก์ปลายทาง” แบบเต็ม เช่น https://example.com ห้ามใช้ลิงก์หน้าเซลเพจเดิมหรือปลายทางที่วนกลับมาหน้าเดิม",
+            "เปิดสวิตช์ “ใช้ลิงก์ปลายทางแทนหน้าเซลเพจ” แล้วกดบันทึกส่วนนี้ ผู้เข้าชมทุกคนจะถูกส่งไปปลายทางแทนการเห็นเนื้อหาเซลเพจ",
+            "เปิดลิงก์เซลเพจในแท็บใหม่เพื่อตรวจสอบว่าไปถึงปลายทางถูกต้อง หากต้องการกลับมาแสดงเซลเพจ ให้ปิดสวิตช์และบันทึกอีกครั้ง โดยเก็บลิงก์ปลายทางไว้ได้",
+            "หากไม่กรอกลิงก์ปลายทาง ระบบจะแสดงหน้าเซลเพจตามปกติ หากรูปแบบลิงก์ไม่ถูกต้องจะมีข้อความแจ้งตอนบันทึก ให้แก้แล้วบันทึกใหม่",
+            "เมื่อใช้การเปลี่ยนเส้นทาง เนื้อหา วิดีโอ และ Pixel บนหน้าเซลเพจจะไม่ถูกโหลด หากต้องการติดตามปลายทาง ต้องตั้งค่าบนเว็บไซต์ปลายทางด้วย",
+            "กรณีหน้าเซลเพจหมดอายุ ระบบจะใช้การตั้งค่า Whitepage ในเมนูวันใช้งานก่อนการเปลี่ยนเส้นทางนี้",
+          ]} />,
+        },
+        {
           icon: "⚙",
           title: "ตั้งค่าหลัก (Tab Title, OG, CAPI)",
           body: (
@@ -763,6 +776,8 @@ function ManualAccordion() {
                 "ชื่อแท็บเบราว์เซอร์ (Tab Title) = ข้อความที่ขึ้นบนแท็บตอนเปิดหน้าเซลเพจ",
                 "OG Description = ข้อความสั้นๆ ที่ขึ้นใต้ชื่อเว็บตอนแชร์ลิงก์ลง Facebook หรือ LINE",
                 "OG Image = รูปที่ขึ้นตอนแชร์ลิงก์ ขนาดแนะนำ 1200 × 630 px (แนวนอน)",
+                "หากไม่ต้องการใช้ OG Image ให้กด “ลบรูป” แล้วกดบันทึกตั้งค่าหลัก ก่อนบันทึกสามารถกด “ยกเลิกการลบ” หรือเลือกรูปใหม่แทนได้",
+                "หลังลบ OG Image แอปแชร์ลิงก์อาจยังแสดงรูปเก่าจากแคช ต้องรอให้แอปอัปเดตตัวอย่างลิงก์ การลบนี้นำรูปออกจากการตั้งค่าแชร์ของหน้านี้เท่านั้น",
                 "Layout ปุ่มสมัคร + LINE = เลือกให้ปุ่มทั้งสองเรียงบน–ล่าง (แนวตั้ง) หรือ ซ้าย–ขวา (แนวนอน)",
                 "Event ตอนกดปุ่มสมัคร = ชื่อ Event ที่ส่งเข้า Facebook Pixel เมื่อมีคนกดปุ่มสมัคร (Subscribe หรือ Purchase) ส่วนปุ่มทัก LINE ส่งเป็น Contact เสมอ",
                 "CAPI Access Token และ ลิงก์ CAPI Endpoint กรอกและบันทึกได้ แต่ตอนนี้ยังไม่ถูกใช้งาน — การส่ง Event ทำจากฝั่งเบราว์เซอร์ผ่าน Pixel เท่านั้น ยังไม่ได้ส่งจากเซิร์ฟเวอร์",

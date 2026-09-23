@@ -216,6 +216,9 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
     data.ctaLayout = formData.get("ctaLayout") === "vertical" ? "vertical" : "horizontal";
     data.capiAccessToken = STR(formData, "capiAccessToken") ?? null;
     data.capiEndpointUrl = STR(formData, "capiEndpointUrl") ?? null;
+    // Removing the share image only clears this page's reference; uploaded
+    // files may still be used elsewhere and must not be deleted here.
+    if (formData.get("remove_ogImage") === "on") data.ogImage = null;
     const og = await saveUpload(formData.get("file_ogImage"));
     if (og && typeof og === "object") return og;
     if (og) data.ogImage = og;
