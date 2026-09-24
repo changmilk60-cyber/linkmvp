@@ -292,7 +292,6 @@ function YoutubeVideo({ data, accent }: { data: { title?: string; url: string };
           allowFullScreen
         />
       </div>
-      <p style={{ margin: "8px 0 0", fontSize: "12px", color: "rgba(255,255,255,.65)" }}>วิดีโอเริ่มเล่นแบบปิดเสียง กดเปิดเสียงที่ตัวเล่นได้ หากวิดีโอไม่เริ่มอัตโนมัติ ให้กดปุ่มเล่น</p>
     </div>
   );
 }
