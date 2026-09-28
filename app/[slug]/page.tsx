@@ -83,7 +83,7 @@ export default async function SlugPage({ params }: { params: { slug: string } })
       reviews={reviews}
       fbPixelIds={fbPixelIds}
       ctaLayout={page.ctaLayout === "vertical" ? "vertical" : "horizontal"}
-      signupEventName={page.capiEventName === "purchase" ? "Purchase" : "Subscribe"}
+      signupEventName="SignupClick"
     />
   );
 }
