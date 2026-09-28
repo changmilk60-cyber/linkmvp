@@ -212,7 +212,7 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
   if (wants("main")) {
     data.tabTitle = STR(formData, "tabTitle") ?? null;
     data.ogDescription = STR(formData, "ogDescription") ?? null;
-    data.capiEventName = formData.get("capiEventName") === "purchase" ? "purchase" : "subscribe";
+    data.capiEventName = "signup_click"; // Legacy settings must never turn a click into a purchase.
     data.ctaLayout = formData.get("ctaLayout") === "vertical" ? "vertical" : "horizontal";
     data.capiAccessToken = STR(formData, "capiAccessToken") ?? null;
     data.capiEndpointUrl = STR(formData, "capiEndpointUrl") ?? null;
