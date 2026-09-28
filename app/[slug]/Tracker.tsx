@@ -21,7 +21,7 @@ function track(slug: string, kind: "view" | "click_signup" | "click_line", fbEve
   // Reported to Facebook as well as to our own stats, so an ad set optimising
   // for this conversion actually receives it.
   if (fbEvent && typeof window !== "undefined" && typeof window.fbq === "function") {
-    window.fbq("track", fbEvent);
+    window.fbq(fbEvent === "SignupClick" ? "trackCustom" : "track", fbEvent);
   }
 }
 
@@ -45,8 +45,8 @@ export function TrackedLink({
 }: {
   slug: string;
   kind: "click_signup" | "click_line";
-  /** Standard Meta event name to fire on click, e.g. "Subscribe" or "Contact". */
-  fbEvent?: string;
+  /** Standard Meta event name to fire on click, or custom click event: "SignupClick" or "Contact". */
+  fbEvent?: "SignupClick" | "Contact";
   href: string;
   className?: string;
   style?: React.CSSProperties;
