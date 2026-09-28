@@ -39,8 +39,8 @@ export default function SalesPage({
   reviews: Review[];
   fbPixelIds: string[];
   ctaLayout: "vertical" | "horizontal";
-  /** Meta event fired when a visitor clicks a signup button. */
-  signupEventName: "Subscribe" | "Purchase";
+  /** Custom Meta click event; never claims a completed registration or purchase. */
+  signupEventName: "SignupClick";
 }) {
   const theme = themeFor(themePreset);
   const primary = colorOverrides.primary || theme.primary;
