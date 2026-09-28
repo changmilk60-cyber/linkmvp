@@ -392,7 +392,7 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
                 </Field>
                 <Field label="ลิงก์ CAPI Endpoint" hint="ปล่อยว่างไว้ก็ได้" hintTone="body"><TextInput name="capiEndpointUrl" defaultValue={page.capiEndpointUrl || ""} /></Field>
                 <Field label="Event ตอนกดปุ่มสมัคร" hint="ชื่อ Event ที่ส่งเข้า Facebook Pixel เมื่อมีคนกดปุ่มสมัคร • ปุ่ม LINE ส่งเป็น Contact เสมอ" hintTone="body" boxed>
-                  <SegCapiEvent defaultValue={page.capiEventName} />
+                  <p style={{ margin: 0 }}>คลิกปุ่มสมัคร (SignupClick)</p>
                 </Field>
                 <Field label="Layout ปุ่มสมัคร + LINE" hint="แนวตั้ง = ปุ่มอยู่บน–ล่าง • แนวนอน = ปุ่มอยู่ซ้าย–ขวา" hintTone="body">
                   <SegCtaLayout defaultValue={page.ctaLayout} />
@@ -452,16 +452,6 @@ function ToggleRow({ name, title, sub, defaultChecked }: { name: string; title: 
       <p style={{ margin: "4px 0 10px", font: "var(--text-hint)", color: "var(--text-muted)" }}>{sub}</p>
       <Toggle checked={val} onChange={setVal} name={name} />
     </div>
-  );
-}
-
-function SegCapiEvent({ defaultValue }: { defaultValue: string }) {
-  const [v, setV] = useState(defaultValue);
-  return (
-    <>
-      <input type="hidden" name="capiEventName" value={v} />
-      <SegmentedChoice value={v} onChange={setV} options={[{ icon: "🔔", label: "สมัครรับข้อมูล", sublabel: "(Subscribe)", value: "subscribe" }, { icon: "🛒", label: "การซื้อ", sublabel: "(Purchase)", value: "purchase" }]} />
-    </>
   );
 }
 
@@ -746,8 +736,10 @@ function ManualAccordion() {
               items={[
                 "กรอก Pixel ID แยกบรรทัด (1 บรรทัดต่อ 1 ไอดี) ระบบจะรวมค่าให้อัตโนมัติ",
                 "ต้องใช้เลข Pixel ID ที่ตรงกับที่แสดงในหน้า Events Manager ของ Facebook มิฉะนั้นจะทดสอบเท่าไหร่ก็ไม่เจอ Event",
-                "Event ที่เว็บส่งให้: PageView ตอนเปิดหน้า • Subscribe (หรือ Purchase ตามที่เลือกใน ตั้งค่าหลัก) ตอนกดปุ่มสมัคร • Contact ตอนกดปุ่มทัก LINE",
+                "Event ที่เว็บส่งให้: PageView ตอนเปิดหน้า • SignupClick (วัดเฉพาะคลิก ไม่ใช่สมัครสำเร็จหรือชำระเงิน) ตอนกดปุ่มสมัคร • Contact ตอนกดปุ่มทัก LINE",
                 "ทดสอบด้วย Test Events ใน Events Manager: ใส่ URL ของหน้าเซลเพจ (ไม่ใช่ URL หน้าหลังบ้าน) แล้วกดปุ่มบนหน้าเว็บดู",
+                "หากเคยตั้งกฎจับปุ่มสมัครหรือ LINE ใน Meta Event Setup Tool ให้ลบกฎที่ซ้ำกับโค้ดเว็บ แล้วใช้ Test events ตรวจว่าคลิกหนึ่งครั้งได้หนึ่ง Event ต่อ Pixel",
+                "ชุดโฆษณาที่ใช้ Purchase หรือ Subscribe ต้องตรวจและปรับเป้าหมายเอง หากใช้ SignupClick ให้ตั้ง Custom Conversion จาก Event นี้ตามตัวเลือกที่บัญชีรองรับ",
                 "ถ้าไม่เห็น Event เลย ให้ปิด Ad Blocker หรือลองเบราว์เซอร์อื่นก่อน เพราะตัวบล็อกโฆษณาจะบล็อกสคริปต์ของ Facebook",
               ]}
             />
@@ -779,7 +771,7 @@ function ManualAccordion() {
                 "หากไม่ต้องการใช้ OG Image ให้กด “ลบรูป” แล้วกดบันทึกตั้งค่าหลัก ก่อนบันทึกสามารถกด “ยกเลิกการลบ” หรือเลือกรูปใหม่แทนได้",
                 "หลังลบ OG Image แอปแชร์ลิงก์อาจยังแสดงรูปเก่าจากแคช ต้องรอให้แอปอัปเดตตัวอย่างลิงก์ การลบนี้นำรูปออกจากการตั้งค่าแชร์ของหน้านี้เท่านั้น",
                 "Layout ปุ่มสมัคร + LINE = เลือกให้ปุ่มทั้งสองเรียงบน–ล่าง (แนวตั้ง) หรือ ซ้าย–ขวา (แนวนอน)",
-                "Event ตอนกดปุ่มสมัคร = ชื่อ Event ที่ส่งเข้า Facebook Pixel เมื่อมีคนกดปุ่มสมัคร (Subscribe หรือ Purchase) ส่วนปุ่มทัก LINE ส่งเป็น Contact เสมอ",
+                "Event ตอนกดปุ่มสมัคร = ชื่อ Event ที่ส่งเข้า Facebook Pixel เมื่อมีคนกดปุ่มสมัคร (SignupClick — วัดเฉพาะคลิก ไม่ต้องระบุมูลค่าหรือสกุลเงิน) ส่วนปุ่มทัก LINE ส่งเป็น Contact เสมอ",
                 "CAPI Access Token และ ลิงก์ CAPI Endpoint กรอกและบันทึกได้ แต่ตอนนี้ยังไม่ถูกใช้งาน — การส่ง Event ทำจากฝั่งเบราว์เซอร์ผ่าน Pixel เท่านั้น ยังไม่ได้ส่งจากเซิร์ฟเวอร์",
                 "กด “บันทึกส่วนนี้” ทุกครั้งหลังแก้ไข",
               ]}
