@@ -102,3 +102,418 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   .pv-cta-shine::before { animation: none; opacity: 0; }
 }
+
+/* ============================================================
+   Landing page (/) — layout echoing a dark, beam-lit hero with
+   panel-wrapped card grids. Colours all come from the existing
+   green/black token set; nothing here is used by the admin or
+   by a customer's sales page.
+   ============================================================ */
+.lp-shell { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+/* hero light beams: blades fanning out from a point at the bottom centre */
+.lp-beams {
+  position: absolute; top: 0; left: 0; right: 0; height: 660px;
+  overflow: hidden; pointer-events: none;
+}
+@media (min-width: 760px) { .lp-beams { height: 730px; } }
+.lp-beam {
+  position: absolute; bottom: 0; left: 50%;
+  width: 30vw; height: 190%;
+  transform-origin: bottom center;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--green-300) 40%, transparent) 0%,
+    color-mix(in srgb, var(--green-500) 17%, transparent) 26%,
+    color-mix(in srgb, var(--green-600) 9%, transparent) 55%,
+    transparent 82%);
+  filter: blur(34px);
+}
+.lp-beam-1 { transform: translateX(-50%) rotate(-31deg); opacity: .85; }
+.lp-beam-2 { transform: translateX(-50%) rotate(-17deg); width: 16vw; opacity: .5; }
+.lp-beam-3 { transform: translateX(-50%) rotate(17deg);  width: 16vw; opacity: .5; }
+.lp-beam-4 { transform: translateX(-50%) rotate(31deg);  opacity: .85; }
+.lp-beam-core {
+  position: absolute; bottom: 0; left: 50%;
+  width: 2px; height: 150%;
+  transform-origin: bottom center;
+  background: linear-gradient(to top, color-mix(in srgb, var(--green-300) 60%, transparent), transparent 70%);
+  filter: blur(2px);
+}
+.lp-beam-core-l { transform: translateX(-50%) rotate(-26deg); }
+.lp-beam-core-r { transform: translateX(-50%) rotate(26deg); }
+.lp-beams::after {
+  content: ""; position: absolute; bottom: -170px; left: 50%; transform: translateX(-50%);
+  width: 560px; height: 320px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--green-300) 30%, transparent) 0%, transparent 68%);
+  filter: blur(30px);
+}
+.lp-glow {
+  position: absolute; left: 50%; bottom: -260px; transform: translateX(-50%);
+  width: min(1000px, 140vw); height: 520px; pointer-events: none;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--green-400) 26%, transparent) 0%, transparent 70%);
+}
+.lp-grid-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--green-500) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--green-500) 10%, transparent) 1px, transparent 1px);
+  background-size: 62px 62px;
+  mask-image: radial-gradient(ellipse 75% 55% at 50% 28%, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 55% at 50% 28%, #000 0%, transparent 78%);
+}
+
+/* chip row under the hero buttons */
+.lp-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.lp-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 13px; border-radius: 999px;
+  border: 1px solid var(--border-hairline);
+  background: color-mix(in srgb, var(--surface-card) 70%, transparent);
+  font: 500 13px/1 var(--font-sans-pv);
+  color: var(--text-muted);
+}
+.lp-chip b { color: var(--text-accent); font-weight: 600; }
+
+/* outlined eyebrow pill used at the head of each section */
+.lp-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin: 0 0 16px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--border-accent);
+  background: color-mix(in srgb, var(--green-900) 55%, transparent);
+  font: 600 12px/1.2 var(--font-sans-pv);
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-accent-bright);
+}
+
+/* the rounded container that wraps a card grid */
+.lp-panel {
+  border: 1px solid var(--border-hairline);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--surface-card) 55%, transparent);
+  padding: 14px;
+}
+.lp-panel-head {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px; margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--surface-inset);
+  font: 600 13px/1.2 var(--font-sans-pv);
+  color: var(--text-muted);
+}
+
+.lp-cards { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 680px) { .lp-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .lp-cards-3 { grid-template-columns: repeat(3, 1fr); } }
+
+.lp-card {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--border-hairline);
+  border-radius: 16px;
+  background: var(--surface-card);
+  padding: 22px 20px;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.lp-card::before {
+  content: ""; position: absolute; top: -40%; left: -20%; width: 70%; height: 90%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--green-500) 13%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+}
+.lp-card:hover { border-color: var(--border-accent); transform: translateY(-2px); }
+.lp-card > * { position: relative; }
+
+.lp-ticks { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.lp-ticks li { display: flex; gap: 9px; font: 400 14px/1.6 var(--font-sans-pv); color: var(--text-muted); }
+.lp-ticks li::before { content: "✓"; color: var(--text-accent); font-weight: 700; flex-shrink: 0; }
+
+/* admin preview card under the hero */
+.lp-window {
+  border: 1px solid var(--border-hairline);
+  border-radius: 16px;
+  background: var(--ink-850);
+  overflow: hidden;
+  box-shadow: 0 30px 80px -30px color-mix(in srgb, var(--green-500) 45%, transparent);
+}
+.lp-window-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-hairline);
+  background: var(--surface-card);
+}
+.lp-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-600); }
+.lp-window-body { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .lp-window-body { grid-template-columns: 190px 1fr; } }
+.lp-window-nav { border-bottom: 1px solid var(--border-hairline); padding: 14px; display: grid; gap: 6px; }
+@media (min-width: 760px) { .lp-window-nav { border-bottom: 0; border-right: 1px solid var(--border-hairline); } }
+.lp-nav-item { padding: 8px 11px; border-radius: 9px; font: 500 13px/1.2 var(--font-sans-pv); color: var(--text-muted); }
+.lp-nav-item[data-on="1"] { background: var(--green-900); color: var(--text-accent-bright); }
+.lp-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px; border-radius: 10px;
+  background: var(--surface-inset); border: 1px solid var(--border-hairline);
+  font: 500 13.5px/1.2 var(--font-sans-pv); color: var(--text-body);
+}
+.lp-switch { margin-left: auto; width: 34px; height: 19px; border-radius: 999px; background: var(--ink-600); position: relative; flex-shrink: 0; }
+.lp-switch[data-on="1"] { background: var(--green-500); }
+.lp-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--white); }
+.lp-switch[data-on="1"]::after { left: auto; right: 2px; }
+
+/* numbered steps */
+.lp-step-no { font: 700 30px/1 var(--font-sans-pv); color: var(--text-accent); }
+
+/* aurora light hugging the top edge of the footer */
+.lp-aurora-wrap { position: absolute; top: 0; left: 0; right: 0; height: 2px; pointer-events: none; }
+.lp-aurora-line {
+  position: absolute; top: -1px; left: 8%; right: 8%; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--green-600) 15%, var(--green-300) 38%, var(--white) 50%, var(--green-300) 62%, var(--green-600) 85%, transparent 100%);
+}
+.lp-aurora-haze {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 90%; height: 150px;
+  background: radial-gradient(ellipse 58% 100% at 50% 0%, color-mix(in srgb, var(--green-300) 55%, transparent) 0%, color-mix(in srgb, var(--green-600) 28%, transparent) 40%, transparent 72%);
+  filter: blur(26px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv-live-dot { animation: none; }
+}
+
+/* Top-games slideshow: the outgoing image fades away to the left while the
+   next one arrives from the right. Both layers are stacked, so neither the
+   height nor the surrounding layout moves during the change. */
+@keyframes pv-game-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-36px); }
+}
+@keyframes pv-game-in {
+  from { opacity: 0; transform: translateX(36px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.pv-game-layer { position: absolute; inset: 0; }
+.pv-game-out { animation: pv-game-out 500ms var(--ease-standard, ease) forwards; }
+.pv-game-in  { animation: pv-game-in 500ms var(--ease-standard, ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pv-game-in { animation: none; }
+  .pv-game-out { display: none; }
+}
+
+/* Sales-page CTA. Measured off the reference clip: the halo around the button
+   is steady, and a highlight sweeps across the face left to right in about
+   0.75s, roughly every 3s. Both the halo and the button colour come from the
+   button itself, so the theme colour is never overridden. */
+.pv-cta {
+  position: relative;
+}
+/* Halo — a blurred copy of the button, sitting behind it. */
+.pv-cta-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(11px);
+  opacity: 0.85;
+}
+/* Clipping layer, so the sweep stays inside the button's shape while the
+   halo above is free to spill outside it. */
+.pv-cta-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pv-cta-shine::before {
+  content: "";
+  position: absolute;
+  top: -60%;
+  bottom: -60%;
+  width: 55%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: translateX(-180%);
+  animation: pv-cta-shine 3s linear infinite;
+}
+@keyframes pv-cta-shine {
+  0%   { transform: translateX(-180%) skewX(-18deg); }
+  28%  { transform: translateX(330%) skewX(-18deg); }
+  100% { transform: translateX(330%) skewX(-18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-cta-shine::before { animation: none; opacity: 0; }
+}
+
+/* ============================================================
+   Landing page (/) — layout echoing a dark, beam-lit hero with
+   panel-wrapped card grids. Colours all come from the existing
+   green/black token set; nothing here is used by the admin or
+   by a customer's sales page.
+   ============================================================ */
+.lp-shell { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+/* hero light beams: blades fanning out from a point at the bottom centre */
+.lp-beams {
+  position: absolute; top: 0; left: 0; right: 0; height: 660px;
+  overflow: hidden; pointer-events: none;
+}
+@media (min-width: 760px) { .lp-beams { height: 730px; } }
+.lp-beam {
+  position: absolute; bottom: 0; left: 50%;
+  width: 30vw; height: 190%;
+  transform-origin: bottom center;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--green-300) 40%, transparent) 0%,
+    color-mix(in srgb, var(--green-500) 17%, transparent) 26%,
+    color-mix(in srgb, var(--green-600) 9%, transparent) 55%,
+    transparent 82%);
+  filter: blur(34px);
+}
+.lp-beam-1 { transform: translateX(-50%) rotate(-31deg); opacity: .85; }
+.lp-beam-2 { transform: translateX(-50%) rotate(-17deg); width: 16vw; opacity: .5; }
+.lp-beam-3 { transform: translateX(-50%) rotate(17deg);  width: 16vw; opacity: .5; }
+.lp-beam-4 { transform: translateX(-50%) rotate(31deg);  opacity: .85; }
+.lp-beam-core {
+  position: absolute; bottom: 0; left: 50%;
+  width: 2px; height: 150%;
+  transform-origin: bottom center;
+  background: linear-gradient(to top, color-mix(in srgb, var(--green-300) 60%, transparent), transparent 70%);
+  filter: blur(2px);
+}
+.lp-beam-core-l { transform: translateX(-50%) rotate(-26deg); }
+.lp-beam-core-r { transform: translateX(-50%) rotate(26deg); }
+.lp-beams::after {
+  content: ""; position: absolute; bottom: -170px; left: 50%; transform: translateX(-50%);
+  width: 560px; height: 320px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--green-300) 30%, transparent) 0%, transparent 68%);
+  filter: blur(30px);
+}
+.lp-glow {
+  position: absolute; left: 50%; bottom: -260px; transform: translateX(-50%);
+  width: min(1000px, 140vw); height: 520px; pointer-events: none;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--green-400) 26%, transparent) 0%, transparent 70%);
+}
+.lp-grid-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--green-500) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--green-500) 10%, transparent) 1px, transparent 1px);
+  background-size: 62px 62px;
+  mask-image: radial-gradient(ellipse 75% 55% at 50% 28%, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 55% at 50% 28%, #000 0%, transparent 78%);
+}
+
+/* chip row under the hero buttons */
+.lp-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.lp-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 13px; border-radius: 999px;
+  border: 1px solid var(--border-hairline);
+  background: color-mix(in srgb, var(--surface-card) 70%, transparent);
+  font: 500 13px/1 var(--font-sans-pv);
+  color: var(--text-muted);
+}
+.lp-chip b { color: var(--text-accent); font-weight: 600; }
+
+/* outlined eyebrow pill used at the head of each section */
+.lp-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin: 0 0 16px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--border-accent);
+  background: color-mix(in srgb, var(--green-900) 55%, transparent);
+  font: 600 12px/1.2 var(--font-sans-pv);
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-accent-bright);
+}
+
+/* the rounded container that wraps a card grid */
+.lp-panel {
+  border: 1px solid var(--border-hairline);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--surface-card) 55%, transparent);
+  padding: 14px;
+}
+.lp-panel-head {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px; margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--surface-inset);
+  font: 600 13px/1.2 var(--font-sans-pv);
+  color: var(--text-muted);
+}
+
+.lp-cards { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 680px) { .lp-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .lp-cards-3 { grid-template-columns: repeat(3, 1fr); } }
+
+.lp-card {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--border-hairline);
+  border-radius: 16px;
+  background: var(--surface-card);
+  padding: 22px 20px;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.lp-card::before {
+  content: ""; position: absolute; top: -40%; left: -20%; width: 70%; height: 90%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--green-500) 13%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+}
+.lp-card:hover { border-color: var(--border-accent); transform: translateY(-2px); }
+.lp-card > * { position: relative; }
+
+.lp-ticks { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.lp-ticks li { display: flex; gap: 9px; font: 400 14px/1.6 var(--font-sans-pv); color: var(--text-muted); }
+.lp-ticks li::before { content: "✓"; color: var(--text-accent); font-weight: 700; flex-shrink: 0; }
+
+/* admin preview card under the hero */
+.lp-window {
+  border: 1px solid var(--border-hairline);
+  border-radius: 16px;
+  background: var(--ink-850);
+  overflow: hidden;
+  box-shadow: 0 30px 80px -30px color-mix(in srgb, var(--green-500) 45%, transparent);
+}
+.lp-window-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-hairline);
+  background: var(--surface-card);
+}
+.lp-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-600); }
+.lp-window-body { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .lp-window-body { grid-template-columns: 190px 1fr; } }
+.lp-window-nav { border-bottom: 1px solid var(--border-hairline); padding: 14px; display: grid; gap: 6px; }
+@media (min-width: 760px) { .lp-window-nav { border-bottom: 0; border-right: 1px solid var(--border-hairline); } }
+.lp-nav-item { padding: 8px 11px; border-radius: 9px; font: 500 13px/1.2 var(--font-sans-pv); color: var(--text-muted); }
+.lp-nav-item[data-on="1"] { background: var(--green-900); color: var(--text-accent-bright); }
+.lp-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px; border-radius: 10px;
+  background: var(--surface-inset); border: 1px solid var(--border-hairline);
+  font: 500 13.5px/1.2 var(--font-sans-pv); color: var(--text-body);
+}
+.lp-switch { margin-left: auto; width: 34px; height: 19px; border-radius: 999px; background: var(--ink-600); position: relative; flex-shrink: 0; }
+.lp-switch[data-on="1"] { background: var(--green-500); }
+.lp-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--white); }
+.lp-switch[data-on="1"]::after { left: auto; right: 2px; }
+
+/* numbered steps */
+.lp-step-no { font: 700 30px/1 var(--font-sans-pv); color: var(--text-accent); }
+
+/* aurora strip above the footer */
+.lp-aurora {
+  height: 150px; margin-bottom: -90px; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 100% at 50% 100%, color-mix(in srgb, var(--green-300) 55%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 100% 90% at 50% 115%, color-mix(in srgb, var(--green-600) 45%, transparent) 0%, transparent 70%);
+  filter: blur(14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-card { transition: none; }
+  .lp-card:hover { transform: none; }
+}
+
+/* the preview card's side nav is decorative — drop it on narrow screens so
+   the card stays compact instead of becoming a long list */
+@media (max-width: 759px) { .lp-window-nav { display: none; } }

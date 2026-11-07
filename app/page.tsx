@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getSessionUserId } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Button, Pill } from "@/components/ds";
+import { Button } from "@/components/ds";
 import HomeFaq from "./HomeFaq";
 
 export const metadata: Metadata = {
@@ -13,12 +13,42 @@ export const metadata: Metadata = {
 };
 
 const FEATURES = [
-  { title: "จัดการหลาย Section ได้ง่าย", body: "ปรับแต่งส่วนประกอบของหน้าเซลเพจได้อย่างเป็นระบบ ไม่ว่าจะเป็นส่วนแนะนำสินค้า รายละเอียดสินค้า รูปภาพ หรือเนื้อหาประกอบการขาย" },
-  { title: "ปรับแต่งโทนสีเว็บไซต์", body: "ปรับเปลี่ยนสีและรูปแบบการนำเสนอให้เหมาะกับแบรนด์หรือสินค้า เพื่อสร้างเอกลักษณ์ให้กับหน้าเซลเพจของคุณ" },
-  { title: "จัดการเนื้อหาจากหลังบ้านเดียว", body: "แก้ไขข้อมูลและอัปเดตเนื้อหาหน้าเซลเพจผ่านระบบจัดการส่วนกลาง ช่วยลดความยุ่งยากในการดูแลเว็บไซต์" },
-  { title: "รองรับการติดตั้ง Tracking Pixel", body: "จัดการการตั้งค่า Pixel สำหรับการติดตามผลทางการตลาด เช่น Facebook Pixel และ TikTok Pixel ตามการรองรับของระบบ เพื่อช่วยให้คุณนำข้อมูลไปวิเคราะห์และปรับปรุงแคมเปญโฆษณา" },
-  { title: "จัดการรีวิวลูกค้า", body: "จัดการส่วนแสดงรีวิวและความคิดเห็นจากลูกค้า เพื่อช่วยนำเสนอข้อมูลประกอบการตัดสินใจซื้อสินค้า" },
-  { title: "ดูสถิติผู้เข้าชมเว็บไซต์", body: "ตรวจสอบสถิติผู้เข้าชมหน้าเซลเพจ เพื่อทำความเข้าใจการเข้าถึงเว็บไซต์และนำข้อมูลไปใช้ปรับปรุงการทำการตลาด" },
+  {
+    icon: "🧩",
+    title: "จัดการหลาย Section ได้ง่าย",
+    body: "ปรับแต่งส่วนประกอบของหน้าเซลเพจได้อย่างเป็นระบบ ทั้งส่วนแนะนำสินค้า รายละเอียด รูปภาพ และเนื้อหาประกอบการขาย",
+    ticks: ["เปิด-ปิดแต่ละ Section ได้", "จัดลำดับขึ้น-ลงได้เอง", "พรีวิวผลก่อนเผยแพร่"],
+  },
+  {
+    icon: "🎨",
+    title: "ปรับแต่งโทนสีเว็บไซต์",
+    body: "เปลี่ยนสีและรูปแบบการนำเสนอให้เข้ากับแบรนด์หรือสินค้า เพื่อสร้างเอกลักษณ์ให้หน้าเซลเพจของคุณ",
+    ticks: ["เลือกสีพื้นหลังและปุ่มได้", "ปรับสีตัวอักษรแยกส่วน", "เห็นผลทันทีที่บันทึก"],
+  },
+  {
+    icon: "🗂️",
+    title: "จัดการเนื้อหาจากหลังบ้านเดียว",
+    body: "แก้ไขข้อมูลและอัปเดตเนื้อหาผ่านระบบจัดการส่วนกลาง ช่วยลดความยุ่งยากในการดูแลเว็บไซต์",
+    ticks: ["แก้ข้อความและรูปภาพ", "ลากรูปจากคอมมาวางได้", "ไม่ต้องเขียนโค้ด"],
+  },
+  {
+    icon: "📊",
+    title: "รองรับการติดตั้ง Tracking Pixel",
+    body: "ตั้งค่า Pixel สำหรับติดตามผลทางการตลาดตามการรองรับของระบบ เพื่อนำข้อมูลไปวิเคราะห์และปรับปรุงแคมเปญโฆษณา",
+    ticks: ["ใส่ Facebook Pixel ID ได้", "ยิง Event ตอนกดปุ่ม", "ใช้ร่วมกับ Ads Manager"],
+  },
+  {
+    icon: "⭐",
+    title: "จัดการรีวิวลูกค้า",
+    body: "ดูแลส่วนแสดงรีวิวและความคิดเห็นจากลูกค้า เพื่อช่วยนำเสนอข้อมูลประกอบการตัดสินใจซื้อ",
+    ticks: ["เพิ่ม-ลบรีวิวได้เอง", "ตั้งค่าการแสดงผล", "จัดวางร่วมกับ Section อื่น"],
+  },
+  {
+    icon: "📈",
+    title: "ดูสถิติผู้เข้าชมเว็บไซต์",
+    body: "ตรวจสอบสถิติผู้เข้าชมหน้าเซลเพจ เพื่อเข้าใจการเข้าถึงเว็บไซต์และนำข้อมูลไปปรับปรุงการตลาด",
+    ticks: ["นับยอดเข้าชมหน้าเพจ", "นับการคลิกปุ่ม", "ดูได้จากหน้า Dashboard"],
+  },
 ];
 
 const AUDIENCE = [
@@ -29,33 +59,67 @@ const AUDIENCE = [
   { who: "ผู้ประกอบการ", what: "เพิ่มช่องทางนำเสนอสินค้าและบริการบนโลกออนไลน์" },
 ];
 
+const CAPABILITIES = [
+  { big: "17", label: "SECTION", note: "ส่วนประกอบหน้าเซลเพจที่เปิด-ปิดและจัดลำดับได้เอง" },
+  { big: "0", label: "LINES OF CODE", note: "ไม่ต้องเขียนโค้ดหรือแก้ไฟล์เว็บไซต์เลยสักบรรทัด" },
+  { big: "2", label: "THEME MODES", note: "สลับธีมสว่าง / ธีมมืด ในระบบหลังบ้านได้ตามถนัด" },
+  { big: "1", label: "DASHBOARD", note: "เนื้อหา โทนสี Pixel รีวิว และสถิติ อยู่ในที่เดียวกัน" },
+];
+
+const STEPS = [
+  { no: "01", title: "สมัครสมาชิกและเข้าสู่ระบบ", body: "สร้างบัญชีเพื่อเข้าใช้งานระบบหลังบ้าน แล้วตั้งชื่อ URL ของหน้าเซลเพจที่ต้องการ" },
+  { no: "02", title: "จัดเนื้อหาและปรับโทนสี", body: "เลือกเปิด Section ที่ต้องการใช้ ใส่ข้อความ รูปภาพ รีวิว และปรับสีให้เข้ากับแบรนด์" },
+  { no: "03", title: "เผยแพร่และติดตามผล", body: "กดบันทึกแล้วหน้าเซลเพจอัปเดตทันที พร้อมดูสถิติผู้เข้าชมและยิง Pixel ได้จาก Dashboard" },
+];
+
 function Section({ children, style }: { children: ReactNode; style?: React.CSSProperties }) {
   return (
-    <section style={{ width: "100%", padding: "clamp(56px, 8vw, 96px) 20px", ...style }}>
-      <div style={{ maxWidth: "1060px", margin: "0 auto" }}>{children}</div>
+    <section style={{ width: "100%", padding: "clamp(56px, 8vw, 100px) 0", ...style }}>
+      <div className="lp-shell">{children}</div>
     </section>
   );
 }
 
 function Eyebrow({ children }: { children: ReactNode }) {
-  return (
-    <p style={{ margin: "0 0 12px", fontFamily: "var(--font-sans-pv)", fontSize: "13px", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-accent)" }}>
-      {children}
-    </p>
-  );
+  return <span className="lp-eyebrow">{children}</span>;
 }
 
-function H2({ children }: { children: ReactNode }) {
+function H2({ children, center = false }: { children: ReactNode; center?: boolean }) {
   return (
-    <h2 style={{ margin: "0 0 18px", fontFamily: "var(--font-sans-pv)", fontSize: "clamp(24px, 3.4vw, 34px)", fontWeight: 700, lineHeight: 1.35, color: "var(--text-primary)" }}>
+    <h2
+      style={{
+        margin: "0 0 14px",
+        fontFamily: "var(--font-sans-pv)",
+        fontSize: "clamp(25px, 3.6vw, 38px)",
+        fontWeight: 700,
+        lineHeight: 1.35,
+        color: "var(--text-primary)",
+        textWrap: "balance",
+        ...(center ? { textAlign: "center" as const } : null),
+      }}
+    >
       {children}
     </h2>
   );
 }
 
-function Lead({ children }: { children: ReactNode }) {
+function Accent({ children }: { children: ReactNode }) {
+  return <span style={{ color: "var(--text-accent)" }}>{children}</span>;
+}
+
+function Lead({ children, center = false, max = "720px" }: { children: ReactNode; center?: boolean; max?: string }) {
   return (
-    <p style={{ margin: "0 0 14px", fontFamily: "var(--font-sans-pv)", fontSize: "16px", lineHeight: 1.85, color: "var(--text-muted)" }}>
+    <p
+      style={{
+        margin: center ? "0 auto 14px" : "0 0 14px",
+        maxWidth: max,
+        fontFamily: "var(--font-sans-pv)",
+        fontSize: "15.5px",
+        lineHeight: 1.85,
+        color: "var(--text-muted)",
+        ...(center ? { textAlign: "center" as const } : null),
+      }}
+    >
       {children}
     </p>
   );
@@ -66,21 +130,21 @@ export default async function Home() {
   if (userId) redirect("/dashboard");
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--surface-page)" }}>
-      {/* top bar */}
+    <main style={{ minHeight: "100vh", background: "var(--surface-page)", overflowX: "hidden" }}>
+      {/* ── top bar ───────────────────────────────────────────── */}
       <header
         style={{
           position: "sticky",
           top: 0,
           zIndex: 30,
-          background: "color-mix(in srgb, var(--surface-page) 88%, transparent)",
-          backdropFilter: "blur(10px)",
+          background: "color-mix(in srgb, var(--surface-page) 86%, transparent)",
+          backdropFilter: "blur(12px)",
           borderBottom: "1px solid var(--border-hairline)",
         }}
       >
-        <div style={{ maxWidth: "1060px", margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="lp-shell" style={{ padding: "13px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
           <span style={{ fontFamily: "var(--font-sans-pv)", fontSize: "19px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: ".02em" }}>
-            LINK<span style={{ color: "var(--text-accent)" }}>MVP</span>
+            LINK<Accent>MVP</Accent>
           </span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
             <Link href="/login"><Button variant="ghost" size="sm">เข้าสู่ระบบ</Button></Link>
@@ -89,120 +153,227 @@ export default async function Home() {
         </div>
       </header>
 
-      {/* 1 — hero */}
-      <Section style={{ position: "relative", overflow: "hidden", paddingTop: "clamp(48px, 7vw, 80px)" }}>
-        <span
-          aria-hidden="true"
-          style={{ position: "absolute", top: "-220px", left: "50%", transform: "translateX(-50%)", width: "min(900px, 120vw)", height: "460px", background: "radial-gradient(ellipse at center, var(--green-tint-3) 0%, transparent 70%)", pointerEvents: "none" }}
-        />
-        <div style={{ position: "relative", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Pill tone="soft" icon="⚡">Sales Page Management Platform</Pill>
-          <h1 style={{ margin: "18px 0 0", maxWidth: "780px", fontFamily: "var(--font-sans-pv)", fontSize: "clamp(30px, 5.2vw, 50px)", fontWeight: 700, lineHeight: 1.35, color: "var(--text-primary)", textWrap: "balance" }}>
+      {/* ── 1 · hero ──────────────────────────────────────────── */}
+      <section style={{ position: "relative", overflow: "hidden", padding: "clamp(52px, 8vw, 96px) 0 0" }}>
+        <span aria-hidden="true" className="lp-grid-bg" />
+        <span aria-hidden="true" className="lp-beams">
+          <span className="lp-beam lp-beam-1" />
+          <span className="lp-beam lp-beam-2" />
+          <span className="lp-beam lp-beam-3" />
+          <span className="lp-beam lp-beam-4" />
+          <span className="lp-beam-core lp-beam-core-l" />
+          <span className="lp-beam-core lp-beam-core-r" />
+        </span>
+        <div className="lp-shell" style={{ position: "relative", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Eyebrow>⚡ Sales Page Management Platform</Eyebrow>
+          <h1
+            style={{
+              margin: "4px 0 0",
+              maxWidth: "820px",
+              fontFamily: "var(--font-sans-pv)",
+              fontSize: "clamp(31px, 5.4vw, 54px)",
+              fontWeight: 700,
+              lineHeight: 1.32,
+              color: "var(--text-primary)",
+              textWrap: "balance",
+            }}
+          >
             <span style={{ display: "inline-block" }}>สร้างเซลเพจง่าย ๆ</span>{" "}
-            <span style={{ display: "inline-block" }}>จัดการทุกหน้าได้ในที่เดียว</span>{" "}
-            <span style={{ display: "inline-block" }}>ด้วย <span style={{ color: "var(--text-accent)" }}>LINKMVP</span></span>
+            <span style={{ display: "inline-block" }}>จัดการทุกหน้า</span>{" "}
+            <span style={{ display: "inline-block" }}><Accent>ในที่เดียว.</Accent></span>
           </h1>
-          <p style={{ margin: "20px 0 0", maxWidth: "720px", fontFamily: "var(--font-sans-pv)", fontSize: "16px", lineHeight: 1.85, color: "var(--text-muted)" }}>
-            แพลตฟอร์มสร้างและจัดการหน้า Sales Page สำหรับธุรกิจออนไลน์ ช่วยให้คุณสร้าง ปรับแต่ง และอัปเดตหน้าเซลเพจได้อย่างสะดวกผ่านระบบหลังบ้านเดียว ไม่ต้องเสียเวลาแก้ไขเว็บไซต์ทีละหน้า
-          </p>
-          <p style={{ margin: "10px 0 0", maxWidth: "720px", fontFamily: "var(--font-sans-pv)", fontSize: "16px", lineHeight: 1.85, color: "var(--text-muted)" }}>
-            จัดการเนื้อหา Section ปรับโทนสี เพิ่มรีวิวลูกค้า ตั้งค่า Pixel และติดตามสถิติผู้เข้าชมได้ครบในระบบเดียว
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "12px", marginTop: "30px" }}>
-            <Link href="/register"><Button variant="primary" size="lg">เริ่มต้นใช้งาน</Button></Link>
-            <Link href="/login"><Button variant="outline" size="lg">ดูตัวอย่างระบบ</Button></Link>
+          <Lead center max="640px">
+            แพลตฟอร์มสร้างและจัดการหน้า Sales Page สำหรับธุรกิจออนไลน์ ปรับ Section โทนสี รีวิว และ Pixel
+            ได้จากหลังบ้านเดียว ไม่ต้องเสียเวลาแก้ไขเว็บไซต์ทีละหน้า
+          </Lead>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", margin: "14px 0 26px" }}>
+            <Link href="/register"><Button variant="primary" size="lg" icon="⚡">เริ่มต้นใช้งานฟรี</Button></Link>
+            <Link href="/login"><Button variant="outline" size="lg">เข้าสู่ระบบหลังบ้าน</Button></Link>
+          </div>
+          <div className="lp-chips">
+            <span className="lp-chip"><b>◆</b> จัดเรียง Section</span>
+            <span className="lp-chip"><b>◆</b> โทนสีเว็บไซต์</span>
+            <span className="lp-chip"><b>◆</b> Tracking Pixel</span>
+            <span className="lp-chip"><b>◆</b> รีวิวลูกค้า</span>
+            <span className="lp-chip"><b>◆</b> สถิติผู้เข้าชม</span>
+          </div>
+        </div>
+
+        {/* admin preview */}
+        <div className="lp-shell" style={{ position: "relative", marginTop: "clamp(34px, 5vw, 56px)" }}>
+          <div className="lp-window">
+            <div className="lp-window-bar">
+              <span className="lp-dot" /><span className="lp-dot" /><span className="lp-dot" />
+              <span style={{ marginLeft: "10px", font: "500 12.5px/1 var(--font-sans-pv)", color: "var(--text-muted)" }}>
+                PageVIP Pro — LINKMVP · ระบบจัดการหลังบ้าน
+              </span>
+            </div>
+            <div className="lp-window-body">
+              <nav className="lp-window-nav" aria-hidden="true">
+                <span className="lp-nav-item" data-on="1">Dashboard</span>
+                <span className="lp-nav-item">วันใช้งาน</span>
+                <span className="lp-nav-item">จัดเรียง Section</span>
+                <span className="lp-nav-item">โทนสีเว็บไซต์</span>
+                <span className="lp-nav-item">ใส่ Pixel</span>
+                <span className="lp-nav-item">ตั้งค่าหลัก</span>
+              </nav>
+              <div style={{ padding: "16px", display: "grid", gap: "9px" }} aria-hidden="true">
+                <div className="lp-row">หัวเว็บไซต์<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">รูปภาพหลัก<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">ข้อความหน้าเว็บ<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">รีวิวลูกค้า<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">วิดีโอจาก YouTube<span className="lp-switch" /></div>
+                <div className="lp-row">ปุ่มสมัคร / ทักไลน์<span className="lp-switch" data-on="1" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span aria-hidden="true" className="lp-glow" style={{ bottom: "-320px" }} />
+      </section>
+
+      {/* ── 2 · what it is ────────────────────────────────────── */}
+      <Section style={{ borderTop: "1px solid var(--border-hairline)", marginTop: "clamp(40px, 6vw, 70px)" }}>
+        <div style={{ display: "grid", gap: "28px", gridTemplateColumns: "1fr", alignItems: "start" }}>
+          <div style={{ maxWidth: "860px" }}>
+            <Eyebrow>แนะนำระบบ</Eyebrow>
+            <H2>ระบบสร้างเซลเพจ ที่ทำให้การขายออนไลน์ <Accent>จัดการง่ายขึ้น</Accent></H2>
+            <Lead max="860px">
+              การทำธุรกิจออนไลน์ในปัจจุบัน การมีหน้าเซลเพจที่นำเสนอสินค้าและบริการได้อย่างน่าสนใจเป็นสิ่งสำคัญ
+              LINKMVP จึงถูกพัฒนาขึ้นเพื่อช่วยให้เจ้าของธุรกิจ นักการตลาด และผู้ขายสินค้าออนไลน์
+              สามารถจัดการหน้าเซลเพจได้อย่างเป็นระบบ
+            </Lead>
+            <Lead max="860px">
+              ไม่ว่าจะเป็นการแก้ไขข้อความ ปรับเปลี่ยนรูปภาพ จัดเรียงส่วนประกอบของหน้าเว็บไซต์ หรืออัปเดตข้อมูลต่าง ๆ
+              ก็สามารถดำเนินการผ่านระบบหลังบ้านได้อย่างสะดวก ลดขั้นตอนการทำงาน
+              และเพิ่มความคล่องตัวในการทำการตลาดออนไลน์
+            </Lead>
           </div>
         </div>
       </Section>
 
-      {/* 2 — what it is */}
+      {/* ── 3 · features ──────────────────────────────────────── */}
       <Section style={{ borderTop: "1px solid var(--border-hairline)" }}>
-        <div style={{ maxWidth: "820px" }}>
-          <Eyebrow>แนะนำระบบ</Eyebrow>
-          <H2>ระบบสร้างเซลเพจที่ช่วยให้การขายออนไลน์จัดการง่ายขึ้น</H2>
-          <Lead>
-            การทำธุรกิจออนไลน์ในปัจจุบัน การมีหน้าเซลเพจที่นำเสนอสินค้าและบริการได้อย่างน่าสนใจเป็นสิ่งสำคัญ LINKMVP จึงถูกพัฒนาขึ้นเพื่อช่วยให้เจ้าของธุรกิจ นักการตลาด และผู้ขายสินค้าออนไลน์ สามารถจัดการหน้าเซลเพจได้อย่างเป็นระบบ
-          </Lead>
-          <Lead>
-            ไม่ว่าจะเป็นการแก้ไขข้อความ ปรับเปลี่ยนรูปภาพ จัดเรียงส่วนประกอบของหน้าเว็บไซต์ หรืออัปเดตข้อมูลต่าง ๆ ก็สามารถดำเนินการผ่านระบบหลังบ้านได้อย่างสะดวก
-          </Lead>
-          <Lead>
-            LINKMVP ช่วยให้คุณบริหารจัดการหน้าเซลเพจได้จากจุดเดียว ลดขั้นตอนการทำงาน และเพิ่มความคล่องตัวในการทำการตลาดออนไลน์
-          </Lead>
+        <Eyebrow>จุดเด่นของ LINKMVP</Eyebrow>
+        <H2>ทุกเครื่องมือจัดการเซลเพจ <Accent>รวมไว้ในแพลตฟอร์มเดียว</Accent></H2>
+        <Lead max="760px">
+          เครื่องมือที่จำเป็นต่อการดูแลหน้าขายสินค้า ถูกรวมไว้ในหลังบ้านชุดเดียว เปิดใช้ส่วนไหนก็ได้ตามที่ธุรกิจของคุณต้องการ
+        </Lead>
+        <div className="lp-panel" style={{ marginTop: "26px" }}>
+          <div className="lp-panel-head">ฟีเจอร์ที่พร้อมใช้งานในระบบหลังบ้าน</div>
+          <div className="lp-cards lp-cards-3">
+            {FEATURES.map((f) => (
+              <article className="lp-card" key={f.title}>
+                <span
+                  aria-hidden="true"
+                  style={{ display: "inline-grid", placeItems: "center", width: "42px", height: "42px", borderRadius: "12px", border: "1px solid var(--border-accent)", background: "var(--green-900)", fontSize: "19px", marginBottom: "14px" }}
+                >
+                  {f.icon}
+                </span>
+                <h3 style={{ margin: "0 0 9px", fontFamily: "var(--font-sans-pv)", fontSize: "18px", fontWeight: 700, lineHeight: 1.45, color: "var(--text-primary)" }}>{f.title}</h3>
+                <p style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "14.5px", lineHeight: 1.75, color: "var(--text-muted)" }}>{f.body}</p>
+                <ul className="lp-ticks">
+                  {f.ticks.map((t) => <li key={t}>{t}</li>)}
+                </ul>
+              </article>
+            ))}
+          </div>
         </div>
       </Section>
 
-      {/* 3 — features */}
-      <Section style={{ background: "var(--surface-accent-soft)", borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <Eyebrow>จุดเด่นของ LINKMVP</Eyebrow>
-          <H2>ทุกเครื่องมือจัดการเซลเพจ รวมไว้ในแพลตฟอร์มเดียว</H2>
+      {/* ── 4 · capabilities band ─────────────────────────────── */}
+      <section style={{ background: "var(--surface-accent-soft)", borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)", padding: "clamp(50px, 7vw, 86px) 0" }}>
+        <div className="lp-shell">
+          <Eyebrow>ระบบทำอะไรได้บ้าง</Eyebrow>
+          <H2>จัดการหน้าเซลเพจได้ครบ <Accent>จากศูนย์กลางเดียว</Accent></H2>
+          <Lead max="820px">
+            ไม่ต้องเสียเวลาจัดการเว็บไซต์หลายส่วนแยกจากกัน LINKMVP รวบรวมเครื่องมือสำคัญสำหรับการดูแลหน้าเซลเพจไว้ในระบบหลังบ้านเดียว
+          </Lead>
+          <div className="lp-cards" style={{ marginTop: "26px" }}>
+            {CAPABILITIES.map((c) => (
+              <div key={c.label} style={{ border: "1px solid var(--border-hairline)", borderRadius: "16px", background: "color-mix(in srgb, var(--surface-card) 70%, transparent)", padding: "22px 20px" }}>
+                <div style={{ fontFamily: "var(--font-sans-pv)", fontSize: "34px", fontWeight: 700, lineHeight: 1.1, color: "var(--text-primary)" }}>{c.big}</div>
+                <div style={{ margin: "4px 0 8px", fontFamily: "var(--font-sans-pv)", fontSize: "12px", fontWeight: 700, letterSpacing: ".1em", color: "var(--text-accent)" }}>{c.label}</div>
+                <p style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "14px", lineHeight: 1.7, color: "var(--text-muted)" }}>{c.note}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "18px" }}>
-          {FEATURES.map((f, i) => (
-            <article
-              key={f.title}
-              style={{ background: "var(--surface-card)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-card)", padding: "26px 24px" }}
-            >
-              <span
-                aria-hidden="true"
-                style={{ display: "inline-grid", placeItems: "center", width: "40px", height: "40px", borderRadius: "var(--radius-badge)", background: "var(--surface-primary)", color: "var(--text-on-primary)", fontFamily: "var(--font-sans-pv)", fontSize: "17px", fontWeight: 700, marginBottom: "16px" }}
-              >
-                {i + 1}
-              </span>
-              <h3 style={{ margin: "0 0 10px", fontFamily: "var(--font-sans-pv)", fontSize: "18px", fontWeight: 700, lineHeight: 1.45, color: "var(--text-primary)" }}>{f.title}</h3>
-              <p style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "15px", lineHeight: 1.75, color: "var(--text-muted)" }}>{f.body}</p>
-            </article>
-          ))}
-        </div>
-      </Section>
+      </section>
 
-      {/* 4 — who it is for */}
+      {/* ── 5 · audience ──────────────────────────────────────── */}
       <Section>
-        <div style={{ maxWidth: "820px", marginBottom: "32px" }}>
-          <Eyebrow>ประโยชน์สำหรับธุรกิจ</Eyebrow>
-          <H2>เหมาะสำหรับใครที่ต้องการทำหน้าเซลเพจอย่างมืออาชีพ</H2>
-          <Lead>LINKMVP ออกแบบมาเพื่อรองรับการทำงานของธุรกิจออนไลน์หลากหลายรูปแบบ</Lead>
-        </div>
-        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "14px" }}>
+        <Eyebrow>ประโยชน์สำหรับธุรกิจ</Eyebrow>
+        <H2>เหมาะสำหรับใคร <Accent>ที่ต้องการทำเซลเพจอย่างมืออาชีพ</Accent></H2>
+        <Lead max="760px">LINKMVP ออกแบบมาเพื่อรองรับการทำงานของธุรกิจออนไลน์หลากหลายรูปแบบ</Lead>
+        <ul className="lp-cards lp-cards-3" style={{ listStyle: "none", margin: "26px 0 0", padding: 0 }}>
           {AUDIENCE.map((a) => (
-            <li
-              key={a.who}
-              style={{ display: "flex", gap: "14px", alignItems: "flex-start", background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "18px 20px" }}
-            >
-              <span aria-hidden="true" style={{ flexShrink: 0, marginTop: "3px", width: "22px", height: "22px", display: "grid", placeItems: "center", borderRadius: "50%", background: "var(--green-tint-3)", color: "var(--text-accent)", fontSize: "13px", fontWeight: 700 }}>✓</span>
-              <span>
-                <strong style={{ display: "block", fontFamily: "var(--font-sans-pv)", fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>{a.who}</strong>
-                <span style={{ fontFamily: "var(--font-sans-pv)", fontSize: "14.5px", lineHeight: 1.7, color: "var(--text-muted)" }}>{a.what}</span>
-              </span>
+            <li className="lp-card" key={a.who} style={{ padding: "20px" }}>
+              <span aria-hidden="true" style={{ display: "inline-grid", placeItems: "center", width: "26px", height: "26px", borderRadius: "50%", background: "var(--green-tint-3)", color: "var(--text-accent)", fontSize: "13px", fontWeight: 700, marginBottom: "12px" }}>✓</span>
+              <strong style={{ display: "block", marginBottom: "5px", fontFamily: "var(--font-sans-pv)", fontSize: "16.5px", fontWeight: 700, color: "var(--text-primary)" }}>{a.who}</strong>
+              <span style={{ fontFamily: "var(--font-sans-pv)", fontSize: "14.5px", lineHeight: 1.7, color: "var(--text-muted)" }}>{a.what}</span>
             </li>
           ))}
         </ul>
       </Section>
 
-      {/* 5 + 6 — backend, why choose */}
-      <Section style={{ background: "var(--surface-accent-soft)", borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: "28px" }}>
-          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-card)", padding: "30px 28px" }}>
+      {/* ── 6 · why choose ────────────────────────────────────── */}
+      <Section style={{ borderTop: "1px solid var(--border-hairline)" }}>
+        <div className="lp-cards" style={{ gridTemplateColumns: undefined }}>
+          <div className="lp-card" style={{ padding: "30px 28px", borderColor: "var(--border-accent)" }}>
             <Eyebrow>ระบบจัดการหลังบ้าน</Eyebrow>
-            <H2>จัดการหน้าเซลเพจได้จากศูนย์กลางเดียว</H2>
-            <Lead>ไม่ต้องเสียเวลาจัดการเว็บไซต์หลายส่วนแยกจากกัน LINKMVP ช่วยรวบรวมเครื่องมือสำคัญสำหรับการดูแลหน้าเซลเพจไว้ในระบบหลังบ้านเดียว</Lead>
-            <Lead>คุณสามารถจัดการองค์ประกอบของหน้าเว็บไซต์ ปรับแต่งรูปแบบการนำเสนอ อัปเดตเนื้อหา และดูแลข้อมูลที่เกี่ยวข้องกับการตลาดได้อย่างสะดวก</Lead>
-            <p style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "16px", fontWeight: 600, lineHeight: 1.7, color: "var(--text-accent)" }}>
+            <H2>ปรับแต่งได้ทุกส่วน <Accent>โดยไม่ต้องแตะโค้ด</Accent></H2>
+            <Lead>
+              คุณสามารถจัดการองค์ประกอบของหน้าเว็บไซต์ ปรับแต่งรูปแบบการนำเสนอ อัปเดตเนื้อหา
+              และดูแลข้อมูลที่เกี่ยวข้องกับการตลาดได้อย่างสะดวกจากหน้าเดียว
+            </Lead>
+            <p style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "15.5px", fontWeight: 600, lineHeight: 1.7, color: "var(--text-accent)" }}>
               จัดการง่ายขึ้น ทำงานเป็นระบบมากขึ้น ด้วย LINKMVP
             </p>
           </div>
-          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-card)", padding: "30px 28px" }}>
+          <div className="lp-card" style={{ padding: "30px 28px" }}>
             <Eyebrow>ทำไมต้องเลือก LINKMVP</Eyebrow>
-            <H2>เปลี่ยนการจัดการเซลเพจที่ยุ่งยาก ให้เป็นเรื่องง่าย</H2>
-            <Lead>การสร้างหน้าเว็บไซต์ขายสินค้าไม่จำเป็นต้องเริ่มต้นจากการเขียนโค้ดหรือแก้ไขเว็บไซต์ด้วยขั้นตอนที่ซับซ้อนเสมอไป</Lead>
-            <Lead>LINKMVP ช่วยให้คุณจัดการส่วนต่าง ๆ ของหน้าเซลเพจผ่านระบบหลังบ้านที่ออกแบบมาเพื่อการบริหารจัดการโดยเฉพาะ</Lead>
-            <Lead>ไม่ว่าคุณจะดูแลหน้าเซลเพจเพียงหน้าเดียว หรือมีหลายหน้าที่ต้องอัปเดตอยู่เป็นประจำ การมีระบบจัดการส่วนกลางจะช่วยให้การทำงานสะดวกและเป็นระเบียบมากยิ่งขึ้น</Lead>
+            <H2>เปลี่ยนงานที่ยุ่งยาก <Accent>ให้เป็นเรื่องง่าย</Accent></H2>
+            <Lead>
+              การสร้างหน้าเว็บไซต์ขายสินค้าไม่จำเป็นต้องเริ่มจากการเขียนโค้ดหรือแก้ไขเว็บไซต์ด้วยขั้นตอนที่ซับซ้อนเสมอไป
+            </Lead>
+            <Lead>
+              ไม่ว่าคุณจะดูแลหน้าเซลเพจเพียงหน้าเดียว หรือมีหลายหน้าที่ต้องอัปเดตเป็นประจำ
+              การมีระบบจัดการส่วนกลางจะช่วยให้การทำงานสะดวกและเป็นระเบียบมากขึ้น
+            </Lead>
           </div>
         </div>
       </Section>
 
-      {/* 7 — CTA */}
+      {/* ── 7 · steps ─────────────────────────────────────────── */}
+      <Section style={{ borderTop: "1px solid var(--border-hairline)" }}>
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Eyebrow>เริ่มต้นอย่างไร</Eyebrow>
+          <H2 center>3 ขั้นตอนง่าย ๆ <br /><Accent>เริ่มใช้งานได้เลย</Accent></H2>
+          <Lead center max="620px">ไม่ต้องติดตั้งโปรแกรมเพิ่ม ใช้งานผ่านเบราว์เซอร์ได้ทันทีทั้งคอมและมือถือ</Lead>
+        </div>
+        <div className="lp-cards lp-cards-3" style={{ marginTop: "30px" }}>
+          {STEPS.map((s) => (
+            <article className="lp-card" key={s.no}>
+              <span className="lp-step-no">{s.no}</span>
+              <h3 style={{ margin: "10px 0 8px", fontFamily: "var(--font-sans-pv)", fontSize: "18px", fontWeight: 700, lineHeight: 1.45, color: "var(--text-primary)" }}>{s.title}</h3>
+              <p style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "14.5px", lineHeight: 1.75, color: "var(--text-muted)" }}>{s.body}</p>
+            </article>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── 8 · FAQ ───────────────────────────────────────────── */}
+      <Section style={{ borderTop: "1px solid var(--border-hairline)" }}>
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "30px" }}>
+          <Eyebrow>FAQ</Eyebrow>
+          <H2 center>คำถามที่พบบ่อย <br /><Accent>ตอบชัดเจนทุกประเด็น</Accent></H2>
+        </div>
+        <div style={{ maxWidth: "860px", margin: "0 auto" }}>
+          <HomeFaq />
+        </div>
+      </Section>
+
+      {/* ── 9 · closing CTA ───────────────────────────────────── */}
       <Section>
         <div
           style={{
@@ -211,46 +382,46 @@ export default async function Home() {
             textAlign: "center",
             background: "var(--surface-accent-header)",
             border: "1px solid var(--border-accent)",
-            borderRadius: "var(--radius-card)",
-            padding: "clamp(40px, 6vw, 64px) 24px",
+            borderRadius: "22px",
+            padding: "clamp(42px, 6vw, 72px) 24px",
           }}
         >
-          <H2>พร้อมยกระดับการจัดการเซลเพจของคุณแล้วหรือยัง?</H2>
-          <p style={{ margin: "0 auto 8px", maxWidth: "680px", fontFamily: "var(--font-sans-pv)", fontSize: "16px", lineHeight: 1.85, color: "var(--text-body)" }}>
-            เริ่มต้นใช้งาน LINKMVP แพลตฟอร์มสร้างและจัดการหน้าเซลเพจที่ช่วยให้ธุรกิจออนไลน์ของคุณทำงานได้ง่ายขึ้น
-          </p>
-          <p style={{ margin: "0 auto 26px", maxWidth: "680px", fontFamily: "var(--font-sans-pv)", fontSize: "16px", lineHeight: 1.85, color: "var(--text-body)" }}>
-            จัดการทุกอย่างจากหลังบ้านเดียว พร้อมปรับแต่งหน้าเว็บไซต์ให้เหมาะกับธุรกิจของคุณ
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "12px" }}>
-            <Link href="/register"><Button variant="primary" size="lg">เริ่มต้นใช้งาน</Button></Link>
-            <Link href="/login"><Button variant="white" size="lg">เข้าสู่ระบบ</Button></Link>
+          <span aria-hidden="true" className="lp-glow" style={{ bottom: "-340px" }} />
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <Eyebrow>พร้อมเริ่มแล้วหรือยัง</Eyebrow>
+            <H2 center>
+              พร้อมยกระดับการจัดการเซลเพจ <br />
+              <Accent>ให้จบในที่เดียวหรือยัง?</Accent>
+            </H2>
+            <Lead center max="640px">
+              เริ่มต้นใช้งาน LINKMVP แพลตฟอร์มสร้างและจัดการหน้าเซลเพจ ที่ช่วยให้ธุรกิจออนไลน์ของคุณทำงานได้ง่ายขึ้น
+              จัดการทุกอย่างจากหลังบ้านเดียว
+            </Lead>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", marginTop: "8px" }}>
+              <Link href="/register"><Button variant="primary" size="lg" icon="⚡">เริ่มต้นใช้งานฟรี</Button></Link>
+              <Link href="/login"><Button variant="white" size="lg">เข้าสู่ระบบ</Button></Link>
+            </div>
           </div>
         </div>
       </Section>
 
-      {/* 8 — FAQ */}
-      <Section style={{ borderTop: "1px solid var(--border-hairline)" }}>
-        <div style={{ textAlign: "center", marginBottom: "36px" }}>
-          <Eyebrow>คำถามที่พบบ่อย</Eyebrow>
-          <H2>FAQ</H2>
-        </div>
-        <div style={{ maxWidth: "820px", margin: "0 auto" }}>
-          <HomeFaq />
-        </div>
-      </Section>
-
-      {/* footer */}
-      <footer style={{ borderTop: "1px solid var(--border-hairline)", background: "var(--surface-card)" }}>
-        <div style={{ maxWidth: "1060px", margin: "0 auto", padding: "44px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
-          <span style={{ fontFamily: "var(--font-sans-pv)", fontSize: "18px", fontWeight: 700, color: "var(--text-primary)" }}>
-            LINK<span style={{ color: "var(--text-accent)" }}>MVP</span> <span style={{ fontWeight: 400, color: "var(--text-muted)" }}>– Sales Page Management Platform</span>
-          </span>
-          <p style={{ margin: 0, maxWidth: "760px", fontFamily: "var(--font-sans-pv)", fontSize: "14.5px", lineHeight: 1.8, color: "var(--text-muted)" }}>
-            ระบบสร้างและจัดการหน้าเซลเพจสำหรับธุรกิจออนไลน์ ช่วยให้การบริหารหน้าเว็บไซต์ขายสินค้าเป็นเรื่องง่าย จัดการเนื้อหา Section โทนสี Pixel รีวิว และสถิติผู้เข้าชมได้จากระบบหลังบ้านเดียว
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "center", fontFamily: "var(--font-sans-pv)", fontSize: "14.5px" }}>
-            <a href="https://linkmvp.shop/" target="_blank" rel="noopener noreferrer">https://linkmvp.shop/</a>
+      {/* ── footer ────────────────────────────────────────────── */}
+      <footer style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--border-hairline)", background: "var(--surface-card)" }}>
+        <span aria-hidden="true" className="lp-aurora-wrap">
+          <span className="lp-aurora-haze" />
+          <span className="lp-aurora-line" />
+        </span>
+        <div className="lp-shell" style={{ position: "relative", padding: "48px 20px 40px", display: "flex", flexWrap: "wrap", gap: "20px", alignItems: "flex-start" }}>
+          <div style={{ flex: "1 1 320px" }}>
+            <span style={{ display: "block", marginBottom: "8px", fontFamily: "var(--font-sans-pv)", fontSize: "18px", fontWeight: 700, color: "var(--text-primary)" }}>
+              LINK<Accent>MVP</Accent>
+            </span>
+            <p style={{ margin: 0, maxWidth: "520px", fontFamily: "var(--font-sans-pv)", fontSize: "14px", lineHeight: 1.8, color: "var(--text-muted)" }}>
+              ระบบสร้างและจัดการหน้าเซลเพจสำหรับธุรกิจออนไลน์ จัดการเนื้อหา Section โทนสี Pixel รีวิว และสถิติผู้เข้าชมได้จากระบบหลังบ้านเดียว
+            </p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "18px", alignItems: "center", fontFamily: "var(--font-sans-pv)", fontSize: "14px", marginLeft: "auto" }}>
+            <a href="https://linkmvp.shop/" target="_blank" rel="noopener noreferrer">linkmvp.shop</a>
             <Link href="/register" style={{ color: "var(--text-muted)" }}>เริ่มต้นใช้งาน</Link>
             <Link href="/login" style={{ color: "var(--text-muted)" }}>เข้าสู่ระบบ</Link>
           </div>

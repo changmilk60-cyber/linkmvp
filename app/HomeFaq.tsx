@@ -32,7 +32,7 @@ const ITEMS = [
 export default function HomeFaq() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       {ITEMS.map((it, i) => {
         const isOpen = open === i;
         return (
@@ -41,7 +41,7 @@ export default function HomeFaq() {
             style={{
               background: "var(--surface-card)",
               border: "1px solid " + (isOpen ? "var(--border-accent)" : "var(--border-hairline)"),
-              borderRadius: "var(--radius-card)",
+              borderRadius: "14px",
               overflow: "hidden",
               transition: "var(--transition-control)",
             }}
@@ -54,19 +54,20 @@ export default function HomeFaq() {
                 width: "100%",
                 background: "transparent",
                 border: 0,
-                padding: "20px 22px",
+                padding: "18px 20px",
                 display: "flex",
                 alignItems: "center",
                 gap: "14px",
                 cursor: "pointer",
                 textAlign: "left",
                 fontFamily: "var(--font-sans-pv)",
-                fontSize: "17px",
+                fontSize: "16px",
                 fontWeight: 600,
                 lineHeight: 1.5,
                 color: "var(--text-primary)",
               }}
             >
+              <span aria-hidden="true" style={{ flexShrink: 0, width: "7px", height: "7px", borderRadius: "50%", background: "var(--text-accent)" }} />
               <span style={{ flex: 1 }}>{it.q}</span>
               <span
                 aria-hidden="true"
@@ -91,7 +92,7 @@ export default function HomeFaq() {
               <p
                 style={{
                   margin: 0,
-                  padding: "0 22px 20px",
+                  padding: "0 20px 18px 41px",
                   fontFamily: "var(--font-sans-pv)",
                   fontSize: "15px",
                   lineHeight: 1.75,
