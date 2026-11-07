@@ -791,18 +791,23 @@ function UrlPanel({ pageId, slug, baseUrl }: { pageId: string; slug: string; bas
       <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)" }}>
         <label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>URL ปัจจุบัน</label>
         <TextInput mono readOnly value={`${baseUrl.replace(/^https?:\/\//, "")}/${slug}`} />
-        <form action={formAction} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "var(--gap-grid)", alignItems: "end", marginTop: "12px" }}>
+        {/* No password here on purpose. It was the only action in the admin
+            that asked for one, it bought little (the owner is already signed
+            in), and a text box sitting in front of a password box made the
+            browser treat the pair as a login form — Chrome filled the name
+            with the saved account e-mail, which would have published that
+            address as the public URL. A tick box guards the one thing that
+            actually matters: the old link stops working for good. */}
+        <form action={formAction} style={{ marginTop: "12px" }}>
           <input type="hidden" name="pageId" value={pageId} />
-          {/* A plain text input sitting directly in front of a password input
-              looks like a sign-in form to the browser, so Chrome was filling
-              this box with the saved account e-mail and the box next to it with
-              the saved password. Submitted unnoticed that would turn the public
-              sales-page URL into the owner's e-mail address. autoComplete="off"
-              on the name and "new-password" on the confirmation stop the pair
-              from being treated as credentials. */}
-          <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>ชื่อลิงก์ใหม่</label><TextInput name="newSlug" placeholder="เช่น new-name" autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} data-1p-ignore data-lpignore="true" /></div>
-          <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>รหัสผ่านยืนยัน</label><TextInput name="confirmPassword" type="password" autoComplete="new-password" /></div>
-          <Button type="submit" variant="primary">เปลี่ยนชื่อ URL</Button>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: "var(--gap-grid)", alignItems: "end" }}>
+            <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>ชื่อลิงก์ใหม่</label><TextInput name="newSlug" placeholder="เช่น new-name" autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} data-1p-ignore data-lpignore="true" /></div>
+            <Button type="submit" variant="primary">เปลี่ยนชื่อ URL</Button>
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: "9px", marginTop: "12px", cursor: "pointer", font: "var(--text-label)", color: "var(--text-body)" }}>
+            <input type="checkbox" name="confirmBreak" value="yes" style={{ width: "17px", height: "17px", accentColor: "var(--green-500)", cursor: "pointer", flexShrink: 0 }} />
+            ฉันเข้าใจว่าลิงก์เดิมจะใช้ไม่ได้อีก
+          </label>
         </form>
         {state?.error ? <p style={{ color: "var(--text-danger)", font: "var(--text-hint)", margin: "8px 0 0" }}>{state.error}</p> : null}
         {state?.success ? <p style={{ color: "var(--text-accent)", font: "var(--text-hint)", margin: "8px 0 0" }}>เปลี่ยนชื่อ URL แล้ว — หน้าอาจต้องโหลดใหม่เพื่อเห็นค่าล่าสุด</p> : null}

@@ -123,14 +123,17 @@ export async function renameSlugAction(_prevState: ActionState, formData: FormDa
 
   const pageId = String(formData.get("pageId") || "");
   const newSlugRaw = String(formData.get("newSlug") || "");
-  const confirmPassword = String(formData.get("confirmPassword") || "");
+  const confirmBreak = formData.get("confirmBreak");
 
   const page = await prisma.page.findFirst({ where: { id: pageId, userId } });
   if (!page) return { error: "ไม่พบหน้านี้" };
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user || !(await verifyPassword(confirmPassword, user.passwordHash))) {
-    return { error: "รหัสผ่านไม่ถูกต้อง" };
+  // Renaming is the one change here that cannot be undone: every link already
+  // shared — ads, LINE, Facebook posts — starts returning 404 the moment it
+  // goes through. The owner is already signed in, so a password proves
+  // nothing extra; what matters is that they meant to break those links.
+  if (!confirmBreak) {
+    return { error: "กรุณาติ๊กยืนยันว่าเข้าใจว่าลิงก์เดิมจะใช้ไม่ได้อีก ก่อนเปลี่ยนชื่อ URL" };
   }
 
   // cleanSlug would quietly turn "someone@gmail.com" into
