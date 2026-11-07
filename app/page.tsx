@@ -23,7 +23,7 @@ const FEATURES = [
     icon: "🎨",
     title: "ปรับแต่งโทนสีเว็บไซต์",
     body: "เปลี่ยนสีและรูปแบบการนำเสนอให้เข้ากับแบรนด์หรือสินค้า เพื่อสร้างเอกลักษณ์ให้หน้าเซลเพจของคุณ",
-    ticks: ["เลือกสีพื้นหลังและปุ่มได้", "ปรับสีตัวอักษรแยกส่วน", "เห็นผลทันทีที่บันทึก"],
+    ticks: ["เลือกได้ 12 โทนสำเร็จรูป", "ปรับสีตัวอักษรแยกส่วน", "เห็นผลทันทีที่บันทึก"],
   },
   {
     icon: "🗂️",
@@ -35,19 +35,19 @@ const FEATURES = [
     icon: "📊",
     title: "รองรับการติดตั้ง Tracking Pixel",
     body: "ตั้งค่า Pixel สำหรับติดตามผลทางการตลาดตามการรองรับของระบบ เพื่อนำข้อมูลไปวิเคราะห์และปรับปรุงแคมเปญโฆษณา",
-    ticks: ["ใส่ Facebook Pixel ID ได้", "ยิง Event ตอนกดปุ่ม", "ใช้ร่วมกับ Ads Manager"],
+    ticks: ["ใส่ Meta Pixel ID (Facebook)", "ยิง Event ตอนกดปุ่มสมัคร", "ปุ่ม LINE ส่งเป็น Contact"],
   },
   {
     icon: "⭐",
     title: "จัดการรีวิวลูกค้า",
     body: "ดูแลส่วนแสดงรีวิวและความคิดเห็นจากลูกค้า เพื่อช่วยนำเสนอข้อมูลประกอบการตัดสินใจซื้อ",
-    ticks: ["เพิ่ม-ลบรีวิวได้เอง", "ตั้งค่าการแสดงผล", "จัดวางร่วมกับ Section อื่น"],
+    ticks: ["เพิ่มรีวิวพร้อมจำนวนดาว", "สุ่มสลับรีวิวอัตโนมัติ", "จัดวางร่วมกับ Section อื่น"],
   },
   {
     icon: "📈",
     title: "ดูสถิติผู้เข้าชมเว็บไซต์",
     body: "ตรวจสอบสถิติผู้เข้าชมหน้าเซลเพจ เพื่อเข้าใจการเข้าถึงเว็บไซต์และนำข้อมูลไปปรับปรุงการตลาด",
-    ticks: ["นับยอดเข้าชมหน้าเพจ", "นับการคลิกปุ่ม", "ดูได้จากหน้า Dashboard"],
+    ticks: ["ผู้เข้าชมวันนี้และทั้งหมด", "คลิกปุ่มสมัครและปุ่ม LINE", "กราฟ 7 วันย้อนหลัง + CTR"],
   },
 ];
 
@@ -62,7 +62,7 @@ const AUDIENCE = [
 const CAPABILITIES = [
   { big: "17", label: "SECTION", note: "ส่วนประกอบหน้าเซลเพจที่เปิด-ปิดและจัดลำดับได้เอง" },
   { big: "0", label: "LINES OF CODE", note: "ไม่ต้องเขียนโค้ดหรือแก้ไฟล์เว็บไซต์เลยสักบรรทัด" },
-  { big: "2", label: "THEME MODES", note: "สลับธีมสว่าง / ธีมมืด ในระบบหลังบ้านได้ตามถนัด" },
+  { big: "12", label: "THEME PRESETS", note: "โทนสีสำเร็จรูปที่เปลี่ยนทั้งหน้าเซลเพจให้เข้าชุดกันทันที" },
   { big: "1", label: "DASHBOARD", note: "เนื้อหา โทนสี Pixel รีวิว และสถิติ อยู่ในที่เดียวกัน" },
 ];
 
@@ -192,9 +192,9 @@ export default async function Home() {
           </div>
           <div className="lp-chips">
             <span className="lp-chip"><b>◆</b> จัดเรียง Section</span>
-            <span className="lp-chip"><b>◆</b> โทนสีเว็บไซต์</span>
+            <span className="lp-chip"><b>◆</b> โทนสีเว็บไซต์ 12 แบบ</span>
             <span className="lp-chip"><b>◆</b> Tracking Pixel</span>
-            <span className="lp-chip"><b>◆</b> รีวิวลูกค้า</span>
+            <span className="lp-chip"><b>◆</b> รีวิวแบบสุ่ม</span>
             <span className="lp-chip"><b>◆</b> สถิติผู้เข้าชม</span>
           </div>
         </div>
@@ -210,20 +210,20 @@ export default async function Home() {
             </div>
             <div className="lp-window-body">
               <nav className="lp-window-nav" aria-hidden="true">
-                <span className="lp-nav-item" data-on="1">Dashboard</span>
-                <span className="lp-nav-item">วันใช้งาน</span>
-                <span className="lp-nav-item">จัดเรียง Section</span>
-                <span className="lp-nav-item">โทนสีเว็บไซต์</span>
-                <span className="lp-nav-item">ใส่ Pixel</span>
-                <span className="lp-nav-item">ตั้งค่าหลัก</span>
+                <span className="lp-nav-item" data-on="1">📐 จัดเรียง Section</span>
+                <span className="lp-nav-item">📊 Dashboard</span>
+                <span className="lp-nav-item">🎨 โทนสีเว็บไซต์</span>
+                <span className="lp-nav-item">🖌 ปรับสีตัวอักษร</span>
+                <span className="lp-nav-item">🍪 ใส่ Pixel</span>
+                <span className="lp-nav-item">⚙ ตั้งค่าหลัก</span>
               </nav>
               <div style={{ padding: "16px", display: "grid", gap: "9px" }} aria-hidden="true">
-                <div className="lp-row">หัวเว็บไซต์<span className="lp-switch" data-on="1" /></div>
-                <div className="lp-row">รูปภาพหลัก<span className="lp-switch" data-on="1" /></div>
-                <div className="lp-row">ข้อความหน้าเว็บ<span className="lp-switch" data-on="1" /></div>
-                <div className="lp-row">รีวิวลูกค้า<span className="lp-switch" data-on="1" /></div>
-                <div className="lp-row">วิดีโอจาก YouTube<span className="lp-switch" /></div>
-                <div className="lp-row">ปุ่มสมัคร / ทักไลน์<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">🔝 หัวเว็บ<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">🖼 รูปหลัก<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">📝 ข้อความ 1<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">⭐ รีวิวแบบสุ่ม<span className="lp-switch" data-on="1" /></div>
+                <div className="lp-row">🎬 วีดีโอ YouTube<span className="lp-switch" /></div>
+                <div className="lp-row">⚪ ปุ่มสมัคร + LINE<span className="lp-switch" data-on="1" /></div>
               </div>
             </div>
           </div>
