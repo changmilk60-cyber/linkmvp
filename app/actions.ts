@@ -133,6 +133,13 @@ export async function renameSlugAction(_prevState: ActionState, formData: FormDa
     return { error: "รหัสผ่านไม่ถูกต้อง" };
   }
 
+  // cleanSlug would quietly turn "someone@gmail.com" into
+  // "someone-gmail-com" and publish the owner's address as the public URL.
+  // Refuse anything that looks like an e-mail rather than mangling it.
+  if (newSlugRaw.includes("@")) {
+    return { error: "ชื่อ URL ห้ามมีเครื่องหมาย @ (อย่าใช้อีเมลเป็นชื่อลิงก์ เพราะคนทั่วไปจะเห็น)" };
+  }
+
   const newSlug = cleanSlug(newSlugRaw);
   if (!SLUG_RE.test(newSlug)) {
     return { error: "ตัวย่อ URL ใช้ได้เฉพาะ a-z, 0-9, - และ _ (3-32 ตัวอักษร)" };

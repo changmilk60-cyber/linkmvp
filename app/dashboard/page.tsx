@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { getSessionUserId } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -64,7 +65,15 @@ export default async function DashboardPage() {
     table: [...days7].reverse().map((d) => [d.slice(5).replace("-", "/"), signupByDay[d] || 0, lineByDay[d] || 0]) as [string, number, number][],
   };
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  // The sales-page URL shown here has to match the domain the owner actually
+  // uses. NEXT_PUBLIC_BASE_URL is a single baked-in value, so once a custom
+  // domain is added it keeps printing the old railway.app host. Read the host
+  // the dashboard was requested on instead, exactly as the sales page does for
+  // its OG tags, and keep the env var only as a fallback.
+  const h = headers();
+  const host = h.get("x-forwarded-host") || h.get("host");
+  const proto = h.get("x-forwarded-proto") || (host && /^(localhost|127\.)/.test(host) ? "http" : "https");
+  const baseUrl = host ? `${proto}://${host}` : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
   // Formatted on the server so the client renders the same string it was sent —
   // a locale-dependent date built in the browser would differ on hydration.

@@ -793,8 +793,15 @@ function UrlPanel({ pageId, slug, baseUrl }: { pageId: string; slug: string; bas
         <TextInput mono readOnly value={`${baseUrl.replace(/^https?:\/\//, "")}/${slug}`} />
         <form action={formAction} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "var(--gap-grid)", alignItems: "end", marginTop: "12px" }}>
           <input type="hidden" name="pageId" value={pageId} />
-          <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>ชื่อลิงก์ใหม่</label><TextInput name="newSlug" placeholder="เช่น new-name" /></div>
-          <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>รหัสผ่านยืนยัน</label><TextInput name="confirmPassword" type="password" /></div>
+          {/* A plain text input sitting directly in front of a password input
+              looks like a sign-in form to the browser, so Chrome was filling
+              this box with the saved account e-mail and the box next to it with
+              the saved password. Submitted unnoticed that would turn the public
+              sales-page URL into the owner's e-mail address. autoComplete="off"
+              on the name and "new-password" on the confirmation stop the pair
+              from being treated as credentials. */}
+          <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>ชื่อลิงก์ใหม่</label><TextInput name="newSlug" placeholder="เช่น new-name" autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} data-1p-ignore data-lpignore="true" /></div>
+          <div><label style={{ display: "block", font: "var(--text-label)", color: "var(--text-accent)", marginBottom: "8px" }}>รหัสผ่านยืนยัน</label><TextInput name="confirmPassword" type="password" autoComplete="new-password" /></div>
           <Button type="submit" variant="primary">เปลี่ยนชื่อ URL</Button>
         </form>
         {state?.error ? <p style={{ color: "var(--text-danger)", font: "var(--text-hint)", margin: "8px 0 0" }}>{state.error}</p> : null}
