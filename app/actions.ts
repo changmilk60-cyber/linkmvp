@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { checkLoginAllowed, clearLoginFailures, clientIp, recordLoginFailure } from "@/lib/rate-limit";
 import { parseMetaPixelIds } from "@/lib/meta-pixel";
 import {
   createSession,
@@ -84,15 +86,34 @@ export async function registerAction(_prevState: ActionState, formData: FormData
   redirect("/dashboard");
 }
 
+function waitMessage(retryInSec: number) {
+  const mins = Math.max(1, Math.ceil(retryInSec / 60));
+  return `ลองผิดหลายครั้งเกินไป กรุณารออีกประมาณ ${mins} นาทีแล้วลองใหม่`;
+}
+
 export async function loginAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
 
+  const ip = clientIp(headers());
+  const gate = checkLoginAllowed(ip, email);
+  if (gate.blocked) return { error: waitMessage(gate.retryInSec || 900) };
+
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return { error: "ไม่พบบัญชีนี้" };
+  // A wrong address counts as a failed attempt too, otherwise the limiter can
+  // be sidestepped by guessing e-mails, and "ไม่พบบัญชีนี้" tells an attacker
+  // which addresses are registered.
+  if (!user) {
+    recordLoginFailure(ip, email);
+    return { error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
+  }
 
   const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) return { error: "รหัสผ่านไม่ถูกต้อง" };
+  if (!ok) {
+    recordLoginFailure(ip, email);
+    return { error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" };
+  }
+  clearLoginFailures(ip, email);
   if (user.disabled) return { error: "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อแอดมิน" };
 
   await createSession(user.id);

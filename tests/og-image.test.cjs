@@ -17,6 +17,13 @@ function setup(owned = true) {
     'next/cache': { revalidatePath: (path) => invalidated.push(path) },
     'next/navigation': { redirect: () => { throw new Error('redirect'); } },
     '@/lib/meta-pixel': {}, '@/lib/url': {}, '@/lib/sections': {}, nanoid: {},
+    'next/headers': { headers: () => new Headers() },
+    '@/lib/rate-limit': {
+      checkLoginAllowed: () => ({ blocked: false, retryInSec: 0 }),
+      recordLoginFailure: () => {},
+      clearLoginFailures: () => {},
+      clientIp: () => 'test',
+    },
   };
   const context = { exports: {}, FormData, File, process, require: (name) => name in imports ? imports[name] : require(name) };
   const source = ts.transpileModule(fs.readFileSync('app/actions.ts', 'utf8'), {
