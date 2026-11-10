@@ -9,6 +9,7 @@ import {
   destroySession,
   getSessionUserId,
   hashPassword,
+  sessionCutoffNow,
   verifyPassword,
 } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -71,7 +72,10 @@ export async function registerAction(_prevState: ActionState, formData: FormData
   if (existing) return { error: "อีเมลนี้ถูกใช้งานแล้ว" };
 
   const passwordHash = await hashPassword(password);
-  const user = await prisma.user.create({ data: { email, passwordHash } });
+  // Stored at second resolution to line up with the session token's `iat`.
+  const user = await prisma.user.create({
+    data: { email, passwordHash, passwordChangedAt: sessionCutoffNow() },
+  });
 
   const slug = await newRandomSlug();
   await prisma.page.create({

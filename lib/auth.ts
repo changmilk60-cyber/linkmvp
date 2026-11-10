@@ -29,6 +29,20 @@ export function sessionCutoffNow(): Date {
   return new Date(Math.floor(Date.now() / 1000) * 1000);
 }
 
+/**
+ * Is a token older than the account's password?
+ *
+ * A JWT's `iat` is whole seconds, while passwordChangedAt can carry
+ * milliseconds — the database default writes them. Comparing the two directly
+ * makes a token minted in the same second look older by up to 999ms, which
+ * rejected the session handed out at sign-up. Both sides are rounded down to
+ * the second so only a genuinely later password change counts.
+ */
+export function isTokenStale(iatSeconds: number | undefined, passwordChangedAt: Date): boolean {
+  if (typeof iatSeconds !== "number") return true;
+  return iatSeconds < Math.floor(passwordChangedAt.getTime() / 1000);
+}
+
 export async function createSession(userId: string) {
   const token = await new SignJWT({ userId })
     .setProtectedHeader({ alg })
@@ -73,8 +87,7 @@ export async function getSessionUserId(): Promise<string | null> {
     });
     if (!user || user.disabled) return null;
 
-    const issuedAtMs = typeof payload.iat === "number" ? payload.iat * 1000 : 0;
-    if (issuedAtMs < user.passwordChangedAt.getTime()) return null;
+    if (isTokenStale(payload.iat, user.passwordChangedAt)) return null;
 
     return userId;
   } catch {
