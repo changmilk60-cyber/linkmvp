@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useFormState } from "react-dom";
 import Link from "next/link";
 import { Button, SectionCard, TextInput } from "@/components/ds";
-import { updateLicenseAction, setDisabledAction } from "./actions";
+import { updateLicenseAction, setDisabledAction, resetPasswordAction } from "./actions";
 
 type Item = {
   pageId: string;
@@ -41,7 +41,83 @@ const ACTION_LABEL: Record<string, string> = {
   set_license: "ตั้งวันหมดอายุ",
   disable: "ระงับการใช้งาน",
   enable: "ปลดระงับ",
+  reset_password: "ตั้งรหัสผ่านใหม่",
 };
+
+/** Readable but mixed — avoids 0/O and 1/l/I so it survives being read aloud
+ *  or copied out of a chat message by hand. */
+function suggestPassword(len = 12) {
+  const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint32Array(len);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (n) => alphabet[n % alphabet.length]).join("");
+}
+
+function PasswordResetter({ item, onDone }: { item: Item; onDone: () => void }) {
+  const [state, formAction] = useFormState(resetPasswordAction, {});
+  const [pw, setPw] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <form action={formAction} style={{ marginTop: "10px", background: "var(--surface-field)", border: "1px solid var(--border-danger)", borderRadius: "var(--radius-inset)", padding: "14px" }}>
+      <input type="hidden" name="userId" value={item.userId} />
+      <p style={{ margin: "0 0 10px", font: "var(--text-hint)", color: "var(--text-warning)" }}>
+        ⚠ ตั้งรหัสผ่านใหม่ให้ <strong>{item.email}</strong> — รหัสเดิมจะใช้ไม่ได้ทันที
+        และอุปกรณ์ที่ล็อกอินค้างอยู่จะถูกตัดออกทั้งหมด
+      </p>
+
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+        <input
+          name="newPassword"
+          type="text"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)"
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          style={{ flex: "1 1 220px", background: "var(--surface-field)", border: "1px solid var(--border-field)", borderRadius: "var(--radius-field)", padding: "var(--pad-field)", color: "var(--text-body)", font: "var(--fw-regular) var(--fs-body)/1.4 var(--font-mono)" }}
+        />
+        <Button type="button" variant="ghost" size="sm" onClick={() => { setPw(suggestPassword()); setCopied(false); }}>
+          สุ่มรหัสให้
+        </Button>
+      </div>
+
+      <label style={{ display: "flex", alignItems: "center", gap: "9px", marginTop: "12px", cursor: "pointer", font: "var(--text-label)", color: "var(--text-body)" }}>
+        <input type="checkbox" name="confirm" value="yes" style={{ width: "17px", height: "17px", accentColor: "var(--green-500)", cursor: "pointer", flexShrink: 0 }} />
+        ยืนยันตั้งรหัสผ่านใหม่ให้บัญชีนี้
+      </label>
+
+      <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+        <Button type="submit" variant="primary" size="sm">ตั้งรหัสผ่านใหม่</Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onDone}>ปิด</Button>
+      </div>
+
+      {state?.error ? <p style={{ margin: "10px 0 0", color: "var(--text-danger)", font: "var(--text-hint)" }}>{state.error}</p> : null}
+      {state?.success ? (
+        <div style={{ marginTop: "12px", background: "var(--surface-inset)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-inset)", padding: "12px" }}>
+          <p style={{ margin: "0 0 8px", color: "var(--text-accent)", font: "var(--text-hint)" }}>{state.success}</p>
+          {state.reveal ? (
+            <>
+              <p style={{ margin: "0 0 6px", font: "var(--text-hint)", color: "var(--text-muted)" }}>
+                รหัสผ่านใหม่ — แสดงครั้งเดียว ระบบไม่ได้เก็บไว้ที่ไหน คัดลอกส่งให้เจ้าของบัญชีเลย
+              </p>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                <code style={{ flex: "1 1 200px", background: "var(--surface-field)", border: "1px solid var(--border-field)", borderRadius: "var(--radius-field)", padding: "10px 12px", color: "var(--text-accent-bright)", font: "var(--fw-bold) var(--fs-body)/1.4 var(--font-mono)", overflowWrap: "anywhere" }}>
+                  {state.reveal}
+                </code>
+                <Button type="button" variant="outline" size="sm"
+                  onClick={() => { navigator.clipboard?.writeText(state.reveal as string).then(() => setCopied(true)).catch(() => undefined); }}>
+                  {copied ? "คัดลอกแล้ว ✓" : "คัดลอก"}
+                </Button>
+              </div>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </form>
+  );
+}
 
 function Stat({ label, value, tone }: { label: string; value: number; tone?: string }) {
   return (
@@ -144,7 +220,7 @@ function DisableButton({ item }: { item: Item }) {
 }
 
 function Row({ item, baseUrl }: { item: Item; baseUrl: string }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<"" | "license" | "password">("");
   const s = STATUS[item.status];
   return (
     <div style={{ background: "var(--surface-card)", border: "1px solid " + (item.disabled ? "var(--border-danger)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "14px 16px", opacity: item.disabled ? 0.72 : 1 }}>
@@ -166,13 +242,19 @@ function Row({ item, baseUrl }: { item: Item; baseUrl: string }) {
           </div>
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          <Button type="button" variant={open ? "outline" : "primary"} size="sm" onClick={() => setOpen(!open)}>
-            {open ? "ยกเลิก" : "แก้วันหมดอายุ"}
+          <Button type="button" variant={open === "license" ? "outline" : "primary"} size="sm"
+            onClick={() => setOpen(open === "license" ? "" : "license")}>
+            {open === "license" ? "ยกเลิก" : "แก้วันหมดอายุ"}
+          </Button>
+          <Button type="button" variant="ghost" size="sm"
+            onClick={() => setOpen(open === "password" ? "" : "password")}>
+            {open === "password" ? "ยกเลิก" : "ตั้งรหัสผ่านใหม่"}
           </Button>
           <DisableButton item={item} />
         </div>
       </div>
-      {open ? <LicenseEditor item={item} onDone={() => setOpen(false)} /> : null}
+      {open === "license" ? <LicenseEditor item={item} onDone={() => setOpen("")} /> : null}
+      {open === "password" ? <PasswordResetter item={item} onDone={() => setOpen("")} /> : null}
     </div>
   );
 }

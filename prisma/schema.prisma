@@ -21,6 +21,12 @@ model User {
   // and every Visit row, which cannot be undone.
   disabled Boolean @default(false)
 
+  // Session cut-off. The session JWT carries only a user id and an issued-at,
+  // and changing the password does not touch the cookie — so without this a
+  // reset would leave whoever already had a session still signed in for up to
+  // 30 days. Tokens issued before this moment are refused.
+  passwordChangedAt DateTime @default(now())
+
   pages        Page[]
 }
 

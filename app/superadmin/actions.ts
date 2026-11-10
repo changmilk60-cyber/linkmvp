@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireSuperadmin, type SessionUser } from "@/lib/auth";
+import { createSession, hashPassword, requireSuperadmin, sessionCutoffNow, type SessionUser } from "@/lib/auth";
 import { endOfDayUTC, extendBy, fmtDate } from "@/lib/license";
 
-type ActionState = { error?: string; success?: string };
+type ActionState = { error?: string; success?: string; reveal?: string };
 
 const MAX_EXTEND_DAYS = 3650; // ten years — a typo guard, not a policy
 
@@ -113,4 +113,65 @@ export async function setDisabledAction(
 
   revalidatePath("/superadmin");
   return { success: `${target.email}: ${disabled ? "ระงับการใช้งานแล้ว" : "ปลดระงับแล้ว"}` };
+}
+
+
+const MIN_PASSWORD = 6;
+
+/**
+ * Set a new password for any account.
+ *
+ * The plaintext is hashed on arrival and is never written to the audit log or
+ * anywhere else — the only place it is ever shown is the one response that
+ * goes back to the superadmin who typed it, so they can pass it on.
+ *
+ * Stamping passwordChangedAt is what actually locks the old holder out: the
+ * session cookie is valid for 30 days and knows nothing about the password,
+ * so without this the reset would not end the sessions already open.
+ */
+export async function resetPasswordAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await requireSuperadmin();
+
+  if (!formData.get("confirm")) {
+    return { error: "กรุณาติ๊กยืนยันก่อนตั้งรหัสผ่านใหม่" };
+  }
+
+  const userId = String(formData.get("userId") || "");
+  const password = String(formData.get("newPassword") || "");
+
+  if (password.length < MIN_PASSWORD) {
+    return { error: `รหัสผ่านต้องยาวอย่างน้อย ${MIN_PASSWORD} ตัวอักษร` };
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true },
+  });
+  if (!target) return { error: "ไม่พบผู้ใช้นี้" };
+
+  const cutoff = sessionCutoffNow();
+  await prisma.user.update({
+    where: { id: target.id },
+    data: { passwordHash: await hashPassword(password), passwordChangedAt: cutoff },
+  });
+
+  // The password itself is deliberately absent from the audit row.
+  await audit(actor, "reset_password", target, null, "ตั้งรหัสผ่านใหม่");
+
+  // Resetting your own password would otherwise sign you out mid-task, since
+  // the cut-off invalidates the cookie you are holding. Mint a fresh one.
+  if (target.id === actor.id) {
+    await createSession(actor.id);
+  }
+
+  revalidatePath("/superadmin");
+  return {
+    success: `ตั้งรหัสผ่านใหม่ให้ ${target.email} แล้ว — ${
+      target.id === actor.id ? "บัญชีของคุณเอง" : "อุปกรณ์ที่ล็อกอินค้างอยู่ถูกตัดออกทั้งหมด"
+    }`,
+    reveal: password,
+  };
 }

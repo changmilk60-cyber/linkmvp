@@ -23,6 +23,12 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
+/** Whole seconds, matching the resolution of the JWT's `iat` claim, so a
+ *  token minted in the same instant as a password change is not refused. */
+export function sessionCutoffNow(): Date {
+  return new Date(Math.floor(Date.now() / 1000) * 1000);
+}
+
 export async function createSession(userId: string) {
   const token = await new SignJWT({ userId })
     .setProtectedHeader({ alg })
@@ -43,12 +49,34 @@ export async function destroySession() {
   cookies().delete(COOKIE_NAME);
 }
 
+/**
+ * The signed-in user's id, or null.
+ *
+ * Verifying the signature is not enough on its own: the cookie lives for 30
+ * days and carries nothing but a user id, so a suspended account or one whose
+ * password was just reset would otherwise keep working until it expired. Both
+ * are checked against the database here, which is the single choke point every
+ * server action already goes through.
+ */
 export async function getSessionUserId(): Promise<string | null> {
   const token = cookies().get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    return (payload.userId as string) ?? null;
+    const userId = (payload.userId as string) ?? null;
+    if (!userId) return null;
+
+    const { prisma } = await import("@/lib/prisma");
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { disabled: true, passwordChangedAt: true },
+    });
+    if (!user || user.disabled) return null;
+
+    const issuedAtMs = typeof payload.iat === "number" ? payload.iat * 1000 : 0;
+    if (issuedAtMs < user.passwordChangedAt.getTime()) return null;
+
+    return userId;
   } catch {
     return null;
   }
