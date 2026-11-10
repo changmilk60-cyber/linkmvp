@@ -3,7 +3,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 import { loginAction } from "@/app/actions";
 import Link from "next/link";
-import { Button, Field, TextInput } from "@/components/ds";
+import { Button, Field, PasswordInput, TextInput } from "@/components/ds";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -27,7 +27,7 @@ export default function LoginPage() {
         </div>
         <form action={formAction} style={{ padding: "var(--pad-card)", display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
           <Field label="อีเมล" boxed={false}><TextInput name="email" type="email" required /></Field>
-          <Field label="รหัสผ่าน" boxed={false}><TextInput name="password" type="password" required /></Field>
+          <Field label="รหัสผ่าน" boxed={false}><PasswordInput name="password" required autoComplete="current-password" /></Field>
           {state?.error ? <p style={{ margin: 0, color: "var(--text-danger)", font: "var(--text-hint)" }}>{state.error}</p> : null}
           <SubmitButton />
           <p style={{ margin: "4px 0 0", textAlign: "center", font: "var(--text-hint)", color: "var(--text-muted)" }}>

@@ -296,3 +296,86 @@ export function ImageUploadField({
     </div>
   );
 }
+
+/**
+ * Password box with a show/hide toggle.
+ *
+ * Typing a password blind is the main reason people get locked out, and the
+ * sign-in form now locks an account after five wrong tries — so being able to
+ * check what was typed is worth more here than it used to be.
+ *
+ * The toggle is a real button so it can be reached by keyboard, and it is
+ * type="button" so pressing it never submits the form. The input keeps its
+ * name and value either way, so switching to text changes only what is drawn
+ * on screen, never what is sent.
+ */
+export function PasswordInput({
+  name,
+  required = false,
+  minLength,
+  placeholder,
+  autoComplete,
+  style,
+  ...rest
+}: {
+  name?: string;
+  required?: boolean;
+  minLength?: number;
+  placeholder?: string;
+  autoComplete?: string;
+  style?: CSSProperties;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "style" | "value" | "defaultValue" | "onChange">) {
+  const [shown, setShown] = useState(false);
+  return (
+    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+      <TextInput
+        name={name}
+        type={shown ? "text" : "password"}
+        required={required}
+        minLength={minLength}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        // Room for the button so a long password never runs underneath it.
+        style={{ paddingRight: "46px", ...style }}
+        {...rest}
+      />
+      <button
+        type="button"
+        onClick={() => setShown((v) => !v)}
+        aria-label={shown ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+        aria-pressed={shown}
+        title={shown ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+        style={{
+          position: "absolute",
+          right: "6px",
+          display: "grid",
+          placeItems: "center",
+          width: "34px",
+          height: "34px",
+          padding: 0,
+          border: 0,
+          borderRadius: "var(--radius-field)",
+          background: "transparent",
+          color: shown ? "var(--text-accent)" : "var(--text-muted)",
+          cursor: "pointer",
+          transition: "var(--transition-control)",
+        }}
+      >
+        {shown ? (
+          // eye with a stroke through it
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 3l18 18" />
+            <path d="M10.6 10.6a2 2 0 002.8 2.8" />
+            <path d="M9.4 5.2A9.6 9.6 0 0112 5c5 0 9 4.5 9 7a11.4 11.4 0 01-2.4 3.4" />
+            <path d="M6.3 6.8C3.9 8.3 3 10.4 3 12c0 2.5 4 7 9 7a9.3 9.3 0 004.3-1" />
+          </svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 12s3.6-7 9-7 9 7 9 7-3.6 7-9 7-9-7-9-7z" />
+            <circle cx="12" cy="12" r="2.6" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
