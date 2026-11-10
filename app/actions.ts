@@ -93,6 +93,7 @@ export async function loginAction(_prevState: ActionState, formData: FormData): 
 
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) return { error: "รหัสผ่านไม่ถูกต้อง" };
+  if (user.disabled) return { error: "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อแอดมิน" };
 
   await createSession(user.id);
   redirect("/dashboard");

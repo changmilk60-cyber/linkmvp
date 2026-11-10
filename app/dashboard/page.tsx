@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { getSessionUserId } from "@/lib/auth";
+import { getSessionUser, isSuperadmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateOwnPage } from "@/app/actions";
@@ -7,8 +7,12 @@ import { lastNDays, parseSections, todayUTC } from "@/lib/sections";
 import AdminClient from "./AdminClient";
 
 export default async function DashboardPage() {
-  const userId = await getSessionUserId();
-  if (!userId) redirect("/login");
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) redirect("/login");
+  // A suspension has to take effect on the session already open, not only at
+  // the next sign-in — the cookie is valid for 30 days.
+  if (sessionUser.disabled) redirect("/login");
+  const userId = sessionUser.id;
 
   const page = await getOrCreateOwnPage(userId);
 
@@ -122,6 +126,7 @@ export default async function DashboardPage() {
       }}
       stats={stats}
       baseUrl={baseUrl}
+      superadmin={isSuperadmin(sessionUser)}
     />
   );
 }

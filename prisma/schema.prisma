@@ -12,7 +12,32 @@ model User {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+
+  // "user" | "superadmin". Authorisation is read from here on every request,
+  // never from the session cookie: that JWT lives for 30 days, so a role baked
+  // into it would keep working for weeks after the role was taken away.
+  role     String  @default("user")
+  // Set instead of deleting an account. Deleting cascades to the owner's Page
+  // and every Visit row, which cannot be undone.
+  disabled Boolean @default(false)
+
   pages        Page[]
+}
+
+// Who changed what, for the actions a superadmin can take. Licence dates are
+// money-adjacent, so "why did my expiry move?" has to be answerable.
+model AdminAudit {
+  id          String   @id @default(cuid())
+  actorId     String
+  actorEmail  String
+  action      String // "extend_license" | "set_license" | "disable" | "enable"
+  targetId    String
+  targetEmail String
+  before      String?
+  after       String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 // One PageVIP Pro sales page + its "หลังบ้านแก้เว็บ" admin settings, per user.

@@ -118,7 +118,7 @@ function d(data: Record<string, unknown>) {
   return data as Record<string, string>;
 }
 
-export default function AdminClient({ page, stats, account, baseUrl }: { page: PageData; stats: Stats; account: AccountInfo; baseUrl: string }) {
+export default function AdminClient({ page, stats, account, baseUrl, superadmin = false }: { page: PageData; stats: Stats; account: AccountInfo; baseUrl: string; superadmin?: boolean }) {
   const [active, setActive] = useState("dashboard");
   const activeItem = NAV_ITEMS.find((i) => i.key === active) ?? NAV_ITEMS[0];
   const show = (key: string) => ({ style: { display: active === key ? "block" : "none" } });
@@ -229,6 +229,11 @@ export default function AdminClient({ page, stats, account, baseUrl }: { page: P
           <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
             <Button variant="primary" icon="👁">พรีวิวหน้าเซลเพจ</Button>
           </a>
+          {/* Only rendered for superadmins, but the route and every one of its
+              actions guard themselves — hiding a link is not access control. */}
+          {superadmin ? (
+            <a href="/superadmin"><Button variant="outline" size="sm" icon="🛡">SUPERADMIN</Button></a>
+          ) : null}
           <form action={logoutAction}><Button variant="ghost" size="sm" type="submit">ออกจากระบบ</Button></form>
         </div>
       </header>
