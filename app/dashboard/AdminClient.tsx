@@ -58,6 +58,7 @@ type PageData = {
   reviewsSubtitle: string | null;
   reviews: { member: string; text: string; stars: string }[];
   licenseExpiresAt: string;
+  neverExpires: boolean;
   daysLeft: number;
 };
 
@@ -223,7 +224,7 @@ export default function AdminClient({ page, stats, account, baseUrl, superadmin 
           never needs a scroll to reach. */}
       <header className="pv-appbar" ref={appbarRef}>
         <h1>linkmvp</h1>
-        <Pill icon="⏰" tone="soft">เหลือ {page.daysLeft} วัน</Pill>
+        <Pill icon={page.neverExpires ? "♾" : "⏰"} tone="soft">{page.neverExpires ? "ถาวร" : `เหลือ ${page.daysLeft} วัน`}</Pill>
         <div className="pv-appbar-actions">
           <SchemeToggle />
           <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
@@ -269,7 +270,7 @@ export default function AdminClient({ page, stats, account, baseUrl, superadmin 
 
         <div id="panel-dashboard" {...show("dashboard")}>
           <SectionCard icon="📊" title="Dashboard สถิติเซลเพจ" subtitle="สรุปผู้เข้าชมและจำนวนการคลิกปุ่ม อัปเดตแบบเรียลไทม์จากผู้เข้าชมจริง" open>
-            <LicenseSummary daysLeft={page.daysLeft} expiresAt={page.licenseExpiresAt} whitepageUrl={page.whitepageRedirectUrl} onGoTo={goTo} />
+            <LicenseSummary daysLeft={page.daysLeft} never={page.neverExpires} expiresAt={page.licenseExpiresAt} whitepageUrl={page.whitepageRedirectUrl} onGoTo={goTo} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: "var(--gap-grid)" }}>
               <StatCard label="ผู้เข้าชมวันนี้" value={stats.viewsToday} note="Session" />
               <StatCard label="ผู้ชมไม่ซ้ำวันนี้" value={stats.uniqueToday} note="ประมาณจากเบราว์เซอร์" />
@@ -278,7 +279,7 @@ export default function AdminClient({ page, stats, account, baseUrl, superadmin 
               <StatCard label="ผู้เข้าชมทั้งหมด" value={stats.viewsAllTime} note="ตั้งแต่เปิดใช้งาน" />
               <StatCard label="อัตราคลิกโดยรวม (CTR)" value={`${stats.ctr}%`} note="คลิกทุกปุ่ม/ผู้เข้าชม" />
               <StatCard label="ผู้ชม 30 วันล่าสุด" value={stats.views30d} note="รวม" />
-              <StatCard label="สถานะ" value={page.daysLeft > 0 ? "ใช้งานได้" : "หมดอายุ"} noteTone="muted" />
+              <StatCard label="สถานะ" value={page.neverExpires ? "ถาวร" : page.daysLeft > 0 ? "ใช้งานได้" : "หมดอายุ"} noteTone="muted" />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "var(--gap-grid)" }}>
               <BarChart title="ผู้เข้าชมย้อนหลัง 7 วัน" height={230} data={stats.chart} />
@@ -300,14 +301,14 @@ export default function AdminClient({ page, stats, account, baseUrl, superadmin 
 
         <div id="panel-account" {...show("account")}>
           <SectionCard icon="👤" title="ข้อมูลบัญชีผู้ใช้งาน" subtitle="บัญชีที่ใช้เข้าระบบ และลิงก์เซลเพจของคุณ" open>
-            <AccountCard account={account} daysLeft={page.daysLeft} expiresAt={page.licenseExpiresAt} />
+            <AccountCard account={account} daysLeft={page.daysLeft} never={page.neverExpires} expiresAt={page.licenseExpiresAt} />
           </SectionCard>
         </div>
 
         <div id="panel-license" {...show("license")}>
           <SectionCard icon="⏰" title="วันใช้งาน (License)" subtitle="วันหมดอายุ และหน้าที่ผู้เข้าชมจะเจอหลังหมดอายุ" open>
             <div style={{ background: "var(--surface-inset)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)" }}>
-              <p style={{ margin: 0, font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>วันหมดอายุปัจจุบัน: <span style={{ color: "var(--text-accent-bright)" }}>{page.licenseExpiresAt}</span> (เหลือ {page.daysLeft} วัน)</p>
+              <p style={{ margin: 0, font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>วันหมดอายุปัจจุบัน: <span style={{ color: "var(--text-accent-bright)" }}>{page.neverExpires ? "ถาวร — ไม่มีวันหมดอายุ" : `${page.licenseExpiresAt} (เหลือ ${page.daysLeft} วัน)`}</span></p>
               <p style={{ margin: "6px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)" }}>ต้องการต่ออายุ กรุณาติดต่อแอดมิน</p>
             </div>
             <Field label="ลิงก์ Redirect หน้า Whitepage" hint="ใช้เฉพาะตอนหมดอายุเท่านั้น — ระบบจะส่งผู้เข้าชมไปยัง URL นี้ทันที หากเว้นว่างจะโชว์หน้าหมดอายุเปล่า" hintTone="body">
@@ -564,7 +565,7 @@ function AccountRow({ label, children }: { label: string; children: ReactNode })
   );
 }
 
-function AccountCard({ account, daysLeft, expiresAt }: { account: AccountInfo; daysLeft: number; expiresAt: string }) {
+function AccountCard({ account, daysLeft, never, expiresAt }: { account: AccountInfo; daysLeft: number; never: boolean; expiresAt: string }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
@@ -582,8 +583,8 @@ function AccountCard({ account, daysLeft, expiresAt }: { account: AccountInfo; d
         <AccountRow label="วันที่สมัครใช้งาน">{account.joinedAt}</AccountRow>
         <AccountRow label="วันที่สร้างเซลเพจ">{account.pageCreatedAt}</AccountRow>
         <AccountRow label="สถานะบัญชี">
-          <span style={{ color: daysLeft > 0 ? "var(--text-accent)" : "var(--text-danger)" }}>
-            {daysLeft > 0 ? `ใช้งานได้ • เหลือ ${daysLeft} วัน` : "หมดอายุแล้ว"}
+          <span style={{ color: never || daysLeft > 0 ? "var(--text-accent)" : "var(--text-danger)" }}>
+            {never ? "ถาวร • ไม่มีวันหมดอายุ" : daysLeft > 0 ? `ใช้งานได้ • เหลือ ${daysLeft} วัน` : "หมดอายุแล้ว"}
           </span>
           <span style={{ display: "block", font: "var(--text-hint)", color: "var(--text-muted)", fontWeight: 400 }}>ถึง {expiresAt}</span>
         </AccountRow>
@@ -603,14 +604,14 @@ function AccountCard({ account, daysLeft, expiresAt }: { account: AccountInfo; d
 
 // Expiry only bites once the licence runs out, and what happens then depends
 // on a field in another panel — so both are shown together on the Dashboard.
-function LicenseSummary({ daysLeft, expiresAt, whitepageUrl, onGoTo }: { daysLeft: number; expiresAt: string; whitepageUrl: string | null; onGoTo: (key: string) => void }) {
-  const soon = daysLeft <= 30;
-  const tone = daysLeft <= 0 ? "var(--text-danger)" : soon ? "var(--text-warning)" : "var(--text-accent)";
+function LicenseSummary({ daysLeft, never, expiresAt, whitepageUrl, onGoTo }: { daysLeft: number; never: boolean; expiresAt: string; whitepageUrl: string | null; onGoTo: (key: string) => void }) {
+  const soon = !never && daysLeft <= 30;
+  const tone = never ? "var(--text-accent-bright)" : daysLeft <= 0 ? "var(--text-danger)" : soon ? "var(--text-warning)" : "var(--text-accent)";
   return (
     <div style={{ background: "var(--surface-inset)", border: "1px solid " + (soon ? "var(--border-accent)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "var(--pad-inset)", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
       <div>
         <p style={{ margin: 0, font: "var(--fw-medium) var(--fs-label)/1.3 var(--font-sans)", color: "var(--text-muted)" }}>วันใช้งานคงเหลือ</p>
-        <p style={{ margin: "6px 0 0", font: "var(--text-stat)", color: tone }}>{daysLeft > 0 ? `${daysLeft} วัน` : "หมดอายุแล้ว"}</p>
+        <p style={{ margin: "6px 0 0", font: "var(--text-stat)", color: tone }}>{never ? "ถาวร" : daysLeft > 0 ? `${daysLeft} วัน` : "หมดอายุแล้ว"}</p>
         <p style={{ margin: "4px 0 0", font: "var(--text-hint)", color: "var(--text-muted)" }}>หมดอายุ {expiresAt}</p>
       </div>
       <div>

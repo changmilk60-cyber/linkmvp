@@ -46,7 +46,7 @@ export async function updateLicenseAction(
 
   const page = await prisma.page.findUnique({
     where: { id: pageId },
-    select: { id: true, slug: true, licenseExpiresAt: true, user: { select: { id: true, email: true } } },
+    select: { id: true, slug: true, licenseExpiresAt: true, licenseNeverExpires: true, user: { select: { id: true, email: true } } },
   });
   if (!page) return { error: "ไม่พบหน้านี้" };
 
@@ -63,21 +63,48 @@ export async function updateLicenseAction(
     const parsed = endOfDayUTC(String(formData.get("date") || ""));
     if (!parsed) return { error: "รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น ปปปป-ดด-วว)" };
     after = parsed;
+  } else if (mode === "forever" || mode === "unforever") {
+    // The stored date is left untouched on both paths, so turning the flag
+    // back off restores whatever expiry the account already had.
+    const never = mode === "forever";
+    if (page.licenseNeverExpires === never) {
+      return { error: never ? "บัญชีนี้เป็นแบบถาวรอยู่แล้ว" : "บัญชีนี้ไม่ได้เป็นแบบถาวรอยู่แล้ว" };
+    }
+    await prisma.page.update({ where: { id: page.id }, data: { licenseNeverExpires: never } });
+    await audit(
+      actor,
+      never ? "set_forever" : "unset_forever",
+      page.user,
+      page.licenseNeverExpires ? "ถาวร" : fmtDate(before),
+      never ? "ถาวร" : fmtDate(before),
+    );
+    revalidatePath("/superadmin");
+    return {
+      success: never
+        ? `${page.user.email}: เปลี่ยนเป็นถาวร ไม่มีวันหมดอายุแล้ว`
+        : `${page.user.email}: ยกเลิกถาวร กลับไปใช้วันหมดอายุ ${fmtDate(before)}`,
+    };
   } else {
     return { error: "คำสั่งไม่ถูกต้อง" };
   }
 
-  await prisma.page.update({ where: { id: page.id }, data: { licenseExpiresAt: after } });
+  await prisma.page.update({
+    where: { id: page.id },
+    // Setting a date is also how a permanent licence is given an end again.
+    data: { licenseExpiresAt: after, licenseNeverExpires: false },
+  });
   await audit(
     actor,
     mode === "add" ? "extend_license" : "set_license",
     page.user,
-    fmtDate(before),
+    page.licenseNeverExpires ? "ถาวร" : fmtDate(before),
     fmtDate(after),
   );
 
   revalidatePath("/superadmin");
-  return { success: `${page.user.email}: ${fmtDate(before)} → ${fmtDate(after)}` };
+  return {
+    success: `${page.user.email}: ${page.licenseNeverExpires ? "ถาวร" : fmtDate(before)} → ${fmtDate(after)}`,
+  };
 }
 
 /** Suspend or restore an account. Never deletes: removing a User cascades to

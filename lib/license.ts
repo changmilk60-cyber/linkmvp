@@ -2,11 +2,15 @@
 
 export const DAY_MS = 86_400_000;
 
-export function daysLeft(expiresAt: Date, now = new Date()): number {
+/** Every helper takes the never-expires flag so no caller can read the date
+ *  on its own and conclude a permanent licence has run out. */
+export function daysLeft(expiresAt: Date, now = new Date(), never = false): number {
+  if (never) return Infinity;
   return Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / DAY_MS));
 }
 
-export function isExpired(expiresAt: Date, now = new Date()): boolean {
+export function isExpired(expiresAt: Date, now = new Date(), never = false): boolean {
+  if (never) return false;
   return expiresAt.getTime() <= now.getTime();
 }
 
@@ -39,9 +43,10 @@ export function fmtDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-export type LicenseStatus = "expired" | "soon" | "ok";
+export type LicenseStatus = "expired" | "soon" | "ok" | "forever";
 
-export function licenseStatus(expiresAt: Date, now = new Date()): LicenseStatus {
+export function licenseStatus(expiresAt: Date, now = new Date(), never = false): LicenseStatus {
+  if (never) return "forever";
   if (isExpired(expiresAt, now)) return "expired";
   return daysLeft(expiresAt, now) <= 7 ? "soon" : "ok";
 }

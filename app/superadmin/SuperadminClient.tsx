@@ -15,8 +15,9 @@ type Item = {
   disabled: boolean;
   joined: string;
   expiresAt: string;
+  never: boolean;
   daysLeft: number;
-  status: "expired" | "soon" | "ok";
+  status: "expired" | "soon" | "ok" | "forever";
   visits: number;
 };
 
@@ -34,6 +35,7 @@ const STATUS: Record<Item["status"], { label: string; color: string; bg: string 
   expired: { label: "หมดอายุแล้ว", color: "var(--text-danger)", bg: "var(--surface-danger-soft)" },
   soon: { label: "ใกล้หมดอายุ", color: "var(--text-warning)", bg: "var(--surface-inset)" },
   ok: { label: "ใช้งานได้", color: "var(--text-accent)", bg: "var(--surface-inset)" },
+  forever: { label: "ถาวร", color: "var(--text-accent-bright)", bg: "var(--surface-inset)" },
 };
 
 const ACTION_LABEL: Record<string, string> = {
@@ -42,6 +44,8 @@ const ACTION_LABEL: Record<string, string> = {
   disable: "ระงับการใช้งาน",
   enable: "ปลดระงับ",
   reset_password: "ตั้งรหัสผ่านใหม่",
+  set_forever: "ตั้งเป็นถาวร",
+  unset_forever: "ยกเลิกถาวร",
 };
 
 /** Readable but mixed — avoids 0/O and 1/l/I so it survives being read aloud
@@ -130,7 +134,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: str
 
 function LicenseEditor({ item, onDone }: { item: Item; onDone: () => void }) {
   const [state, formAction] = useFormState(updateLicenseAction, {});
-  const [mode, setMode] = useState<"add" | "set">("add");
+  const [mode, setMode] = useState<"add" | "set" | "forever" | "unforever">(item.never ? "unforever" : "add");
   const [days, setDays] = useState("30");
   const [date, setDate] = useState(item.expiresAt);
 
@@ -138,6 +142,8 @@ function LicenseEditor({ item, onDone }: { item: Item; onDone: () => void }) {
   // date the server will write: a lapsed licence counts from today, a live
   // one from its own end date.
   const preview = (() => {
+    if (mode === "forever") return "♾ ถาวร ไม่มีวันหมดอายุ";
+    if (mode === "unforever") return `กลับไปใช้วันหมดอายุเดิม ${item.expiresAt}`;
     if (mode === "set") return date || "—";
     const n = Number(days);
     if (!Number.isInteger(n) || n === 0) return "—";
@@ -152,19 +158,29 @@ function LicenseEditor({ item, onDone }: { item: Item; onDone: () => void }) {
       <input type="hidden" name="mode" value={mode} />
 
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
-        {(["add", "set"] as const).map((m) => (
+        {([
+          ["add", "ต่ออายุ (+วัน)"],
+          ["set", "ตั้งวันที่เอง"],
+          item.never ? (["unforever", "♾ ยกเลิกถาวร"] as const) : (["forever", "♾ ตั้งเป็นถาวร"] as const),
+        ] as const).map(([m, label]) => (
           <button
             key={m}
             type="button"
             onClick={() => setMode(m)}
             style={{ padding: "7px 13px", borderRadius: "var(--radius-button)", cursor: "pointer", font: "var(--fw-semibold) var(--fs-hint)/1.1 var(--font-sans)", background: mode === m ? "var(--surface-primary)" : "var(--surface-raised)", color: mode === m ? "var(--text-on-primary)" : "var(--text-muted)", border: "1px solid " + (mode === m ? "var(--border-accent-strong)" : "var(--border-hairline)") }}
           >
-            {m === "add" ? "ต่ออายุ (+วัน)" : "ตั้งวันที่เอง"}
+            {label}
           </button>
         ))}
       </div>
 
-      {mode === "add" ? (
+      {mode === "forever" || mode === "unforever" ? (
+        <p style={{ margin: 0, font: "var(--text-hint)", color: "var(--text-muted)" }}>
+          {mode === "forever"
+            ? "หน้าเซลเพจจะไม่หมดอายุและจะไม่ถูก redirect ไป Whitepage อีก — วันหมดอายุเดิมยังถูกเก็บไว้ ถ้ายกเลิกถาวรภายหลังจะกลับมาใช้ค่าเดิม"
+            : "กลับไปนับวันหมดอายุตามเดิม"}
+        </p>
+      ) : mode === "add" ? (
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
           {[30, 90, 180, 365].map((d) => (
             <button key={d} type="button" onClick={() => setDays(String(d))}
@@ -181,7 +197,7 @@ function LicenseEditor({ item, onDone }: { item: Item; onDone: () => void }) {
       )}
 
       <p style={{ margin: "12px 0 0", font: "var(--fw-semibold) var(--fs-body)/1.5 var(--font-sans)", color: "var(--text-body)" }}>
-        {item.expiresAt} <span style={{ color: "var(--text-accent)" }}>→ {preview}</span>
+        {item.never ? "♾ ถาวร" : item.expiresAt} <span style={{ color: "var(--text-accent)" }}>→ {preview}</span>
         {item.status === "expired" && mode === "add" ? (
           <span style={{ display: "block", font: "var(--text-hint)", color: "var(--text-warning)", marginTop: "4px" }}>
             บัญชีนี้หมดอายุแล้ว — นับวันใหม่จากวันนี้
@@ -191,7 +207,7 @@ function LicenseEditor({ item, onDone }: { item: Item; onDone: () => void }) {
 
       <label style={{ display: "flex", alignItems: "center", gap: "9px", marginTop: "12px", cursor: "pointer", font: "var(--text-label)", color: "var(--text-body)" }}>
         <input type="checkbox" name="confirm" value="yes" style={{ width: "17px", height: "17px", accentColor: "var(--green-500)", cursor: "pointer", flexShrink: 0 }} />
-        ยืนยันเปลี่ยนวันหมดอายุของ {item.email}
+        ยืนยันเปลี่ยนการใช้งานของ {item.email}
       </label>
 
       <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
@@ -236,9 +252,11 @@ function Row({ item, baseUrl }: { item: Item; baseUrl: string }) {
           </a>
         </div>
         <div style={{ flex: "0 0 auto", textAlign: "right" }}>
-          <div style={{ font: "var(--fw-semibold) var(--fs-body)/1.3 var(--font-sans)", color: s.color }}>{item.expiresAt}</div>
+          <div style={{ font: "var(--fw-semibold) var(--fs-body)/1.3 var(--font-sans)", color: s.color }}>
+            {item.never ? "♾ ถาวร" : item.expiresAt}
+          </div>
           <div style={{ font: "var(--text-hint)", color: "var(--text-muted)" }}>
-            {item.status === "expired" ? s.label : `เหลือ ${item.daysLeft} วัน`} · {item.visits} ครั้ง
+            {item.never ? "ไม่มีวันหมดอายุ" : item.status === "expired" ? s.label : `เหลือ ${item.daysLeft} วัน`} · {item.visits} ครั้ง
           </div>
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
@@ -264,7 +282,7 @@ export default function SuperadminClient({
 }: {
   actorEmail: string;
   items: Item[];
-  summary: { total: number; expired: number; soon: number; disabled: number };
+  summary: { total: number; expired: number; soon: number; disabled: number; forever: number };
   baseUrl: string;
   q: string;
   sort: string;
@@ -294,6 +312,7 @@ export default function SuperadminClient({
           <Stat label="หน้าเซลเพจทั้งหมด" value={summary.total} />
           <Stat label="หมดอายุแล้ว" value={summary.expired} tone="var(--text-danger)" />
           <Stat label="ใกล้หมดอายุ (≤7 วัน)" value={summary.soon} tone="var(--text-warning)" />
+          <Stat label="ถาวร (ไม่หมดอายุ)" value={summary.forever} tone="var(--text-accent-bright)" />
           <Stat label="บัญชีที่ถูกระงับ" value={summary.disabled} />
         </div>
 

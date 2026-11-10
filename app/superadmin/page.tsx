@@ -37,13 +37,19 @@ export default async function SuperadminPage({
     prisma.page.findMany({
       where,
       // Soonest to expire first — the view an operator actually works from.
-      orderBy: sort === "newest" ? { createdAt: "desc" } : { licenseExpiresAt: "asc" },
+      // Permanent licences sort to the bottom of the "expiring first" view:
+      // they are never the thing an operator needs to act on.
+      orderBy:
+        sort === "newest"
+          ? { createdAt: "desc" }
+          : [{ licenseNeverExpires: "asc" as const }, { licenseExpiresAt: "asc" as const }],
       skip: (pageNo - 1) * PER_PAGE,
       take: PER_PAGE,
       select: {
         id: true,
         slug: true,
         licenseExpiresAt: true,
+        licenseNeverExpires: true,
         createdAt: true,
         // passwordHash is never selected.
         user: { select: { id: true, email: true, role: true, disabled: true, createdAt: true } },
@@ -68,17 +74,25 @@ export default async function SuperadminPage({
     disabled: r.user.disabled,
     joined: fmtDate(r.user.createdAt),
     expiresAt: fmtDate(r.licenseExpiresAt),
-    daysLeft: daysLeft(r.licenseExpiresAt, now),
-    status: licenseStatus(r.licenseExpiresAt, now),
+    never: r.licenseNeverExpires,
+    daysLeft: r.licenseNeverExpires ? 0 : daysLeft(r.licenseExpiresAt, now),
+    status: licenseStatus(r.licenseExpiresAt, now, r.licenseNeverExpires),
     visits: r._count.visits,
   }));
 
   const summary = {
     total,
-    expired: await prisma.page.count({ where: { licenseExpiresAt: { lte: now } } }),
-    soon: await prisma.page.count({
-      where: { licenseExpiresAt: { gt: now, lte: new Date(now.getTime() + 7 * 86_400_000) } },
+    // Permanent licences are excluded from both warning counts.
+    expired: await prisma.page.count({
+      where: { licenseNeverExpires: false, licenseExpiresAt: { lte: now } },
     }),
+    soon: await prisma.page.count({
+      where: {
+        licenseNeverExpires: false,
+        licenseExpiresAt: { gt: now, lte: new Date(now.getTime() + 7 * 86_400_000) },
+      },
+    }),
+    forever: await prisma.page.count({ where: { licenseNeverExpires: true } }),
     disabled: await prisma.user.count({ where: { disabled: true } }),
   };
 

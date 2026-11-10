@@ -43,7 +43,7 @@ export default async function SlugPage({ params }: { params: { slug: string } })
   const page = await prisma.page.findUnique({ where: { slug: params.slug } });
   if (!page) notFound();
 
-  const expired = page.licenseExpiresAt.getTime() < Date.now();
+  const expired = !page.licenseNeverExpires && page.licenseExpiresAt.getTime() < Date.now();
   if (expired) {
     const whitepage = normalizeExternalUrl(page.whitepageRedirectUrl);
     if (whitepage) redirect(whitepage);

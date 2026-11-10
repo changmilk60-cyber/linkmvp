@@ -55,6 +55,11 @@ model Page {
 
   // ---- license ----
   licenseExpiresAt DateTime @default(dbgenerated("(now() + interval '365 days')"))
+  // A licence that never runs out. Kept as a flag rather than a date far in
+  // the future so "ถาวร" can be said plainly instead of showing a countdown
+  // of several million days, and so the expiry date underneath is preserved
+  // if the flag is ever turned back off.
+  licenseNeverExpires Boolean @default(false)
 
   // ---- appearance ----
   themePreset     String  @default("green-black")

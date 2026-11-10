@@ -84,7 +84,8 @@ export default async function DashboardPage() {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, createdAt: true } });
   const thaiDate = (d: Date) =>
     `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear() + 543}`;
-  const daysLeft = Math.max(0, Math.ceil((page.licenseExpiresAt.getTime() - Date.now()) / 86_400_000));
+  const neverExpires = page.licenseNeverExpires;
+  const daysLeft = neverExpires ? 0 : Math.max(0, Math.ceil((page.licenseExpiresAt.getTime() - Date.now()) / 86_400_000));
 
   return (
     <AdminClient
@@ -116,6 +117,7 @@ export default async function DashboardPage() {
         reviewsSubtitle: page.reviewsSubtitle,
         reviews: page.reviews ? JSON.parse(page.reviews) : [],
         licenseExpiresAt: page.licenseExpiresAt.toISOString().slice(0, 10),
+        neverExpires,
         daysLeft,
       }}
       account={{
