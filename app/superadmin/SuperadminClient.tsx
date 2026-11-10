@@ -18,7 +18,6 @@ type Item = {
   never: boolean;
   daysLeft: number;
   status: "expired" | "soon" | "ok" | "forever";
-  visits: number;
 };
 
 type AuditRow = {
@@ -256,7 +255,7 @@ function Row({ item, baseUrl }: { item: Item; baseUrl: string }) {
             {item.never ? "♾ ถาวร" : item.expiresAt}
           </div>
           <div style={{ font: "var(--text-hint)", color: "var(--text-muted)" }}>
-            {item.never ? "ไม่มีวันหมดอายุ" : item.status === "expired" ? s.label : `เหลือ ${item.daysLeft} วัน`} · {item.visits} ครั้ง
+            {item.never ? "ไม่มีวันหมดอายุ" : item.status === "expired" ? s.label : `เหลือ ${item.daysLeft} วัน`}
           </div>
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>

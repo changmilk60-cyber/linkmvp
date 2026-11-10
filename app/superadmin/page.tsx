@@ -53,7 +53,8 @@ export default async function SuperadminPage({
         createdAt: true,
         // passwordHash is never selected.
         user: { select: { id: true, email: true, role: true, disabled: true, createdAt: true } },
-        _count: { select: { visits: true } },
+        // Visit counts are the customer's own business data and say nothing
+        // about whether a licence needs attention, so they are not read here.
       },
     }),
     prisma.adminAudit.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
@@ -77,7 +78,6 @@ export default async function SuperadminPage({
     never: r.licenseNeverExpires,
     daysLeft: r.licenseNeverExpires ? 0 : daysLeft(r.licenseExpiresAt, now),
     status: licenseStatus(r.licenseExpiresAt, now, r.licenseNeverExpires),
-    visits: r._count.visits,
   }));
 
   const summary = {
