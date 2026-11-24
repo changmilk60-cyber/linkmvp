@@ -82,6 +82,7 @@ export default async function SlugPage({ params }: { params: { slug: string } })
       reviewsSubtitle={page.reviewsSubtitle}
       reviews={reviews}
       fbPixelIds={fbPixelIds}
+      privacyNotice={page.privacyNoticeEnabled}
       ctaLayout={page.ctaLayout === "vertical" ? "vertical" : "horizontal"}
       signupEventName="SignupClick"
     />

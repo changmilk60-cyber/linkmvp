@@ -54,7 +54,7 @@ model Page {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // ---- license ----
-  licenseExpiresAt DateTime @default(dbgenerated("(now() + interval '365 days')"))
+  licenseExpiresAt DateTime @default(dbgenerated("(now() + '365 days'::interval)"))
   // A licence that never runs out. Kept as a flag rather than a date far in
   // the future so "ถาวร" can be said plainly instead of showing a countdown
   // of several million days, and so the expiry date underneath is preserved
@@ -79,6 +79,11 @@ model Page {
   capiEndpointUrl String?
   capiEventName   String  @default("subscribe") // "subscribe" | "purchase"
   ctaLayout       String  @default("horizontal") // "vertical" | "horizontal"
+
+  // ---- privacy notice ----
+  // Small line at the foot of the sales page linking to /privacy. The owner
+  // switches it from the admin.
+  privacyNoticeEnabled Boolean @default(true)
 
   // ---- bot / whitepage cloak ----
   landingUrl           String?

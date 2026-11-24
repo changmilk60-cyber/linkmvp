@@ -44,6 +44,8 @@ type PageData = {
   fbPixelIds: string | null;
   fbPixelCode: string | null;
   fbPixelEnabled: boolean;
+  privacyNoticeEnabled: boolean;
+  privacyUrl: string;
   capiAccessToken: string | null;
   capiEndpointUrl: string | null;
   capiEventName: string;
@@ -109,6 +111,7 @@ const NAV_GROUPS: { group: string; items: { icon: string; label: string; key: st
       { icon: "🔗", label: "เปลี่ยนชื่อ URL", key: "url" },
       { icon: "🍪", label: "ใส่ Pixel", key: "pixel", saves: true },
       { icon: "🔀", label: "เปลี่ยนเส้นทาง", key: "bot", saves: true },
+      { icon: "🛡", label: "นโยบาย PDPA", key: "privacy", saves: true },
       { icon: "⚙", label: "ตั้งค่าหลัก", key: "main", saves: true },
     ],
   },
@@ -386,6 +389,21 @@ export default function AdminClient({ page, stats, account, baseUrl, superadmin 
           </SectionCard>
         </div>
 
+        <div id="panel-privacy" {...show("privacy")}>
+          <SectionCard icon="🛡" title="นโยบายความเป็นส่วนตัว Privacy Policy (PDPA)" subtitle="ข้อความแจ้งท้ายหน้าเซลเพจ และลิงก์นโยบายสำหรับนำไปใช้ที่อื่น" open>
+              <ToggleRow
+                name="privacyNoticeEnabled"
+                title="แสดงข้อความนโยบายความเป็นส่วนตัวท้ายหน้าเซลเพจ"
+                sub="เปิดไว้ = มีข้อความเล็ก ๆ ท้ายหน้าพร้อมลิงก์ไปที่นโยบาย • ปิด = ไม่แสดง • ถ้าหน้านี้ใช้ Meta Pixel แนะนำให้เปิดไว้"
+                defaultChecked={page.privacyNoticeEnabled}
+              />
+              <Field label="ลิงก์นโยบายความเป็นส่วนตัว" hint="คัดลอกไปใส่ในที่ที่ต้องระบุลิงก์นโยบาย เช่น การตั้งค่าโฆษณาหรือฟอร์มของ Facebook" hintTone="body">
+                <CopyField id="privacy-url" value={page.privacyUrl} />
+              </Field>
+              <ScopeSave scope="privacy" onScope={setScope} />
+          </SectionCard>
+        </div>
+
         <div id="panel-main" {...show("main")}>
           <SectionCard title="ตั้งค่าหลัก" subtitle="Tab Title, OG, CAPI และอื่นๆ" open>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "var(--gap-grid)" }}>
@@ -445,6 +463,29 @@ function ScopeSave({ scope, onScope }: { scope: string; onScope: (s: string) => 
     <Button type="submit" variant="quiet" onClick={() => onScope(scope)}>
       บันทึกส่วนนี้
     </Button>
+  );
+}
+
+/** Read-only value with a copy button. Falls back to selecting the text when
+ *  the browser will not let the page write to the clipboard, so Ctrl+C still works. */
+function CopyField({ id, value }: { id: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      (document.getElementById(id) as HTMLInputElement | null)?.select();
+    }
+  }
+  return (
+    <div style={{ display: "flex", gap: "8px", alignItems: "stretch", flexWrap: "wrap" }}>
+      <div style={{ flex: "1 1 260px", minWidth: 0 }}>
+        <TextInput id={id} mono readOnly value={value} onFocus={(e) => e.currentTarget.select()} />
+      </div>
+      <Button type="button" variant="primary" onClick={copy}>{copied ? "คัดลอกแล้ว ✓" : "คัดลอก"}</Button>
+    </div>
   );
 }
 
@@ -779,6 +820,22 @@ function ManualAccordion() {
                 "Layout ปุ่มสมัคร + LINE = เลือกให้ปุ่มทั้งสองเรียงบน–ล่าง (แนวตั้ง) หรือ ซ้าย–ขวา (แนวนอน)",
                 "Event ตอนกดปุ่มสมัคร = ชื่อ Event ที่ส่งเข้า Facebook Pixel เมื่อมีคนกดปุ่มสมัคร (SignupClick — วัดเฉพาะคลิก ไม่ต้องระบุมูลค่าหรือสกุลเงิน) ส่วนปุ่มทัก LINE ส่งเป็น Contact เสมอ",
                 "CAPI Access Token และ ลิงก์ CAPI Endpoint กรอกและบันทึกได้ แต่ตอนนี้ยังไม่ถูกใช้งาน — การส่ง Event ทำจากฝั่งเบราว์เซอร์ผ่าน Pixel เท่านั้น ยังไม่ได้ส่งจากเซิร์ฟเวอร์",
+                "กด “บันทึกส่วนนี้” ทุกครั้งหลังแก้ไข",
+              ]}
+            />
+          ),
+        },
+        {
+          icon: "🛡",
+          title: "นโยบาย PDPA (ข้อความท้ายหน้า + ลิงก์นโยบาย)",
+          body: (
+            <ManualList
+              items={[
+                "สวิตช์ “แสดงข้อความนโยบายความเป็นส่วนตัวท้ายหน้าเซลเพจ” = เปิดแล้วจะมีข้อความเล็ก ๆ ท้ายหน้าพร้อมลิงก์ไปที่นโยบาย ปิดแล้วข้อความจะไม่แสดง",
+                "ข้อความจะเปลี่ยนตามสิ่งที่หน้านั้นทำจริง: หน้าที่ใช้ Meta Pixel จะบอกว่าใช้ Meta Pixel และคุกกี้ ส่วนหน้าที่ไม่ใช้ Pixel จะบอกแค่ว่าใช้คุกกี้นับสถิติการเข้าชม",
+                "ข้อความอยู่ท้ายหน้าเสมอ แม้จัดเรียง Section ใหม่ และไม่บังเนื้อหาหรือปุ่มสมัคร",
+                "ลิงก์นโยบายความเป็นส่วนตัว = กดคัดลอกไปใส่ในที่ที่ต้องระบุลิงก์นโยบาย เช่น การตั้งค่าโฆษณาหรือฟอร์มของ Facebook ทุกหน้าใช้นโยบายฉบับเดียวกัน",
+                "หน้าที่สร้างไว้ก่อนมีเมนูนี้จะเหมือนเดิม: หน้าที่ใช้ Pixel จะเปิดไว้ ส่วนหน้าที่ไม่ใช้จะปิดไว้ จนกว่าคุณจะเปิดเอง",
                 "กด “บันทึกส่วนนี้” ทุกครั้งหลังแก้ไข",
               ]}
             />

@@ -226,7 +226,7 @@ const STR = (fd: FormData, k: string) => {
 // into `_scope` first, so a panel only ever writes its own columns. Anything
 // outside the submitted scope is left exactly as it is in the database —
 // no more carrying the whole page's state through every save.
-type SaveScope = "all" | "bot" | "license" | "sections" | "theme" | "pixel" | "main" | "colors";
+type SaveScope = "all" | "bot" | "license" | "sections" | "theme" | "pixel" | "main" | "colors" | "privacy";
 
 export async function saveSettingsAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const userId = await getSessionUserId();
@@ -298,6 +298,15 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
     if (landing.error) return { error: landing.error };
     data.landingUrl = landing.value;
     data.cloakToLandingUrl = formData.get("cloakToLandingUrl") === "on";
+  }
+
+  if (wants("privacy")) {
+    // The switch posts "on" when lit and "" when off (see Toggle), so an
+    // absent field is only possible from a form that does not contain this
+    // panel — in which case the stored value must be left alone.
+    if (formData.has("privacyNoticeEnabled")) {
+      data.privacyNoticeEnabled = formData.get("privacyNoticeEnabled") === "on";
+    }
   }
 
   if (wants("license")) {

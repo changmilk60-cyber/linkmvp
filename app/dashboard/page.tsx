@@ -103,6 +103,9 @@ export default async function DashboardPage() {
         fbPixelIds: page.fbPixelIds,
         fbPixelCode: page.fbPixelCode,
         fbPixelEnabled: page.fbPixelEnabled,
+        privacyNoticeEnabled: page.privacyNoticeEnabled,
+        // One policy for every page, served from the same host the owner is on.
+        privacyUrl: `${baseUrl.replace(/\/$/, "")}/privacy`,
         capiAccessToken: page.capiAccessToken,
         capiEndpointUrl: page.capiEndpointUrl,
         capiEventName: page.capiEventName,

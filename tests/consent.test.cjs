@@ -43,16 +43,25 @@ test('the consent bar is shown on the home page only', () => {
   assert.equal(fs.readFileSync('app/page.tsx', 'utf8').includes('<ConsentBanner'), true);
 });
 
-test('the Pixel notice is drawn only when a Pixel is configured, and outside the reorderable sections', () => {
+test('the privacy notice follows the owner\'s switch, sits outside the reorderable sections, and its wording follows the Pixel', () => {
   const src = fs.readFileSync('app/[slug]/SalesPage.tsx', 'utf8');
-  // Conditional on at least one enabled Pixel id (page.tsx already empties the
-  // list when the Pixel is switched off).
-  assert.match(src, /fbPixelIds\.length > 0 \? <PixelNotice/);
-  // Rendered after the sections map, not as one of the sections the owner can reorder.
+  // Drawn only when the owner has it switched on...
+  assert.match(src, /privacyNotice \? <PrivacyNotice usesPixel=\{fbPixelIds\.length > 0\}/);
+  // ...after the sections map, not as one of the sections the owner can reorder.
   const mapAt = src.indexOf('sections.map((s)');
-  const noticeAt = src.indexOf('<PixelNotice');
+  const noticeAt = src.indexOf('<PrivacyNotice');
   assert.ok(mapAt > 0 && noticeAt > mapAt, 'notice must come after the section list');
-  assert.equal(src.includes('case "pixel_notice"'), false);
+  assert.equal(src.includes('case "privacy_notice"'), false);
+  // The Meta sentence is only used when a Pixel really runs; otherwise it would be untrue.
+  assert.match(src, /usesPixel\s*\?\s*"หน้านี้ใช้ Meta Pixel/);
+  assert.match(src, /: "หน้านี้ใช้คุกกี้เพื่อนับสถิติการเข้าชม"/);
   // Links to the policy and opens it in a new tab so an ad visitor keeps the page.
   assert.match(src, /href="\/privacy" target="_blank" rel="noopener"/);
+});
+
+test('the admin can save the switch under its own scope', () => {
+  const act = fs.readFileSync('app/actions.ts', 'utf8');
+  assert.match(act, /"privacy"/);
+  assert.match(act, /wants\("privacy"\)/);
+  assert.match(act, /privacyNoticeEnabled = formData\.get\("privacyNoticeEnabled"\) === "on"/);
 });

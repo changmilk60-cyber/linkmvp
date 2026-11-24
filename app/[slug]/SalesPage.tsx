@@ -22,6 +22,7 @@ export default function SalesPage({
   reviewsSubtitle,
   reviews,
   fbPixelIds,
+  privacyNotice,
   ctaLayout,
   signupEventName,
 }: {
@@ -38,6 +39,8 @@ export default function SalesPage({
   reviewsSubtitle: string | null;
   reviews: Review[];
   fbPixelIds: string[];
+  /** Owner's switch for the policy line at the foot of the page. */
+  privacyNotice: boolean;
   ctaLayout: "vertical" | "horizontal";
   /** Custom Meta click event; never claims a completed registration or purchase. */
   signupEventName: "SignupClick";
@@ -144,26 +147,30 @@ export default function SalesPage({
         {sections.map((s) => (s.enabled ? <Fragment key={s.key}>{renderSection(s)}</Fragment> : null))}
         {/* Outside the section list on purpose: the owner can reorder every
             section, and this must always be the last thing on the page. */}
-        {fbPixelIds.length > 0 ? <PixelNotice color={textMuted} /> : null}
+        {privacyNotice ? <PrivacyNotice usesPixel={fbPixelIds.length > 0} color={textMuted} /> : null}
       </div>
     </main>
   );
 }
 
 /**
- * Notice that this page uses Meta Pixel, linking to the privacy policy.
+ * Policy line at the foot of the page, linking to the privacy policy.
  *
  * Meta's Business Tools Terms are reported to ask advertisers for a prominent
  * notice, on each page that runs a Pixel, linking to an explanation of the
- * third-party tracking in use. It is only drawn when a Pixel is actually
- * configured and enabled, it takes no space from the content above it, and
- * unlike a consent box it never stands between a visitor and the sign-up
- * button. The link opens a new tab so an ad visitor does not lose the page.
+ * third-party tracking in use. The owner decides whether it is shown. The
+ * wording follows what the page really does: every page counts visits with
+ * a cookie, and only a page with an enabled Pixel also talks to Meta, so the
+ * Meta sentence is used only then. It takes no space from the content above
+ * it, and unlike a consent box it never stands between a visitor and the
+ * sign-up button. The link opens a new tab so an ad visitor keeps the page.
  */
-function PixelNotice({ color }: { color: string }) {
+function PrivacyNotice({ usesPixel, color }: { usesPixel: boolean; color: string }) {
   return (
     <p style={{ margin: "6px 0 0", textAlign: "center", fontSize: "11.5px", lineHeight: 1.7, color }}>
-      หน้านี้ใช้ Meta Pixel (Facebook) และคุกกี้เพื่อวัดผลการเข้าชมและโฆษณา{" "}
+      {usesPixel
+        ? "หน้านี้ใช้ Meta Pixel (Facebook) และคุกกี้เพื่อวัดผลการเข้าชมและโฆษณา"
+        : "หน้านี้ใช้คุกกี้เพื่อนับสถิติการเข้าชม"}{" "}
       <a href="/privacy" target="_blank" rel="noopener" style={{ color: "inherit", textDecoration: "underline" }}>
         นโยบายความเป็นส่วนตัว
       </a>
