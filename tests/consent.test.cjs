@@ -35,3 +35,17 @@ test('the consent box is never mounted on a customer sales page, the root layout
     assert.equal(fs.readFileSync(f, 'utf8').includes('ConsentBanner'), false, f);
   }
 });
+
+test('the Pixel notice is drawn only when a Pixel is configured, and outside the reorderable sections', () => {
+  const src = fs.readFileSync('app/[slug]/SalesPage.tsx', 'utf8');
+  // Conditional on at least one enabled Pixel id (page.tsx already empties the
+  // list when the Pixel is switched off).
+  assert.match(src, /fbPixelIds\.length > 0 \? <PixelNotice/);
+  // Rendered after the sections map, not as one of the sections the owner can reorder.
+  const mapAt = src.indexOf('sections.map((s)');
+  const noticeAt = src.indexOf('<PixelNotice');
+  assert.ok(mapAt > 0 && noticeAt > mapAt, 'notice must come after the section list');
+  assert.equal(src.includes('case "pixel_notice"'), false);
+  // Links to the policy and opens it in a new tab so an ad visitor keeps the page.
+  assert.match(src, /href="\/privacy" target="_blank" rel="noopener"/);
+});

@@ -142,8 +142,32 @@ export default function SalesPage({
 
       <div style={{ maxWidth: "480px", margin: "0 auto", padding: "20px 16px 48px", display: "flex", flexDirection: "column", gap: "18px" }}>
         {sections.map((s) => (s.enabled ? <Fragment key={s.key}>{renderSection(s)}</Fragment> : null))}
+        {/* Outside the section list on purpose: the owner can reorder every
+            section, and this must always be the last thing on the page. */}
+        {fbPixelIds.length > 0 ? <PixelNotice color={textMuted} /> : null}
       </div>
     </main>
+  );
+}
+
+/**
+ * Notice that this page uses Meta Pixel, linking to the privacy policy.
+ *
+ * Meta's Business Tools Terms are reported to ask advertisers for a prominent
+ * notice, on each page that runs a Pixel, linking to an explanation of the
+ * third-party tracking in use. It is only drawn when a Pixel is actually
+ * configured and enabled, it takes no space from the content above it, and
+ * unlike a consent box it never stands between a visitor and the sign-up
+ * button. The link opens a new tab so an ad visitor does not lose the page.
+ */
+function PixelNotice({ color }: { color: string }) {
+  return (
+    <p style={{ margin: "6px 0 0", textAlign: "center", fontSize: "11.5px", lineHeight: 1.7, color }}>
+      หน้านี้ใช้ Meta Pixel (Facebook) และคุกกี้เพื่อวัดผลการเข้าชมและโฆษณา{" "}
+      <a href="/privacy" target="_blank" rel="noopener" style={{ color: "inherit", textDecoration: "underline" }}>
+        นโยบายความเป็นส่วนตัว
+      </a>
+    </p>
   );
 }
 
