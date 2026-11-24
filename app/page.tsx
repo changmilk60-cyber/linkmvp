@@ -424,6 +424,7 @@ export default async function Home() {
             <a href="https://linkmvp.shop/" target="_blank" rel="noopener noreferrer">linkmvp.shop</a>
             <Link href="/register" style={{ color: "var(--text-muted)" }}>เริ่มต้นใช้งาน</Link>
             <Link href="/login" style={{ color: "var(--text-muted)" }}>เข้าสู่ระบบ</Link>
+            <Link href="/privacy" style={{ color: "var(--text-muted)" }}>นโยบายความเป็นส่วนตัว</Link>
           </div>
         </div>
       </footer>

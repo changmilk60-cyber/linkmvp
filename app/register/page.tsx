@@ -31,6 +31,9 @@ export default function RegisterPage() {
           {state?.error ? <p style={{ margin: 0, color: "var(--text-danger)", font: "var(--text-hint)" }}>{state.error}</p> : null}
           <SubmitButton />
           <p style={{ margin: "4px 0 0", textAlign: "center", font: "var(--text-hint)", color: "var(--text-muted)" }}>
+            การสมัครถือว่าคุณได้อ่าน <Link href="/privacy" style={{ color: "var(--text-accent)" }}>นโยบายความเป็นส่วนตัว</Link> แล้ว
+          </p>
+          <p style={{ margin: 0, textAlign: "center", font: "var(--text-hint)", color: "var(--text-muted)" }}>
             มีบัญชีอยู่แล้ว? <Link href="/login" style={{ color: "var(--text-accent)" }}>เข้าสู่ระบบ</Link>
           </p>
         </form>
