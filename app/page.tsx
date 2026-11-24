@@ -5,6 +5,7 @@ import { getSessionUserId } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ds";
 import HomeFaq from "./HomeFaq";
+import ConsentBanner from "@/components/ConsentBanner";
 
 export const metadata: Metadata = {
   title: "LINKMVP – ระบบสร้างเซลเพจและจัดการหน้าเว็บไซต์ขายสินค้าออนไลน์",
@@ -131,6 +132,7 @@ export default async function Home() {
 
   return (
     <main style={{ minHeight: "100vh", background: "var(--surface-page)", overflowX: "hidden" }}>
+      <ConsentBanner />
       {/* ── top bar ───────────────────────────────────────────── */}
       <header
         style={{

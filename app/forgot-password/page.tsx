@@ -1,9 +1,11 @@
 import Link from "next/link";
+import ConsentBanner from "@/components/ConsentBanner";
 import { Hint } from "@/components/ds";
 
 export default function ForgotPasswordPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 20px", background: "var(--surface-page)" }}>
+      <ConsentBanner />
       <div style={{ width: "460px", maxWidth: "100%", background: "var(--surface-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-card)", overflow: "hidden" }}>
         <div style={{ background: "var(--surface-accent-header)", borderBottom: "2px solid var(--green-500)", padding: "26px 24px", textAlign: "center" }}>
           <div aria-hidden="true" style={{ fontSize: "34px", lineHeight: 1 }}>🔑</div>
