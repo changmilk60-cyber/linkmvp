@@ -28,12 +28,19 @@ test('someone who accepted an older version is asked again', () => {
   assert.equal(needsConsent('2020-01-01'), true);
 });
 
-test('the consent box is never mounted on a customer sales page, the root layout or the admin', () => {
-  // The root layout also wraps every sales page; a box covering the page
-  // before the sign-up button would cost the customer conversions.
-  for (const f of ['app/layout.tsx', 'app/[slug]/page.tsx', 'app/[slug]/SalesPage.tsx', 'app/dashboard/page.tsx', 'app/superadmin/page.tsx']) {
+test('the consent bar is shown on the home page only', () => {
+  // The root layout also wraps every sales page, so it must not live there.
+  // The sign-in pages are deliberately left clean as well: the owner chose to
+  // show the bar on the home page alone.
+  const clean = [
+    'app/layout.tsx', 'app/[slug]/page.tsx', 'app/[slug]/SalesPage.tsx',
+    'app/dashboard/page.tsx', 'app/superadmin/page.tsx', 'app/privacy/page.tsx',
+    'app/login/page.tsx', 'app/register/page.tsx', 'app/forgot-password/page.tsx',
+  ];
+  for (const f of clean) {
     assert.equal(fs.readFileSync(f, 'utf8').includes('ConsentBanner'), false, f);
   }
+  assert.equal(fs.readFileSync('app/page.tsx', 'utf8').includes('<ConsentBanner'), true);
 });
 
 test('the Pixel notice is drawn only when a Pixel is configured, and outside the reorderable sections', () => {
