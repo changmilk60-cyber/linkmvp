@@ -4,19 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import { CONSENT_STORAGE_KEY, POLICY_VERSION, needsConsent } from "@/lib/policy";
 
 /**
- * First-visit privacy notice for linkmvp.shop's own pages.
+ * Privacy notice for linkmvp.shop's own pages, shown once per policy version.
+ *
+ * A bar along the bottom of the screen, not a modal: it never blocks the page,
+ * takes no focus and does not lock scrolling, so the site works exactly the
+ * same whether or not it is acknowledged. That fits what it is for here —
+ * these pages set no optional cookies and run no tracking, so there is nothing
+ * for a visitor to switch off, and a box that held the page hostage until it
+ * was pressed would only be in the way.
  *
  * Deliberately NOT mounted in the root layout: that layout also wraps every
- * customer's sales page, and a box covering the page before the visitor can
- * reach the sign-up button would cost the customer conversions. It is added
- * page by page to the marketing and sign-in pages only.
+ * customer's sales page. It is added page by page to the marketing and
+ * sign-in pages only.
  *
  * Starts hidden and decides after mount. Rendering it on the server would
- * flash the box at people who already accepted, and the server cannot know.
+ * flash the bar at people who already accepted, and the server cannot know.
  */
 export default function ConsentBanner() {
   const [open, setOpen] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let stored: string | null = null;
@@ -24,19 +30,27 @@ export default function ConsentBanner() {
       stored = window.localStorage.getItem(CONSENT_STORAGE_KEY);
     } catch {
       // Storage blocked (private mode, strict settings): the choice cannot be
-      // remembered, so it is asked once per page view instead of failing.
+      // remembered, so it is shown once per page view instead of failing.
     }
     if (needsConsent(stored)) setOpen(true);
   }, []);
 
+  // A fixed bar sits on top of the bottom of the page. Reserve that much room
+  // under the content while it is open, otherwise the last links on a short
+  // screen could never be scrolled clear of it.
   useEffect(() => {
-    if (!open) return;
-    button.current?.focus();
-    // Keep the page behind the box from scrolling while it is open.
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (!open || !bar.current) return;
+    const el = bar.current;
+    const prev = document.body.style.paddingBottom;
+    const reserve = () => {
+      document.body.style.paddingBottom = `${el.offsetHeight + 24}px`;
+    };
+    reserve();
+    const ro = new ResizeObserver(reserve);
+    ro.observe(el);
     return () => {
-      document.body.style.overflow = prev;
+      ro.disconnect();
+      document.body.style.paddingBottom = prev;
     };
   }, [open]);
 
@@ -44,7 +58,7 @@ export default function ConsentBanner() {
     try {
       window.localStorage.setItem(CONSENT_STORAGE_KEY, POLICY_VERSION);
     } catch {
-      /* see above — the box still closes for this page view */
+      /* see above — the bar still closes for this page view */
     }
     setOpen(false);
   }
@@ -53,50 +67,58 @@ export default function ConsentBanner() {
 
   return (
     <div
-      className="pv-consent-backdrop"
-      // minmax(0,1fr): a plain grid column grows to fit its content, so the
-      // 460px card pushed past a narrower screen instead of shrinking to it.
-      style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", placeItems: "center", padding: "20px", background: "rgba(0,0,0,.72)" }}
+      ref={bar}
+      role="region"
+      aria-label="การแจ้งเรื่องคุกกี้และนโยบายความเป็นส่วนตัว"
+      className="pv-consent-bar"
+      style={{
+        position: "fixed",
+        left: "50%",
+        bottom: "16px",
+        transform: "translateX(-50%)",
+        zIndex: 1000,
+        width: "min(760px, calc(100% - 24px))",
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: "12px 20px",
+        padding: "16px 20px",
+        background: "var(--surface-card)",
+        border: "1px solid var(--border-accent)",
+        borderRadius: "var(--radius-card)",
+        boxShadow: "0 12px 40px rgba(0,0,0,.55)",
+      }}
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="pv-consent-title"
-        aria-describedby="pv-consent-body"
-        className="pv-consent-card"
-        onKeyDown={(e) => {
-          // Only one thing can be focused in here; stop Tab from leaving the box.
-          if (e.key === "Tab") {
-            e.preventDefault();
-            button.current?.focus();
-          }
-        }}
-        style={{ width: "100%", maxWidth: "460px", maxHeight: "100%", overflow: "auto", background: "var(--surface-card)", border: "1px solid var(--border-accent)", borderRadius: "var(--radius-card)", boxShadow: "0 24px 70px rgba(0,0,0,.6)" }}
-      >
-        <div style={{ background: "var(--surface-accent-header)", borderBottom: "2px solid var(--green-500)", padding: "20px 22px", textAlign: "center" }}>
-          <div aria-hidden="true" style={{ fontSize: "28px", lineHeight: 1 }}>🛡</div>
-          <h2 id="pv-consent-title" style={{ margin: "8px 0 0", fontFamily: "var(--font-sans-pv)", fontSize: "20px", fontWeight: 700, lineHeight: 1.3, color: "var(--text-primary)" }}>
+      <div style={{ flex: "1 1 320px", minWidth: 0 }}>
+        <p style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>
+          เว็บไซต์นี้ใช้คุกกี้
+        </p>
+        <p style={{ margin: "4px 0 0", fontFamily: "var(--font-sans-pv)", fontSize: "13.5px", lineHeight: 1.7, color: "var(--text-muted)" }}>
+          เราใช้เฉพาะคุกกี้ที่จำเป็นต่อการเข้าสู่ระบบ และเก็บข้อมูลบัญชีตามที่ระบุใน
+          <a href="/privacy" target="_blank" rel="noopener" style={{ color: "var(--text-accent)", textDecoration: "underline", margin: "0 4px" }}>
             นโยบายความเป็นส่วนตัว
-          </h2>
-        </div>
-        <div style={{ padding: "20px 22px 22px" }}>
-          <p id="pv-consent-body" style={{ margin: 0, fontFamily: "var(--font-sans-pv)", fontSize: "15px", lineHeight: 1.8, color: "var(--text-body)" }}>
-            เว็บไซต์นี้เก็บข้อมูลบัญชีของคุณและใช้คุกกี้ที่จำเป็นต่อการเข้าสู่ระบบ ตามที่อธิบายไว้ใน
-            <a href="/privacy" target="_blank" rel="noopener" style={{ color: "var(--text-accent)", textDecoration: "underline", margin: "0 4px" }}>
-              นโยบายความเป็นส่วนตัว
-            </a>
-            กรุณาอ่านและกดยอมรับเพื่อใช้งานต่อ
-          </p>
-          <button
-            ref={button}
-            type="button"
-            onClick={accept}
-            style={{ marginTop: "18px", width: "100%", padding: "13px 16px", border: 0, borderRadius: "var(--radius-button)", background: "var(--surface-primary)", color: "var(--text-on-primary)", fontFamily: "var(--font-sans-pv)", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-glow, 0 8px 22px rgba(0,204,102,.28))" }}
-          >
-            ยอมรับ
-          </button>
-        </div>
+          </a>
+          ท่านใช้งานเว็บไซต์ต่อได้ตามปกติโดยไม่ต้องกดยอมรับ
+        </p>
       </div>
+      <button
+        type="button"
+        onClick={accept}
+        style={{
+          flex: "0 0 auto",
+          padding: "11px 26px",
+          border: 0,
+          borderRadius: "var(--radius-button)",
+          background: "var(--surface-primary)",
+          color: "var(--text-on-primary)",
+          fontFamily: "var(--font-sans-pv)",
+          fontSize: "15px",
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        ยอมรับ
+      </button>
     </div>
   );
 }

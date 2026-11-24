@@ -518,11 +518,9 @@ a:hover {
    the card stays compact instead of becoming a long list */
 @media (max-width: 759px) { .lp-window-nav { display: none; } }
 
-/* privacy consent box on linkmvp.shop's own pages */
-@keyframes pv-consent-pop { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
-@keyframes pv-consent-fade { from { opacity: 0; } to { opacity: 1; } }
-.pv-consent-backdrop { animation: pv-consent-fade .18s ease-out; }
-.pv-consent-card { animation: pv-consent-pop .22s ease-out; }
+/* privacy notice bar on linkmvp.shop's own pages */
+@keyframes pv-consent-rise { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.pv-consent-bar { animation: pv-consent-rise .25s ease-out; }
 @media (prefers-reduced-motion: reduce) {
-  .pv-consent-backdrop, .pv-consent-card { animation: none; }
+  .pv-consent-bar { animation: none; }
 }
