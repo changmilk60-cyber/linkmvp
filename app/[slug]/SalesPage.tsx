@@ -5,7 +5,8 @@ import ConsentBanner, { PolicyLink, type ConsentLook } from "@/components/Consen
 import type { CSSProperties } from "react";
 import Script from "next/script";
 import { ViewTracker, TrackedLink } from "./Tracker";
-import { extractYoutubeId, themeFor, type SectionEntry, type SectionKey } from "@/lib/sections";
+import { extractYoutubeId, normalizePlayMode, resolveVideoOrientation, themeFor, type SectionEntry, type SectionKey } from "@/lib/sections";
+import VideoPlayer from "@/components/VideoPlayer";
 
 type Review = { member: string; text: string; stars: string };
 
@@ -109,7 +110,7 @@ export default function SalesPage({
       case "image_slider":
         return <ImageSlider data={s.data as { images: string[] }} />;
       case "youtube_video":
-        return <YoutubeVideo data={s.data as { title?: string; url: string }} accent={primary} />;
+        return <YoutubeVideo data={s.data as { title?: string; url: string; layout?: string; playMode?: string }} accent={primary} />;
       case "reviews":
         if (reviews.length === 0) return null;
         return <ReviewsCarousel title={reviewsTitle} subtitle={reviewsSubtitle} reviews={reviews} accent={primary} muted={textMuted} />;
@@ -356,21 +357,18 @@ function TextBlock({ data, accent }: { data: { heading: string; body: string }; 
   );
 }
 
-function YoutubeVideo({ data, accent }: { data: { title?: string; url: string }; accent: string }) {
+function YoutubeVideo({ data, accent }: { data: { title?: string; url: string; layout?: string; playMode?: string }; accent: string }) {
   const videoId = extractYoutubeId(data.url || "");
   if (!videoId) return null;
   return (
     <div>
       {data.title ? <h2 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 700, color: accent }}>{data.title}</h2> : null}
-      <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "14px", overflow: "hidden", background: "#000" }}>
-        <iframe
-          src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1`}
-          title={data.title || "วีดีโอ"}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
+      <VideoPlayer
+        videoId={videoId}
+        title={data.title || "วีดีโอ"}
+        orientation={resolveVideoOrientation(data.url || "", data.layout)}
+        playMode={normalizePlayMode(data.playMode)}
+      />
     </div>
   );
 }

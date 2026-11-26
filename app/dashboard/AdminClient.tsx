@@ -28,7 +28,8 @@ import {
   Toggle,
 } from "@/components/ds";
 import { logoutAction, moveSectionAction, renameSlugAction, saveSettingsAction } from "@/app/actions";
-import { extractYoutubeId, FEED_BANK_SLOTS, SECTION_META, THEME_PRESETS, type SectionEntry, type SectionKey } from "@/lib/sections";
+import { extractYoutubeId, FEED_BANK_SLOTS, normalizePlayMode, normalizeVideoLayout, resolveVideoOrientation, SECTION_META, THEME_PRESETS, type SectionEntry, type SectionKey, type VideoLayout, type VideoPlayMode } from "@/lib/sections";
+import VideoPlayer from "@/components/VideoPlayer";
 
 type PageData = {
   id: string;
@@ -555,26 +556,49 @@ function ReviewsEditor({ title, subtitle, reviews }: { title: string | null; sub
 
 // Shows a live embed preview as the merchant types/pastes a link, so a
 // broken or non-YouTube URL is obvious before saving rather than after.
-function YoutubeVideoFields({ title, url }: { title: string; url: string }) {
+function YoutubeVideoFields({ title, url, layout, playMode }: { title: string; url: string; layout: string; playMode: string }) {
   const [value, setValue] = useState(url);
+  const [shape, setShape] = useState<VideoLayout>(normalizeVideoLayout(layout));
+  const [mode, setMode] = useState<VideoPlayMode>(normalizePlayMode(playMode));
   const videoId = extractYoutubeId(value);
+  const orientation = resolveVideoOrientation(value, shape);
   return (
     <>
       <Field label="หัวข้อวีดีโอ (ไม่บังคับ)"><TextInput name="section_data_youtube_video_title" defaultValue={title} placeholder="ดูวิธีสมัครแบบเต็ม" /></Field>
-      <Field label="ลิงก์วีดีโอ YouTube" hint="วางลิงก์จาก YouTube ได้ทุกแบบ เช่น youtube.com/watch?v=... หรือ youtu.be/..." hintTone="accent">
+      <Field label="ลิงก์วีดีโอ YouTube" hint="วางลิงก์จาก YouTube ได้ทุกแบบ เช่น youtube.com/watch?v=... หรือ youtu.be/... หรือลิงก์ Shorts" hintTone="accent">
         <TextInput mono name="section_data_youtube_video_url" value={value} onChange={setValue} placeholder="https://www.youtube.com/watch?v=..." />
+      </Field>
+      <Field
+        label="รูปทรงของวีดีโอ"
+        hint="อัตโนมัติ = ลิงก์ Shorts แสดงแนวตั้ง ลิงก์อื่นแสดงแนวนอน • ถ้าเป็นคลิปแนวตั้งที่ไม่ใช่ลิงก์ Shorts (เช่น คลิปที่อัปโหลดเป็นแนวตั้งธรรมดา) ระบบแยกเองไม่ได้ ให้เลือก “แนวตั้ง” เอง"
+        hintTone="body"
+      >
+        <input type="hidden" name="section_data_youtube_video_layout" value={shape} />
+        <SegmentedChoice
+          value={shape}
+          onChange={(v) => setShape(v as VideoLayout)}
+          options={[
+            { icon: "✨", label: "อัตโนมัติ", value: "auto" },
+            { icon: "▭", label: "แนวนอน", sublabel: "16:9", value: "landscape" },
+            { icon: "▯", label: "แนวตั้ง", sublabel: "9:16", value: "portrait" },
+          ]}
+        />
+      </Field>
+      <Field label="การเล่น" hint="กดเล่น = แสดงรูปปกพร้อมปุ่มเล่นตรงกลางและปุ่มขยายจอ เล่นพร้อมเสียงเมื่อผู้เข้าชมกด • เล่นอัตโนมัติ = เริ่มเล่นทันทีที่เปิดหน้าโดยปิดเสียง (แบบเดิม)" hintTone="body">
+        <input type="hidden" name="section_data_youtube_video_playMode" value={mode} />
+        <SegmentedChoice
+          value={mode}
+          onChange={(v) => setMode(v as VideoPlayMode)}
+          options={[
+            { icon: "▶", label: "กดเล่น", value: "click" },
+            { icon: "🔇", label: "เล่นอัตโนมัติ (ปิดเสียง)", value: "autoplay" },
+          ]}
+        />
       </Field>
       <div style={{ gridColumn: "1 / -1" }}>
         {videoId ? (
-          <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: "var(--radius-inset)", overflow: "hidden", background: "#000" }}>
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}`}
-              title="ตัวอย่างวีดีโอ"
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
+          // key: switching to autoplay must start a fresh player, not reuse the poster state
+          <VideoPlayer key={`${videoId}-${orientation}-${mode}`} videoId={videoId} title="ตัวอย่างวีดีโอ" orientation={orientation} playMode={mode} />
         ) : value ? (
           <Hint tone="warning" icon="⚠">ไม่พบวีดีโอจากลิงก์นี้ — ตรวจสอบว่าเป็นลิงก์ YouTube ที่ถูกต้อง</Hint>
         ) : null}
@@ -1011,7 +1035,7 @@ function SectionExtra({ sKey, data }: { sKey: SectionKey; data: Record<string, u
         </>
       );
     case "youtube_video":
-      return <YoutubeVideoFields title={v.title || ""} url={v.url || ""} />;
+      return <YoutubeVideoFields title={v.title || ""} url={v.url || ""} layout={String(v.layout ?? "auto")} playMode={String(v.playMode ?? "click")} />;
     default:
       return null;
   }

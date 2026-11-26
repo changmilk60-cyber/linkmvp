@@ -524,3 +524,42 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   .pv-consent-bar { animation: none; }
 }
+
+/* ---- YouTube player (sales page + admin preview) ---- */
+.pv-video { margin: 0 auto; width: 100%; }
+/* A vertical clip is as tall as the screen allows and no wider than that makes it. */
+.pv-video[data-orientation="portrait"] { width: min(100%, calc(72vh * 9 / 16)); }
+.pv-video-box { position: relative; width: 100%; overflow: hidden; background: #000; border-radius: 14px; }
+
+.pv-video-play {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  display: grid; place-items: center;
+  padding: 0; border: 0; background: transparent; cursor: pointer;
+}
+.pv-video-play > span {
+  width: 68px; height: 68px; border-radius: 50%;
+  display: grid; place-items: center; padding-left: 4px; /* optical centring of the triangle */
+  background: rgba(255,255,255,.2); border: 2px solid rgba(255,255,255,.78);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: transform .15s ease, background .15s ease;
+}
+.pv-video-play:hover > span,
+.pv-video-play:focus-visible > span { transform: scale(1.07); background: rgba(255,255,255,.32); }
+.pv-video-play:focus-visible,
+.pv-video-full:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+
+.pv-video-full {
+  position: absolute; right: 12px; bottom: 12px; width: 44px; height: 44px;
+  display: grid; place-items: center; padding: 0; cursor: pointer;
+  border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55);
+  background: rgba(8,16,28,.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+
+/* Expanded: the box becomes the whole screen and YouTube fits the clip inside it.
+   Written as two rules because one unknown pseudo-class voids a whole selector list. */
+.pv-video:fullscreen { width: 100% !important; height: 100%; background: #000; }
+.pv-video:fullscreen .pv-video-box { width: 100%; height: 100%; aspect-ratio: auto !important; border-radius: 0; }
+.pv-video:-webkit-full-screen { width: 100% !important; height: 100%; background: #000; }
+.pv-video:-webkit-full-screen .pv-video-box { width: 100%; height: 100%; aspect-ratio: auto !important; border-radius: 0; }
+
+@media (prefers-reduced-motion: reduce) { .pv-video-play > span { transition: none; } }

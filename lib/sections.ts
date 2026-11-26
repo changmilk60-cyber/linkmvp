@@ -96,7 +96,7 @@ export const DEFAULT_SECTIONS: SectionEntry[] = [
   { key: "image_slider", enabled: false, data: { images: ["", "", "", ""] } },
   { key: "reviews", enabled: true, data: {} },
   { key: "signup_line_buttons", enabled: true, data: { signupUrl: "", lineUrl: "" } },
-  { key: "youtube_video", enabled: false, data: { title: "", url: "" } },
+  { key: "youtube_video", enabled: false, data: { title: "", url: "", layout: "auto", playMode: "click" } },
   { key: "page_footer", enabled: true, data: {} },
 ];
 
@@ -159,6 +159,38 @@ export function lastNDays(n: number) {
 
 // Accepts any common YouTube URL shape (watch, youtu.be, shorts, embed,
 // live) plus surrounding text, and returns the 11-char video ID or null.
+/** How the video box is shaped. "auto" decides from the link (see below). */
+export type VideoLayout = "auto" | "landscape" | "portrait";
+/** "click": poster with a play button. "autoplay": starts muted on load, as before. */
+export type VideoPlayMode = "click" | "autoplay";
+
+/** A link in the youtube.com/shorts/… form. */
+export function isShortsUrl(url: string): boolean {
+  return /youtube(?:-nocookie)?\.com\/shorts\//.test(url.trim());
+}
+
+/**
+ * Which shape the video box takes.
+ *
+ * YouTube does not say whether a clip is vertical, and a vertical clip pasted
+ * as an ordinary watch link looks identical to a landscape one from here, so
+ * "auto" can only recognise the Shorts link form. For anything else the owner
+ * picks the shape; their choice always wins over the guess.
+ */
+export function resolveVideoOrientation(url: string, layout?: unknown): "landscape" | "portrait" {
+  if (layout === "portrait") return "portrait";
+  if (layout === "landscape") return "landscape";
+  return isShortsUrl(url) ? "portrait" : "landscape";
+}
+
+export function normalizeVideoLayout(v: unknown): VideoLayout {
+  return v === "landscape" || v === "portrait" ? v : "auto";
+}
+
+export function normalizePlayMode(v: unknown): VideoPlayMode {
+  return v === "autoplay" ? "autoplay" : "click";
+}
+
 export function extractYoutubeId(url: string): string | null {
   const m = url.trim().match(
     /(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/

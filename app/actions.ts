@@ -18,7 +18,7 @@ import { normalizeExternalUrl } from "@/lib/url";
 import { nanoid } from "nanoid";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
-import { DEFAULT_SECTIONS, FEED_BANK_SLOTS, parseSections, type SectionEntry, type SectionKey } from "@/lib/sections";
+import { DEFAULT_SECTIONS, FEED_BANK_SLOTS, normalizePlayMode, normalizeVideoLayout, parseSections, type SectionEntry, type SectionKey } from "@/lib/sections";
 
 const SLUG_RE = /^[a-zA-Z0-9_-]{3,32}$/;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -483,6 +483,10 @@ export async function saveSettingsAction(_prevState: ActionState, formData: Form
         s.data = {
           title: STR(formData, "section_data_youtube_video_title") || "",
           url: STR(formData, "section_data_youtube_video_url") || "",
+          // Anything outside the known values falls back to the safe default,
+          // so a hand-edited form cannot store a value the page cannot render.
+          layout: normalizeVideoLayout(formData.get("section_data_youtube_video_layout")),
+          playMode: normalizePlayMode(formData.get("section_data_youtube_video_playMode")),
         };
         break;
       }
