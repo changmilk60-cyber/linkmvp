@@ -577,6 +577,7 @@ function YoutubeVideoFields({ title, url, layout, playMode }: { title: string; u
         <SegmentedChoice
           value={shape}
           onChange={(v) => setShape(v as VideoLayout)}
+          stack
           options={[
             { icon: "✨", label: "อัตโนมัติ", value: "auto" },
             { icon: "▭", label: "แนวนอน", sublabel: "16:9", value: "landscape" },
@@ -589,6 +590,7 @@ function YoutubeVideoFields({ title, url, layout, playMode }: { title: string; u
         <SegmentedChoice
           value={mode}
           onChange={(v) => setMode(v as VideoPlayMode)}
+          stack
           options={[
             { icon: "▶", label: "กดเล่น", value: "click" },
             { icon: "🔇", label: "เล่นอัตโนมัติ (ปิดเสียง)", value: "autoplay" },

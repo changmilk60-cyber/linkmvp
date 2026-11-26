@@ -140,7 +140,7 @@ export function Toggle({ checked, onChange, name, disabled = false, style }: { c
   );
 }
 
-export function SegmentedChoice({ options, value, onChange, columns, style }: { options: { icon?: string; label: string; sublabel?: string; value: string }[]; value: string; onChange: (v: string) => void; columns?: number; style?: CSSProperties }) {
+export function SegmentedChoice({ options, value, onChange, columns, style, stack }: { options: { icon?: string; label: string; sublabel?: string; value: string }[]; value: string; onChange: (v: string) => void; columns?: number; style?: CSSProperties; stack?: boolean }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(" + (columns || options.length) + ",minmax(0,1fr))", gap: "var(--gap-grid)", ...style }}>
       {options.map((o) => {
@@ -150,9 +150,20 @@ export function SegmentedChoice({ options, value, onChange, columns, style }: { 
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
-            style={{ background: active ? "var(--green-tint-1)" : "var(--surface-inset)", border: "1px solid " + (active ? "var(--border-accent-strong)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: "14px 12px", color: active ? "var(--text-accent)" : "var(--text-body)", font: "var(--fw-semibold) var(--fs-label)/1.35 var(--font-sans)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", transition: "var(--transition-control)" }}
+            style={{ background: active ? "var(--green-tint-1)" : "var(--surface-inset)", border: "1px solid " + (active ? "var(--border-accent-strong)" : "var(--border-hairline)"), borderRadius: "var(--radius-inset)", padding: stack ? "14px 6px" : "14px 12px", color: active ? "var(--text-accent)" : "var(--text-body)", font: "var(--fw-semibold) var(--fs-label)/1.35 var(--font-sans)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", minWidth: 0, transition: "var(--transition-control)" }}
           >
-            <span>{o.icon ? <span aria-hidden="true" style={{ marginRight: "6px" }}>{o.icon}</span> : null}{o.label}</span>
+            {stack ? (
+              <>
+                {o.icon ? <span aria-hidden="true">{o.icon}</span> : null}
+                <span style={{ textAlign: "center" }}>
+                  {o.label.split(" ").map((w, i) => (
+                    <span key={i} style={{ whiteSpace: "nowrap", display: "inline-block", margin: "0 2px" }}>{w}</span>
+                  ))}
+                </span>
+              </>
+            ) : (
+              <span>{o.icon ? <span aria-hidden="true" style={{ marginRight: "6px" }}>{o.icon}</span> : null}{o.label}</span>
+            )}
             {o.sublabel ? <span style={{ font: "var(--text-hint)", color: "inherit", opacity: 0.85 }}>{o.sublabel}</span> : null}
           </button>
         );
