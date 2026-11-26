@@ -529,9 +529,6 @@ a:hover {
 .pv-video { margin: 0 auto; width: 100%; }
 /* A vertical clip fills the full width of the content column. */
 .pv-video[data-orientation="portrait"] { width: 100%; }
-/* On the sales page a vertical clip runs edge to edge: no side gutter. */
-.pv-bleed { margin: 0 -16px; }
-.pv-bleed .pv-video-box { border-radius: 0; }
 .pv-video-box { position: relative; width: 100%; overflow: hidden; background: #000; border-radius: 14px; }
 
 .pv-video-play {
