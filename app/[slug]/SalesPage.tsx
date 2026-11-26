@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import ConsentBanner, { PolicyLink, type ConsentLook } from "@/components/ConsentBanner";
 import type { CSSProperties } from "react";
 import Script from "next/script";
 import { ViewTracker, TrackedLink } from "./Tracker";
@@ -148,9 +149,56 @@ export default function SalesPage({
         {/* Outside the section list on purpose: the owner can reorder every
             section, and this must always be the last thing on the page. */}
         {privacyNotice ? <PrivacyNotice usesPixel={fbPixelIds.length > 0} color={textMuted} /> : null}
+        {/* First-visit bar. The line above stays after it is accepted, so the
+            notice is still on the page on every later visit. */}
+        {privacyNotice ? (
+          <ConsentBanner
+            compact
+            reserve="inline"
+            look={consentLook(primary, theme.accent, textBody)}
+            message={
+              <>
+                {fbPixelIds.length > 0
+                  ? "หน้านี้ใช้ Meta Pixel (Facebook) และคุกกี้เพื่อวัดผลการเข้าชมและโฆษณา"
+                  : "หน้านี้ใช้คุกกี้เพื่อนับสถิติการเข้าชม"}
+                <PolicyLink color={theme.accent} />
+                ใช้งานต่อได้ตามปกติ
+              </>
+            }
+          />
+        ) : null}
       </div>
     </main>
   );
+}
+
+/** Black or white, whichever has the stronger contrast against `hex`.
+ *  Comparing both is what matters: a brightness cut-off picks white for
+ *  mid-tones such as orange or teal, where black is far easier to read. */
+function readableOn(hex: string): string {
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return "#000000";
+  const h = m[1].length === 3 ? m[1].split("").map((c) => c + c).join("") : m[1];
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const againstBlack = (lum + 0.05) / 0.05;
+  const againstWhite = 1.05 / (lum + 0.05);
+  return againstBlack >= againstWhite ? "#000000" : "#ffffff";
+}
+
+/** The bar takes the page's own colours so it reads as part of the page. */
+function consentLook(primary: string, accent: string, text: string): ConsentLook {
+  // The link uses the theme's accent, not its primary: several primaries
+  // (wine red, red, purple) are too dark to read as text on this background.
+  return {
+    background: "rgba(8,8,8,.92)",
+    border: primary,
+    text,
+    muted: text,
+    accent,
+    buttonBg: primary,
+    buttonText: readableOn(primary),
+  };
 }
 
 /**

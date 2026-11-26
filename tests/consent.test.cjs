@@ -28,12 +28,11 @@ test('someone who accepted an older version is asked again', () => {
   assert.equal(needsConsent('2020-01-01'), true);
 });
 
-test('the consent bar is shown on the home page only', () => {
-  // The root layout also wraps every sales page, so it must not live there.
-  // The sign-in pages are deliberately left clean as well: the owner chose to
-  // show the bar on the home page alone.
+test('the consent bar lives on the home page and, behind the owner\'s switch, on sales pages - nowhere else', () => {
+  // The root layout wraps every sales page, so it must not carry the bar: a
+  // page whose owner switched the notice off must stay clean.
   const clean = [
-    'app/layout.tsx', 'app/[slug]/page.tsx', 'app/[slug]/SalesPage.tsx',
+    'app/layout.tsx', 'app/[slug]/page.tsx',
     'app/dashboard/page.tsx', 'app/superadmin/page.tsx', 'app/privacy/page.tsx',
     'app/login/page.tsx', 'app/register/page.tsx', 'app/forgot-password/page.tsx',
   ];
@@ -41,6 +40,20 @@ test('the consent bar is shown on the home page only', () => {
     assert.equal(fs.readFileSync(f, 'utf8').includes('ConsentBanner'), false, f);
   }
   assert.equal(fs.readFileSync('app/page.tsx', 'utf8').includes('<ConsentBanner'), true);
+
+  // On a sales page it is only drawn when the owner has the notice switched on,
+  // and it is the compact, theme-coloured, in-page-spacer variant.
+  const sales = fs.readFileSync('app/[slug]/SalesPage.tsx', 'utf8');
+  assert.match(sales, /privacyNotice \? \(\s*<ConsentBanner\s+compact\s+reserve="inline"/);
+  assert.match(sales, /look=\{consentLook\(primary, theme\.accent, textBody\)\}/);
+});
+
+test('button text on the sales-page bar is chosen by real contrast, not a brightness cut-off', () => {
+  // A cut-off picks white text for mid-tones such as orange and teal, which
+  // reads at only ~2.6:1; comparing against both black and white does not.
+  const sales = fs.readFileSync('app/[slug]/SalesPage.tsx', 'utf8');
+  assert.match(sales, /againstBlack >= againstWhite/);
+  assert.equal(/lum > 0\.4/.test(sales), false);
 });
 
 test('the privacy notice follows the owner\'s switch, sits outside the reorderable sections, and its wording follows the Pixel', () => {
