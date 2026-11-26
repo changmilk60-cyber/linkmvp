@@ -360,15 +360,19 @@ function TextBlock({ data, accent }: { data: { heading: string; body: string }; 
 function YoutubeVideo({ data, accent }: { data: { title?: string; url: string; layout?: string; playMode?: string }; accent: string }) {
   const videoId = extractYoutubeId(data.url || "");
   if (!videoId) return null;
+  const orientation = resolveVideoOrientation(data.url || "", data.layout);
+  const portrait = orientation === "portrait";
   return (
     <div>
       {data.title ? <h2 style={{ margin: "0 0 8px", fontSize: "17px", fontWeight: 700, color: accent }}>{data.title}</h2> : null}
-      <VideoPlayer
-        videoId={videoId}
-        title={data.title || "วีดีโอ"}
-        orientation={resolveVideoOrientation(data.url || "", data.layout)}
-        playMode={normalizePlayMode(data.playMode)}
-      />
+      <div className={portrait ? "pv-bleed" : undefined}>
+        <VideoPlayer
+          videoId={videoId}
+          title={data.title || "วีดีโอ"}
+          orientation={orientation}
+          playMode={normalizePlayMode(data.playMode)}
+        />
+      </div>
     </div>
   );
 }
